@@ -2053,6 +2053,7 @@
        is measured in the window. */
     transform: translate(-50%, -50%) translateY(var(--stage-shift, 0px))
                scale(var(--stage-k, 1))
+               translate(var(--stage-focus-x, 0px), var(--stage-focus-y, 0px))
                translate(var(--page-dx, 0px), var(--page-dy, 0px));
     transform-origin: 50% 50%;
     /* No ground of its own: the field paints between the bands and what lies
@@ -2065,6 +2066,111 @@
        text exactly as it did when it was the body's. */
     isolation: isolate;
     z-index: 0;
+  }
+
+  /* On a phone the two 620px-wide pages cannot remain side by side and still
+     be read.  The stage itself is not reflowed or rewritten: a small piece of
+     browser furniture chooses which of its two windows the viewport centres.
+     This keeps the poster's saved geometry identical on desktop and mobile. */
+  .mobile-view-switch { display: none; }
+  @media (max-width: 600px) {
+    html { --mobile-toolbar-h: 3.25rem; }
+    body { touch-action: manipulation; }
+    .mobile-view-switch {
+      position: fixed;
+      left: max(0.5rem, env(safe-area-inset-left));
+      right: max(0.5rem, env(safe-area-inset-right));
+      bottom: max(0.45rem, env(safe-area-inset-bottom));
+      z-index: 76;
+      display: grid;
+      grid-template-columns: 2.75rem minmax(0, 1fr) minmax(0, 1fr) 2.75rem;
+      gap: 0.3rem;
+      padding: 0.3rem;
+      font-family: var(--body-font);
+      font-size: 0.6875rem;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--ink);
+      background: color-mix(in srgb, var(--void) 92%, transparent);
+      border: 1px solid var(--ink);
+      backdrop-filter: blur(5px);
+    }
+    .mobile-view-switch button {
+      min-width: 0;
+      min-height: 2.75rem;
+      margin: 0;
+      padding: 0.35rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: inherit;
+      background: var(--void);
+      border: 1px solid color-mix(in srgb, var(--ink) 52%, transparent);
+      border-radius: 0;
+      font: inherit;
+      letter-spacing: inherit;
+      text-transform: inherit;
+      cursor: pointer;
+    }
+    .mobile-view-switch button[aria-pressed="true"] {
+      color: var(--void); background: var(--ink); border-color: var(--ink);
+    }
+    .mobile-view-switch button:focus-visible {
+      outline: 2px solid var(--ink); outline-offset: 2px;
+    }
+    .mobile-view-switch button[disabled] { opacity: 0.28; }
+
+    /* The bands and the inter-window gutter describe the desktop pair. Mobile
+       has its own compact navigation below, so no clipped fragment of that
+       furniture is allowed to sit over the selected page. */
+    .ticker, .crest, .dates, .gutter, .ring { visibility: hidden !important; }
+    .nav { display: none !important; }
+
+    /* The artist page is deliberately narrower in mobile mode. Its content is
+       fluid already; this lets it be shown at a larger physical scale than a
+       620px desktop twin, and its own vertical scroller remains touchable. */
+    html.mobile-pane-info .listen {
+      font-size: 0.875rem;
+    }
+    html.mobile-pane-poster .listen { visibility: hidden; }
+    html.mobile-pane-info .frame,
+    html.mobile-pane-info .wm-inside,
+    html.mobile-pane-info .wm-box,
+    html.mobile-pane-info .wm-void-contour,
+    html.mobile-pane-info .wm-box-edge,
+    html.mobile-pane-info .rule,
+    html.mobile-pane-info .tiles { visibility: hidden !important; }
+    html.mobile-pane-info .profile {
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Controls are not the public page, but /studio can still be opened from a
+       phone. Keep its panels inside the safe viewport rather than preserving a
+       desktop drag position that lies off-screen. */
+    .params, .editor {
+      left: max(0.35rem, env(safe-area-inset-left)) !important;
+      right: max(0.35rem, env(safe-area-inset-right)) !important;
+      top: calc(var(--app-chrome-height, 0px) + 0.35rem) !important;
+      bottom: calc(var(--mobile-toolbar-h) + env(safe-area-inset-bottom) + 0.55rem) !important;
+      width: auto !important; min-width: 0 !important; max-width: none !important;
+      height: auto !important; max-height: none !important;
+      resize: none !important;
+    }
+    .panel-titlebar { min-height: 2.75rem; }
+    .panel-titlebar button { width: 2.35rem; height: 2.35rem; }
+
+    /* HOME remains useful on the published archive. The studio's longer action
+       row would fight the mobile switch, so it moves above it and scrolls as a
+       single compact rail when present. */
+    .corner { bottom: calc(var(--mobile-toolbar-h) + env(safe-area-inset-bottom) + 0.65rem); }
+    .corner.left { left: max(0.5rem, env(safe-area-inset-left)); }
+    .corner.right {
+      left: max(0.5rem, env(safe-area-inset-left));
+      right: max(0.5rem, env(safe-area-inset-right));
+      max-width: none; flex-wrap: nowrap; overflow-x: auto;
+      justify-content: flex-end; padding: 0.2rem 0;
+    }
+    .corner button { min-height: 2.5rem; padding-inline: 0.35rem; }
   }
 
   .ring {
@@ -4039,7 +4145,7 @@
            resampling and all fifteen hover treatments arrive here already
            written. With no picture set it runs the page's field instead, so the
            block is alive either way. -->
-      <article class="profile" id="profile" hidden>
+      <article class="profile" id="profile" tabindex="0" hidden>
         <h3 id="profile-name"></h3>
         <div class="poster profile-board" id="profile-board">
           <div class="pic profile-pic" id="profile-pic"></div>
@@ -4179,6 +4285,16 @@
   <!-- Fixed viewport decoration. It is not inside #stage and therefore never
        changes the page's measurements, scale or proportions. -->
   <div id="viewport-frames" aria-hidden="true"></div>
+
+  <!-- Smartphone browser furniture. The poster and the artist page remain the
+       same two stage windows; these controls only choose which one is centred
+       in the narrow viewport. -->
+  <nav class="mobile-view-switch" id="mobile-view-switch" aria-label="Vue mobile">
+    <button type="button" id="mobile-prev" aria-label="Concert précédent">←</button>
+    <button type="button" id="mobile-poster" aria-pressed="true">Affiche</button>
+    <button type="button" id="mobile-info" aria-pressed="false">Infos</button>
+    <button type="button" id="mobile-next" aria-label="Concert suivant">→</button>
+  </nav>
 
   
 
@@ -4405,8 +4521,75 @@
   var STAGE_W = 1600, STAGE_H = 900;
   var stageK = 1, stageX0 = 0, stageY0 = 0;
   var appZoom = 1, appTopInset = 0;
+  var mobilePane = 'poster';
   function viewW() { return STAGE_W; }
   function viewH() { return STAGE_H; }
+  function smartphoneMode() {
+    return (document.documentElement.clientWidth || window.innerWidth || STAGE_W) <= 600;
+  }
+  function viewportFrameMetricScale() {
+    var w = document.documentElement.clientWidth || window.innerWidth || STAGE_W;
+    /* The viewport frames are browser furniture, not poster content. On a
+       phone they shrink a little faster than the 1600px stage so a deliberately
+       broad horizontal rail still reads as a border rather than consuming half
+       the display. Individual lines and glyphs keep a one-pixel floor below. */
+    return w <= 600 ? Math.max(0.12, Math.min(1, w / 2400)) : 1;
+  }
+  function viewportFrameSafeInsets() {
+    var frames = viewportFrames();
+    var scale = viewportFrameMetricScale();
+    var previousFrame = null, previousInset = null;
+    var safe = { top: 0, right: 0, bottom: 0, left: 0 };
+    for (var i = 0; i < frames.length; i++) {
+      var f = frames[i];
+      if (!f.enabled) continue;
+      var edge;
+      if (look.viewportFramesMagnet && previousFrame && previousInset) {
+        edge = {
+          top: previousInset.top + previousFrame.thicknessTop * scale,
+          right: previousInset.right + previousFrame.thicknessRight * scale,
+          bottom: previousInset.bottom + previousFrame.thicknessBottom * scale,
+          left: previousInset.left + previousFrame.thicknessLeft * scale
+        };
+      } else {
+        edge = { top: f.inset * scale, right: f.inset * scale,
+                 bottom: f.inset * scale, left: f.inset * scale };
+      }
+      safe = {
+        top: edge.top + f.thicknessTop * scale,
+        right: edge.right + f.thicknessRight * scale,
+        bottom: edge.bottom + f.thicknessBottom * scale,
+        left: edge.left + f.thicknessLeft * scale
+      };
+      previousFrame = f; previousInset = edge;
+    }
+    return safe;
+  }
+  function updateMobileControls() {
+    var root = document.documentElement;
+    var poster = document.getElementById('mobile-poster');
+    var info = document.getElementById('mobile-info');
+    var disabled = look.listen === false;
+    if (disabled && mobilePane === 'info') mobilePane = 'poster';
+    root.classList.toggle('mobile-pane-info', smartphoneMode() && mobilePane === 'info');
+    root.classList.toggle('mobile-pane-poster', smartphoneMode() && mobilePane !== 'info');
+    if (poster) poster.setAttribute('aria-pressed', mobilePane !== 'info' ? 'true' : 'false');
+    if (info) {
+      info.setAttribute('aria-pressed', mobilePane === 'info' ? 'true' : 'false');
+      info.disabled = disabled;
+    }
+    var one = pages && pages.length < 2;
+    var prevMobile = document.getElementById('mobile-prev');
+    var nextMobile = document.getElementById('mobile-next');
+    if (prevMobile) prevMobile.disabled = one;
+    if (nextMobile) nextMobile.disabled = one;
+  }
+  function setMobilePane(which) {
+    if (which === 'info' && look.listen === false) which = 'poster';
+    mobilePane = which === 'info' ? 'info' : 'poster';
+    updateMobileControls();
+    settleSoon();
+  }
   /* A rect in the stage's own pixels. The stage is centred in the window and
      scaled, so a measurement taken from the window is out by both — the origin
      as much as the scale, and the origin is the one that is easy to forget: at
@@ -4508,6 +4691,8 @@
        than a row of dates that needs a taller window. */
     stageK = Math.min(1, w / STAGE_W, h / STAGE_H) * appZoom;
     var s = document.documentElement.style;
+    document.documentElement.classList.toggle('smartphone', smartphoneMode());
+    if (smartphoneMode()) s.setProperty('--pair-dx', '0px');
     s.setProperty('--stage-w', STAGE_W + 'px');
     s.setProperty('--stage-h', STAGE_H + 'px');
     s.setProperty('--stage-k', stageK);
@@ -4516,6 +4701,45 @@
     var sr = el ? el.getBoundingClientRect() : null;
     stageX0 = sr ? sr.left : 0;
     stageY0 = sr ? sr.top : 0;
+  }
+  function fitMobileStage() {
+    var root = document.documentElement;
+    var s = root.style;
+    updateMobileControls();
+    if (!smartphoneMode()) {
+      s.setProperty('--stage-focus-x', '0px');
+      s.setProperty('--stage-focus-y', '0px');
+      return false;
+    }
+    var b = wordmarkInk();
+    if (!b) return false;
+    var target = { x: b.boxX, y: b.boxY, w: b.boxW, h: b.boxH };
+    if (mobilePane === 'info' && look.listen !== false) {
+      var cs = getComputedStyle(root);
+      target.x = parseFloat(cs.getPropertyValue('--listen-x')) || target.x;
+      target.w = parseFloat(cs.getPropertyValue('--listen-w')) || target.w;
+    }
+    var safe = viewportFrameSafeInsets();
+    var viewportW = root.clientWidth || window.innerWidth || 390;
+    var viewportH = root.clientHeight || window.innerHeight || 844;
+    var toolbar = 62 + Math.max(0, parseFloat(getComputedStyle(document.body)
+      .getPropertyValue('padding-bottom')) || 0);
+    var availW = Math.max(160, viewportW - safe.left - safe.right - 16);
+    var availH = Math.max(220, viewportH - appTopInset - safe.top - safe.bottom - toolbar - 16);
+    var nextK = Math.min(1, availW / Math.max(1, target.w),
+      availH / Math.max(1, target.h)) * appZoom;
+    var changed = Math.abs(nextK - stageK) > 0.0005;
+    stageK = nextK;
+    s.setProperty('--stage-k', stageK);
+    s.setProperty('--stage-top', (appTopInset + safe.top + 8 + availH / 2).toFixed(2) + 'px');
+    s.setProperty('--stage-shift', '0px');
+    s.setProperty('--stage-focus-x', (STAGE_W / 2 - (target.x + target.w / 2)).toFixed(2) + 'px');
+    s.setProperty('--stage-focus-y', (STAGE_H / 2 - (target.y + target.h / 2)).toFixed(2) + 'px');
+    var el = document.getElementById('stage');
+    var sr = el ? el.getBoundingClientRect() : null;
+    stageX0 = sr ? sr.left : 0;
+    stageY0 = sr ? sr.top : 0;
+    return changed;
   }
   fitStage();
 
@@ -4549,8 +4773,10 @@
   function settle() {
     fitStage();
     fit();
-    centrePage();
     applyWindow();
+    renderViewportFrames();
+    if (fitMobileStage()) fit();
+    if (!smartphoneMode()) centrePage();
     buildTickers();
     buildCrest();
     buildGutter();
@@ -6247,40 +6473,41 @@
     }
     track.appendChild(run); side.appendChild(track);
   }
-  function setViewportFrameStyle(style, frame) {
-    style.setProperty('--vf-inset', frame.inset + 'px');
-    style.setProperty('--vf-thick', frame.thickness + 'px');
-    style.setProperty('--vf-thick-top', frame.thicknessTop + 'px');
-    style.setProperty('--vf-thick-right', frame.thicknessRight + 'px');
-    style.setProperty('--vf-thick-bottom', frame.thicknessBottom + 'px');
-    style.setProperty('--vf-thick-left', frame.thicknessLeft + 'px');
-    style.setProperty('--vf-radius', frame.radius + 'px');
+  function setViewportFrameStyle(style, frame, metricScale) {
+    metricScale = metricScale == null ? viewportFrameMetricScale() : metricScale;
+    style.setProperty('--vf-inset', frame.inset * metricScale + 'px');
+    style.setProperty('--vf-thick', frame.thickness * metricScale + 'px');
+    style.setProperty('--vf-thick-top', frame.thicknessTop * metricScale + 'px');
+    style.setProperty('--vf-thick-right', frame.thicknessRight * metricScale + 'px');
+    style.setProperty('--vf-thick-bottom', frame.thicknessBottom * metricScale + 'px');
+    style.setProperty('--vf-thick-left', frame.thicknessLeft * metricScale + 'px');
+    style.setProperty('--vf-radius', frame.radius * metricScale + 'px');
     style.setProperty('--vf-opacity', String(frame.opacity));
     style.setProperty('--vf-ground', frame.ground);
     style.setProperty('--vf-ink', frame.ink);
-    style.setProperty('--vf-cell-size', frame.textureSize + 'px');
+    style.setProperty('--vf-cell-size', Math.max(1, frame.textureSize * metricScale) + 'px');
     style.setProperty('--vf-frame-secs', frame.frameSeconds + 's');
     style.setProperty('--vf-colour-secs', frame.colourSeconds + 's');
     style.setProperty('--vf-glyph-col', frame.glyphColor);
     style.setProperty('--vf-glyph-opacity', String(frame.glyphOpacity));
-    style.setProperty('--vf-glyph-size', frame.glyphSize + 'px');
-    style.setProperty('--vf-glyph-gap', frame.glyphGap + 'px');
+    style.setProperty('--vf-glyph-size', Math.max(1, frame.glyphSize * metricScale) + 'px');
+    style.setProperty('--vf-glyph-gap', frame.glyphGap * metricScale + 'px');
     style.setProperty('--vf-glyph-secs', frame.glyphSeconds + 's');
     var cell = window.MG && MG.patterns && MG.patterns[frame.texture];
     if (cell) style.setProperty('--vf-cell', String(cell));
   }
-  function appendViewportGapCorners(layer, frame, edgeInset, previousFrame) {
+  function appendViewportGapCorners(layer, frame, edgeInset, previousFrame, metricScale) {
     if (!previousFrame || frame.radius <= 0) return;
     var outerW = Math.max(0, (window.innerWidth || document.documentElement.clientWidth) -
       edgeInset.left - edgeInset.right);
     var outerH = Math.max(0, (window.innerHeight || document.documentElement.clientHeight) -
       edgeInset.top - edgeInset.bottom);
-    var radius = Math.min(frame.radius, outerW / 2, outerH / 2);
+    var radius = Math.min(frame.radius * metricScale, outerW / 2, outerH / 2);
     if (radius < 0.75) return;
     var gaps = document.createElement('div');
     gaps.className = 'vf-gap-set vff-' + previousFrame.fill +
       ' vfm-' + previousFrame.frameMotion + ' vfc-' + previousFrame.colourMotion;
-    setViewportFrameStyle(gaps.style, previousFrame);
+    setViewportFrameStyle(gaps.style, previousFrame, metricScale);
     gaps.style.setProperty('--vf-gap-radius', radius + 'px');
     var corners = [
       ['tl', 'top', edgeInset.top, 'auto', 'auto', edgeInset.left],
@@ -6307,6 +6534,7 @@
     if (!host) return;
     host.textContent = '';
     var frames = viewportFrames();
+    var metricScale = viewportFrameMetricScale();
     var previousVisibleFrame = null;
     var previousVisibleInset = null;
     for (var i = 0; i < frames.length; i++) {
@@ -6317,24 +6545,25 @@
                         ' vfc-' + f.colourMotion + ' vfg-' + f.glyphMotion;
       layer.dataset.frame = String(i);
       var style = layer.style;
-      setViewportFrameStyle(style, f);
+      setViewportFrameStyle(style, f, metricScale);
       var edgeInset;
       if (look.viewportFramesMagnet && previousVisibleFrame && previousVisibleInset) {
         edgeInset = {
-          top: previousVisibleInset.top + previousVisibleFrame.thicknessTop,
-          right: previousVisibleInset.right + previousVisibleFrame.thicknessRight,
-          bottom: previousVisibleInset.bottom + previousVisibleFrame.thicknessBottom,
-          left: previousVisibleInset.left + previousVisibleFrame.thicknessLeft
+          top: previousVisibleInset.top + previousVisibleFrame.thicknessTop * metricScale,
+          right: previousVisibleInset.right + previousVisibleFrame.thicknessRight * metricScale,
+          bottom: previousVisibleInset.bottom + previousVisibleFrame.thicknessBottom * metricScale,
+          left: previousVisibleInset.left + previousVisibleFrame.thicknessLeft * metricScale
         };
       } else {
-        edgeInset = { top: f.inset, right: f.inset, bottom: f.inset, left: f.inset };
+        edgeInset = { top: f.inset * metricScale, right: f.inset * metricScale,
+                      bottom: f.inset * metricScale, left: f.inset * metricScale };
       }
       style.setProperty('--vf-inset-top', edgeInset.top + 'px');
       style.setProperty('--vf-inset-right', edgeInset.right + 'px');
       style.setProperty('--vf-inset-bottom', edgeInset.bottom + 'px');
       style.setProperty('--vf-inset-left', edgeInset.left + 'px');
       if (look.viewportFramesMagnet && previousVisibleFrame) {
-        appendViewportGapCorners(layer, f, edgeInset, previousVisibleFrame);
+        appendViewportGapCorners(layer, f, edgeInset, previousVisibleFrame, metricScale);
       }
       var ring = document.createElement('div'); ring.className = 'vf-ring';
       var sides = ['top', 'right', 'foot', 'left'];
@@ -7259,8 +7488,12 @@
          what gives, since a panel over the poster is no use to anyone. */
       var gap2 = Math.max(0, genValue('listen', 'gap', b2.pad));
       var right2 = vw - b2.boxX;
-      var wide = b2.boxW;
-      var x2 = right2 - wide;
+      /* A phone shows one page at a time. The information page can therefore
+         reflow to a narrower internal canvas and be enlarged more than the
+         poster, while the desktop twin remains exactly the frame's width. */
+      var phone = smartphoneMode();
+      var wide = phone ? Math.min(430, b2.boxW) : b2.boxW;
+      var x2 = phone ? (b2.boxX + b2.boxW + gap2) : (right2 - wide);
       var clear2 = b2.boxX + b2.boxW + gap2;
       /* Held frames: the panel is the frame's twin, so it is the same width as
          the frame whatever else happens. Dragging the concert's lines out to the
@@ -7268,7 +7501,7 @@
          less room on the right — and the panel was giving that room up out of
          its own width, so moving the text in one frame resized the other. Held,
          it *moves* instead of narrowing, and is kept on the stage. */
-      var held = !layout.framesFree && layout.frameFixW && layout.frameFixH;
+      var held = phone || (!layout.framesFree && layout.frameFixW && layout.frameFixH);
       if (x2 < clear2) {
         /* No room to mirror into: pushed clear of the frame and narrowed to what
            is left. Below a width worth reading it stands down altogether — a
@@ -7282,7 +7515,7 @@
          object, and the middle of the stage is the middle of that object. The
          frame alone is what the flow centres, so the difference is exactly half
          of what stands to its right. */
-      var want = roomEnough0(wide) ? -((b2.boxW + gap2) / 2) : 0;
+      var want = phone ? 0 : (roomEnough0(wide) ? -((b2.boxW + gap2) / 2) : 0);
       var haveDx = parseFloat(getComputedStyle(document.documentElement)
         .getPropertyValue('--pair-dx')) || 0;
       if (Math.abs(want - haveDx) > 0.5 && !pairing) {
@@ -7416,6 +7649,7 @@
     var billName = el.textContent;
     var profileName = el.getAttribute('data-profile-name');
     openName(profileName || billName, a && a.getAttribute('href'), billName, !!profileName);
+    if (smartphoneMode()) setMobilePane('info');
   }
 
   /* One class on the root says which. Every effect is a rule keyed to it, so
@@ -9443,6 +9677,7 @@
     fit();
     drawPosters();          // only the page on screen runs its board
     if (page !== from) openFirst();
+    if (smartphoneMode()) settleSoon();
   }
 
   if (pages.length > 1) {
@@ -9462,6 +9697,23 @@
     if (prev) prev.hidden = true;
     if (next) next.hidden = true;
   }
+
+  var mobilePosterButton = document.getElementById('mobile-poster');
+  var mobileInfoButton = document.getElementById('mobile-info');
+  var mobilePrevButton = document.getElementById('mobile-prev');
+  var mobileNextButton = document.getElementById('mobile-next');
+  if (mobilePosterButton) mobilePosterButton.addEventListener('click', function () {
+    setMobilePane('poster');
+  });
+  if (mobileInfoButton) mobileInfoButton.addEventListener('click', function () {
+    setMobilePane('info');
+  });
+  if (mobilePrevButton) mobilePrevButton.addEventListener('click', function () {
+    show(page - 1);
+  });
+  if (mobileNextButton) mobileNextButton.addEventListener('click', function () {
+    show(page + 1);
+  });
 
   /* ---- contact view -------------------------------------------------
      The wordmark toggles it; toggling back returns to the page you left. */
@@ -16339,6 +16591,7 @@
      first act is already open. */
   applyConcertEdits();
   openFirst();
+  settleSoon();
 
   document.addEventListener('click', routeToListen, true);
   /* A smaller window is the same page, smaller. Nothing is laid out again —
