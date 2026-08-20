@@ -767,6 +767,13 @@
     image-rendering: var(--pic-render, pixelated);
     pointer-events: none;
   }
+  /* A picture placed on the surface is a pasted photograph: it must sit above
+     the board's hand-drawn ridge/groove ring (those two pseudo-elements paint
+     at level 6). Without an explicit level the ring was composited over the
+     photograph, making it look as if the image had slipped underneath the
+     frame. A picture used as the board's ground is overridden later and stays
+     behind it. */
+  .poster:not(.profile-board) > .pic:not(.as-ground) { z-index: 7; }
   .poster {
     margin: 0;
     width: 100%;
@@ -1493,6 +1500,7 @@
     left: var(--pic-x, 0); top: var(--pic-y, 0);
     width: var(--pic-w, 0); height: var(--pic-h, 0);
     border-radius: var(--pic-radius, 0);
+    z-index: 8;
   }
   html.pic-skinned .poster:not(.profile-board) .skin-hi,
   html.pic-skinned .poster:not(.profile-board) .skin-lo { display: block; }
@@ -1514,7 +1522,7 @@
     border: var(--pic-border, none);
     box-sizing: border-box;
     pointer-events: none;
-    z-index: 3;
+    z-index: 10;
   }
   /* The texture, on its own layer above the picture.
 
@@ -1533,6 +1541,7 @@
     mix-blend-mode: var(--pic-tex-blend, multiply);
     border-radius: var(--pic-radius, 0);
     pointer-events: none;
+    z-index: 9;
   }
   /* Serving as the ground, the picture is the whole board, so its texture is
      too. Created and placed here rather than only beside a picture element,
@@ -1587,7 +1596,7 @@
        flow and went out of view entirely — the poster lost its text. Where the
        block is already positioned, which is whenever it has been placed, this
        raises it; where it is not, it costs nothing. */
-    z-index: 1;
+    z-index: 11;
   }
   .skin-hi { background: var(--skin-hi, #fff); mix-blend-mode: multiply; }
   .skin-lo { background: var(--skin-lo, #000); mix-blend-mode: screen; }
@@ -9337,9 +9346,10 @@
     bootRevealQueued = true;
     if (bootFallback) { clearTimeout(bootFallback); bootFallback = 0; }
     raf2(function () {
-      /* One last measurement while the curtain is still closed. Visibility
-         does not remove boxes from layout, so this is the exact public frame. */
-      settle();
+      /* Geometry was settled immediately before the final board and picture
+         were painted. Do not settle it a second time here: fitBoard is
+         intentionally stateful while it aligns the wordmark, and a second pass
+         after the bitmap was made can move the picture under the board frame. */
       requestAnimationFrame(function () {
         document.documentElement.classList.add('mg-ready');
         bootPainting = false;
