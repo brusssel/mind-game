@@ -487,6 +487,7 @@
         "skinAnim": "both",
         "skinInk": "#d7d8ef",
         "skinGround": "#000000",
+        "picPlace": "board",
         "picSkin": "duo",
         "picSkinAnim": "both",
         "picSkinInk": "#121111",
@@ -591,8 +592,8 @@
         "infoCase": "upper",
         "infoNameText": "same",
         "wmCell": "scatter",
-        "wmCellInk": "#808080",
-        "wmCellGround": "#343232",
+        "wmCellInk": "#c7c7c7",
+        "wmCellGround": "#575252",
         "contourLo": "#4a2ba1",
         "contourHi": "#595a82",
         "navInk": "#8b8593",
@@ -700,7 +701,8 @@
             "step": 2
           },
           "cyclic": {
-            "threshold": 0.65
+            "threshold": 0.65,
+            "states": 12
           },
           "text": {
             "size": 2.55,
@@ -715,7 +717,8 @@
             "pictureLineupGap": 4,
             "artistLeading": 1.3,
             "lineupInfoGap": 0.55,
-            "metaLeading": 1.05
+            "metaLeading": 1.05,
+            "inset": 0.035
           },
           "nav": {
             "size": 5,
@@ -741,7 +744,8 @@
             "distortion": 80,
             "seed": 6,
             "frequencyX": 0.002,
-            "wordGap": 0.38
+            "wordGap": 0.38,
+            "frequencyY": 0.062
           },
           "space": {
             "head": 0,
@@ -812,19 +816,14 @@
           "wmpos": {
             "offsetX": 0
           },
-          "organic_posterimage": {
-            "distortion": 0,
-            "frequencyX": 0.002,
-            "frequencyY": 0.002,
-            "seed": 14
-          },
-          "organic_wmframe": {},
-          "organic_postertext": {},
           "wmcell": {
             "scale": 0.27
           },
           "pfhover": {
             "tint": 0.8
+          },
+          "life": {
+            "layers": 1
           }
         },
         "edge": {
@@ -875,7 +874,6 @@
         "cellGround": "#0b0710",
         "board": "turing",
         "wm": "cell",
-        "picPlace": "board",
         "picTex": "none",
         "picTexBlend": "multiply",
         "picTexScale": 8,
