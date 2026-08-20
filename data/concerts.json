@@ -1,0 +1,55 @@
+{
+  "concerts": [
+    {
+      "projects": [
+        "$hit & $hine",
+        "Officine",
+        "Új Bála"
+      ],
+      "projectUrls": [
+        "https://shitandshine.bandcamp.com/music",
+        "",
+        ""
+      ],
+      "profileNames": [
+        "Shit & Shine",
+        "",
+        ""
+      ],
+      "location": "rue de La Campine 15, Molenbeek",
+      "locationUrl": "",
+      "date": "2027-01-30",
+      "time": "20:30",
+      "fee": "8-10€",
+      "url": "",
+      "image": "images/20260809-215259-2026-08-18.jpg"
+    },
+    {
+      "projects": [
+        "Tresque (Release Party)",
+        "Augustė Vickunaitė",
+        "Zohastre",
+        "Illat (DJ)"
+      ],
+      "projectUrls": [
+        "https://www.nts.live/artists/52673-tresque",
+        "https://www.q-o2.be/en/artist/auguste-vickunaite/",
+        "https://institut-fuer-feinmotorik.net/",
+        "https://www.periscope-lyon.com/en/artists/deeat-palace-2/"
+      ],
+      "profileNames": [
+        "Tresque",
+        "Augustė Vickunaitė",
+        "",
+        "Illat"
+      ],
+      "location": "Rue de la Campine 15, Molenbeek",
+      "locationUrl": "",
+      "date": "2026-11-28",
+      "time": "20:30",
+      "fee": "8-10 €",
+      "url": "",
+      "image": ""
+    }
+  ]
+}
