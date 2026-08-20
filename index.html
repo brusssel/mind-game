@@ -51,6 +51,20 @@
     text-align: center;
   }
 
+  /* First paint is deliberately a curtain, not the template's undressed
+     fallback. The page is assembled in two passes: the shared look first, then
+     the selected concert's frozen dressing and its canvas-rendered picture.
+     Showing the first pass produced a short flash of the source photograph and
+     a sparse, wrongly scaled poster. Keep every part of the flyer together and
+     reveal it only after the final layout and processed pixels are ready. */
+  html:not(.mg-ready) #stage,
+  html:not(.mg-ready) #viewport-frames,
+  html:not(.mg-ready) .mobile-view-switch,
+  html:not(.mg-ready) .corner {
+    visibility: hidden !important;
+  }
+  html:not(.mg-ready) body::before { opacity: 0 !important; }
+
   /* What lies around the stage. The page is a poster now and this is the wall it
      is pinned to: its own colour, and its own field if it is given one — the same
      four the rest of the site offers, so nothing new had to be invented for it. */
@@ -9300,6 +9314,64 @@
     return function () { dead = true; };
   }
 
+  /* Atomic first paint. Boards and pictures finish on different paths (and an
+     imported picture may finish asynchronously), so both report into one boot
+     gate. Fonts are a third dependency because their metrics decide the final
+     scale. Nothing here changes the saved TRESQUE dressing; it only decides
+     when the already-computed page is allowed to become visible. */
+  var bootPainting = false;
+  var bootBoardPainted = false;
+  var bootPicturePainted = false;
+  var bootFontsPainted = !(document.fonts && document.fonts.ready);
+  var bootRevealQueued = false;
+  var bootFallback = 0;
+
+  function bootHasPicture() {
+    var fig = document.querySelector('.concerts:not([hidden]) .poster');
+    return !!(fig && fig.querySelector('.pic'));
+  }
+  function revealFinishedPage(force) {
+    if (!bootPainting || bootRevealQueued) return;
+    if (!force && (!bootFontsPainted || !bootBoardPainted ||
+        (bootHasPicture() && !bootPicturePainted))) return;
+    bootRevealQueued = true;
+    if (bootFallback) { clearTimeout(bootFallback); bootFallback = 0; }
+    raf2(function () {
+      /* One last measurement while the curtain is still closed. Visibility
+         does not remove boxes from layout, so this is the exact public frame. */
+      settle();
+      requestAnimationFrame(function () {
+        document.documentElement.classList.add('mg-ready');
+        bootPainting = false;
+      });
+    });
+  }
+  function beginFinishedPage() {
+    bootPainting = true;
+    bootBoardPainted = false;
+    bootPicturePainted = false;
+    bootRevealQueued = false;
+    /* Never let a bitmap painted during the shared-look pass satisfy the final
+       pass. It remains behind the curtain until the selected date is rendered. */
+    picKey = null;
+    var fig = document.querySelector('.concerts:not([hidden]) .poster');
+    var pic = fig && fig.querySelector('.pic');
+    if (pic) pic.style.backgroundImage = '';
+    /* A broken external image must not leave the public page black forever.
+       Five seconds is a fail-open only; the normal path reveals as soon as both
+       canvases and the fonts report ready. */
+    bootFallback = setTimeout(function () { revealFinishedPage(true); }, 5000);
+  }
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () {
+      bootFontsPainted = true;
+      revealFinishedPage(false);
+    }, function () {
+      bootFontsPainted = true;
+      revealFinishedPage(false);
+    });
+  }
+
   /* One write, every copy. The board is repainted ten times a second and the
      tiles wear the same image, so they read it from a variable rather than each
      being handed a copy — otherwise a page tiled nine deep would be nine data
@@ -9316,6 +9388,10 @@
       fig.style.backgroundBlendMode = '';
     }
     document.documentElement.style.setProperty('--board-img', v);
+    if (bootPainting) {
+      bootBoardPainted = true;
+      revealFinishedPage(false);
+    }
   }
 
   /* The picture, scaled to exactly the size it is shown at, by whichever
@@ -9534,6 +9610,10 @@
   function publishPic(pic, url) {
     dressPicture(pic, url);
     document.documentElement.style.setProperty('--pic-img', 'url("' + url + '")');
+    if (bootPainting) {
+      bootPicturePainted = true;
+      revealFinishedPage(false);
+    }
   }
 
   /* The chosen Macintosh cell as a canvas pattern, rebuilt when it changes. */
@@ -16591,7 +16671,13 @@
      first act is already open. */
   applyConcertEdits();
   openFirst();
-  settleSoon();
+  /* The content editor can rebuild the concert DOM, so the atomic paint starts
+     only after that last possible rebuild. Re-run the final picture and board
+     once against settled geometry; their publishers open the curtain together. */
+  beginFinishedPage();
+  settle();
+  drawPosters();
+  revealFinishedPage(false);
 
   document.addEventListener('click', routeToListen, true);
   /* A smaller window is the same page, smaller. Nothing is laid out again —
