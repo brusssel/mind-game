@@ -591,9 +591,9 @@
         "infoContour": "line",
         "infoCase": "upper",
         "infoNameText": "same",
-        "wmCell": "scatter",
-        "wmCellInk": "#c7c7c7",
-        "wmCellGround": "#575252",
+        "wmCell": "weave",
+        "wmCellInk": "#6d6f6d",
+        "wmCellGround": "#3a3936",
         "contourLo": "#4a2ba1",
         "contourHi": "#595a82",
         "navInk": "#8b8593",
@@ -737,15 +737,15 @@
             "travel": 20
           },
           "wm": {
-            "size": 2.22,
+            "size": 2.87,
             "height": 1.09,
             "width": 1.06,
             "tracking": 0,
             "distortion": 80,
             "seed": 6,
-            "frequencyX": 0.002,
+            "frequencyX": 0.01,
             "wordGap": 0.38,
-            "frequencyY": 0.062
+            "frequencyY": 0.046
           },
           "space": {
             "head": 0,
@@ -814,7 +814,7 @@
             "strip cell": 10
           },
           "wmpos": {
-            "offsetX": 0
+            "offsetX": 87
           },
           "wmcell": {
             "scale": 0.27
@@ -883,7 +883,7 @@
       "layout": {
         "wmW": 672,
         "wmDx": -216,
-        "wmDy": -98,
+        "wmDy": -88,
         "boardW": 472,
         "boardDx": -308,
         "boardDy": -77,
