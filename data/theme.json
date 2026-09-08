@@ -467,7 +467,7 @@
         "tex": "grid",
         "text": "moire",
         "hover": "noise",
-        "hoverInk": "#037239",
+        "hoverInk": "#0d8c4a",
         "hoverAltInk": "#000000",
         "textInk": "#a6a4ad",
         "contour": "normal",
@@ -490,8 +490,8 @@
         "picPlace": "board",
         "picSkin": "duo",
         "picSkinAnim": "both",
-        "picSkinInk": "#1d1b1b",
-        "picSkinGround": "#1c1929",
+        "picSkinInk": "#332f0a",
+        "picSkinGround": "#0a0a33",
         "picScreen": null,
         "pfScreen": null,
         "profileArr": "name",
@@ -567,7 +567,7 @@
         "datesText": "grey-75",
         "datesCase": "upper",
         "wmAlign": "right",
-        "wmContourMode": "autonomous",
+        "wmContourMode": "integrated",
         "glyphCell": "noise",
         "glyphCol": "#000000",
         "glyphCellInk": null,
@@ -591,11 +591,11 @@
         "infoContour": "line",
         "infoCase": "upper",
         "infoNameText": "same",
-        "wmCell": "weave",
-        "wmCellInk": "#6d6f6d",
-        "wmCellGround": "#3a3936",
-        "contourLo": "#4a2ba1",
-        "contourHi": "#595a82",
+        "wmCell": "moire",
+        "wmCellInk": "#252222",
+        "wmCellGround": "#393838",
+        "contourLo": "#252376",
+        "contourHi": "#1f1278",
         "navInk": "#8b8593",
         "viewportFrames": [
           {
@@ -705,20 +705,22 @@
             "states": 12
           },
           "text": {
-            "size": 2.55,
-            "date": 0.75,
-            "place": 0.75,
-            "artists": 1,
-            "details": 0.75,
+            "size": 2.45,
+            "date": 0.65,
+            "place": 0.65,
+            "artists": 1.15,
+            "details": 0.65,
             "artistGap": 0,
-            "datePlaceGap": 7.8,
+            "datePlaceGap": 9.6,
             "timePriceGap": 0,
             "placeTimeGap": 12,
-            "pictureLineupGap": 4.5,
-            "artistLeading": 1.4,
-            "lineupInfoGap": 0.8,
-            "metaLeading": 0.95,
-            "inset": 0.035
+            "pictureLineupGap": 6.2,
+            "artistLeading": 1.2,
+            "lineupInfoGap": 0.75,
+            "metaLeading": 0.85,
+            "inset": 0.04,
+            "tracking": 0.06,
+            "leading": 1.35
           },
           "nav": {
             "size": 5,
@@ -730,7 +732,7 @@
           },
           "contour": {
             "seconds": 5,
-            "width": 0.75
+            "width": 2
           },
           "motion": {
             "seconds": 2,
@@ -738,14 +740,16 @@
           },
           "wm": {
             "size": 2.87,
-            "height": 1.09,
-            "width": 1.06,
-            "tracking": 0,
+            "height": 1.13,
+            "width": 1.3,
+            "tracking": -0.15,
             "distortion": 80,
             "seed": 6,
-            "frequencyX": 0.01,
-            "wordGap": 0.38,
-            "frequencyY": 0.046
+            "frequencyX": 0.008,
+            "wordGap": 0.18,
+            "frequencyY": 0.046,
+            "perspectiveX": -28,
+            "skewX": -2.5
           },
           "space": {
             "head": 0,
@@ -817,7 +821,7 @@
             "offsetX": 87
           },
           "wmcell": {
-            "scale": 0.27
+            "scale": 0.095
           },
           "pfhover": {
             "tint": 0.8
@@ -828,10 +832,10 @@
         },
         "edge": {
           "pic": {
-            "r": 0,
-            "w": 1,
-            "s": "dotted",
-            "c": "#879791"
+            "r": 2,
+            "w": 0.1,
+            "s": "solid",
+            "c": "#567b63"
           },
           "board": {
             "w": 66,
@@ -883,25 +887,25 @@
       "layout": {
         "wmW": 672,
         "wmDx": -216,
-        "wmDy": -86,
+        "wmDy": -89,
         "boardW": 472,
-        "boardDx": -308,
-        "boardDy": -77,
-        "infoDx": -142,
-        "infoDy": 106,
+        "boardDx": -303,
+        "boardDy": -87,
+        "infoDx": -151,
+        "infoDy": 83,
         "framePad": 16,
         "boardH": 602,
-        "frameH": 40,
-        "picDx": -246,
-        "picDy": -27,
-        "picDw": -76.3984375,
-        "picDh": 60,
+        "frameH": 41,
+        "picDx": -276,
+        "picDy": -39,
+        "picDw": -116.3984375,
+        "picDh": 52.999908447265625,
         "allDx": 267.21248184594015,
         "allDy": 155.17611637917906,
         "pageDx": 0,
         "pageDy": 24,
         "frameFixW": 622.66,
-        "frameFixH": 772.55,
+        "frameFixH": 773.55,
         "framesFree": 0,
         "frameFixX": -204.91248184594014,
         "frameFixY": -124.87611637917907,
@@ -909,7 +913,7 @@
         "infoFixY": 219.7734375,
         "infoFixW": 583.25,
         "infoFixH": 363.3437194824219,
-        "infoW": 593.25,
+        "infoW": 598.25,
         "infoScale": 0,
         "infoAnchored": 0
       },
