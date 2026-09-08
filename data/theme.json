@@ -490,8 +490,8 @@
         "picPlace": "board",
         "picSkin": "duo",
         "picSkinAnim": "both",
-        "picSkinInk": "#121111",
-        "picSkinGround": "#181523",
+        "picSkinInk": "#1d1b1b",
+        "picSkinGround": "#1c1929",
         "picScreen": null,
         "pfScreen": null,
         "profileArr": "name",
@@ -706,18 +706,18 @@
           },
           "text": {
             "size": 2.55,
-            "date": 0.95,
-            "place": 0.9,
-            "artists": 1.05,
-            "details": 0.95,
+            "date": 0.75,
+            "place": 0.75,
+            "artists": 1,
+            "details": 0.75,
             "artistGap": 0,
-            "datePlaceGap": 7.65,
+            "datePlaceGap": 7.8,
             "timePriceGap": 0,
-            "placeTimeGap": 10,
-            "pictureLineupGap": 4,
-            "artistLeading": 1.3,
-            "lineupInfoGap": 0.55,
-            "metaLeading": 1.05,
+            "placeTimeGap": 12,
+            "pictureLineupGap": 4.5,
+            "artistLeading": 1.4,
+            "lineupInfoGap": 0.8,
+            "metaLeading": 0.95,
             "inset": 0.035
           },
           "nav": {
@@ -883,7 +883,7 @@
       "layout": {
         "wmW": 672,
         "wmDx": -216,
-        "wmDy": -88,
+        "wmDy": -86,
         "boardW": 472,
         "boardDx": -308,
         "boardDy": -77,
@@ -916,10 +916,7 @@
       "frozen": true,
       "public": true,
       "images": {
-        "https://i1.sndcdn.com/avatars-000309884919-faviak-t1080x1080.jpg": "images/frozen/2026-11-28/69a9a1c138be.jpg",
-        "images/artists/auguste-vickunaite.jpg": "images/frozen/2026-11-28/4c919af49a3f.jpg",
-        "https://f4.bcbits.com/img/0046176790_10.jpg": "images/frozen/2026-11-28/2d2d55eca4b3.jpg",
-        "https://www.zamzamrec.org/3%20bands/Zohastre/zohastre%20la%20berge%20web.jpg": "images/frozen/2026-11-28/05877914bee8.jpg"
+        "https://i1.sndcdn.com/avatars-000309884919-faviak-t1080x1080.jpg": "images/frozen/2026-11-28/69a9a1c138be.jpg"
       }
     }
   }
