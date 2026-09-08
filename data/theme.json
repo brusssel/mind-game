@@ -914,7 +914,7 @@
         "infoAnchored": 0
       },
       "frozen": true,
-      "public": true,
+      "public": false,
       "images": {
         "https://i1.sndcdn.com/avatars-000309884919-faviak-t1080x1080.jpg": "images/frozen/2026-11-28/69a9a1c138be.jpg"
       }
