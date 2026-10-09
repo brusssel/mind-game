@@ -1389,6 +1389,15 @@
     background-size: cover; background-position: center;
     pointer-events: none;
   }
+  /* The stand-in is not a photograph: it is a drawing with words on it, and
+     `cover` crops whichever edge does not fit — on a tall block it ate the
+     lettering. Shown whole instead, centred, over the page's own ground. A
+     real picture goes on filling its block. */
+  .profile-board.stand-in > .pic {
+    background-size: contain; background-repeat: no-repeat;
+    background-position: center; background-color: var(--void);
+  }
+
   /* Nothing to tint: the duotone dresses a photograph, and the field block is
      already in the page's own two colours. */
   html.skinned .profile-board.empty .skin-hi,
@@ -7395,6 +7404,7 @@
        never a blank. The field-texture block below remains the fallback to the
        fallback: if `images/no-image.png` is not there, nothing changes. */
     var shown = a.image || (defaultArtistPic ? DEFAULT_ARTIST_PIC : '');
+    board.classList.toggle('stand-in', !!shown && shown === DEFAULT_ARTIST_PIC);
     if (shown) {
       pic.style.backgroundImage = 'url("' + srcFor(shown) + '")';
       board.classList.remove('empty');
@@ -14583,6 +14593,41 @@
           + ' — click to let it follow again, wearing exactly what it wears now.'
       : 'Pin everything ' + key + ' is wearing, so later design work cannot reach it.';
   }
+  /* What a date overrules. Inheriting is the resting state: an unfrozen date
+     states only what it changes and takes the rest from the template. But
+     there was no way back — a value stated once stayed stated, and a template
+     changed afterwards could never reach it again. This drops what the date
+     says for itself and nothing else: the bill, the freeze, the publishing and
+     the frozen pictures are facts about the date rather than its dressing, and
+     they stay. ⌘Z puts the dressing back. */
+  /* What a date actually overrules — which is not everything it states. A
+     setting the template is silent about is overruling nothing: the picture's
+     texture dials, say, which exist on a date made since they were added and
+     nowhere in a template saved before. Counting those kept the button lit
+     after a reset that had in fact given everything back. */
+  function overruleCount(entry) {
+    var n = 0, k;
+    for (k in (entry.look || {})) if (baseLook && baseLook[k] !== undefined) n++;
+    for (k in (entry.layout || {})) if (baseLayout && baseLayout[k] !== undefined) n++;
+    return n;
+  }
+
+  function templateLabel() {
+    var b = document.getElementById('date-template');
+    if (!b) return;
+    var key = pageKey(page);
+    var e = key ? dateDress[key] : null;
+    var own = e ? overruleCount(e) : 0;
+    /* Hidden when there is nothing to give back, and while the date is frozen:
+       a frozen date is read-only until it is released, and a button that
+       silently does nothing is worse than no button. */
+    b.hidden = !key || !own || frozenAt(key);
+    if (b.hidden) return;
+    b.title = key + ' overrules the template on ' + own + ' setting'
+      + (own === 1 ? '' : 's') + ' — click to drop them and follow it again.'
+      + ' ⌘Z puts them back.';
+  }
+
   /* Is this date for the open web yet? Private is the resting state — a date
      says nothing about itself until somebody says it is ready — so a bill can
      be drafted, dressed and left alone for weeks without ever being reachable
@@ -14632,6 +14677,23 @@
       }
     });
   }
+
+  on('date-template', function () {
+    var key = pageKey(page);
+    if (!key || frozenAt(key)) return;
+    var entry = dateDress[key];
+    if (!entry || !overruleCount(entry)) return;
+    delete entry.look;
+    delete entry.layout;
+    if (!saysSomething(entry)) delete dateDress[key];
+    /* The template's dressing on screen, by the one path that knows how to put
+       it there — then written down, which with nothing of its own left is the
+       entry being cleared rather than rewritten. */
+    applyPageLook(page);
+    saveLook();
+    templateLabel();
+    persistDates(this, 'Template');
+  });
 
   on('date-public', function () {
     var key = pageKey(page);
@@ -17043,6 +17105,7 @@
     showCellControls();
     redrawPanels();
     if (typeof freezeLabel === 'function') freezeLabel();
+    if (typeof templateLabel === 'function') templateLabel();
     if (typeof publicLabel === 'function') publicLabel();
     applyingPage = false;
   }
@@ -17186,6 +17249,7 @@
   })();
   applyPageLook(page);
   if (typeof freezeLabel === 'function') freezeLabel();
+  if (typeof templateLabel === 'function') templateLabel();
   if (typeof publicLabel === 'function') publicLabel();
 
   /* /edit, or ?edit, or #edit — whichever way someone arrives at it. */
