@@ -4981,6 +4981,11 @@
      assembly's, and centring the stage left the whole thing sitting high. */
   var PAGE_PARTS = ['dates-top', 'crest', 'ticker-top', 'crest-mid', 'dates'];
   var centring = false;
+  /* How much of the window's foot the browser's own frames cover. Set by
+     fitStage, read by centrePage: the assembly is placed inside the room the
+     bands leave, not inside the window. */
+  var stageFoot = 0;
+
   function centrePage() {
     if (centring) return;
     var lo = Infinity, hi = -Infinity, i, el, r;
@@ -5005,7 +5010,7 @@
        centring would leave, so the whole assembly sits above the middle by that
        same half. Stated as a rule rather than as a one-off nudge, so it holds
        at any window height and through any change to what the strips carry. */
-    var H2 = Math.max(0, (document.documentElement.clientHeight || 0) - appTopInset);
+    var H2 = Math.max(0, (document.documentElement.clientHeight || 0) - appTopInset - stageFoot);
     var centredGap = Math.max(0, (H2 - (hi - lo)) / 2);
     /* The user's page offset is deliberate and must not be mistaken for a
        centring error. It is stored in stage pixels and seen here after scale. */
@@ -5062,7 +5067,42 @@
        the arithmetic under the pointer, and the frame drifts even when frames
        are pinned. A feedback loop in the middle of the layout editor is worse
        than a row of dates that needs a taller window. */
-    stageK = Math.min(1, w / STAGE_W, h / STAGE_H) * appZoom;
+    /* The room asked for is the stage *and* what hangs under it: the row of
+       dates, the top line and the middle lane all stand below the stage's own
+       box. Asking only for the stage, a 1280 by 720 window was told 900 would
+       do, the stage took the whole height, and the dates were placed twenty
+       pixels past the bottom edge — eaten by the frame's lower band on the
+       site, while the app, whose own toolbar takes that height away, showed
+       them whole.
+
+       `belowStage()` is in the stage's units, not the window's: `R()` divides
+       what it measures by the scale, so the figure does not move when the
+       scale does. That is what makes this safe to feed back in — a reservation
+       measured in screen pixels would chase its own tail, and did: it moved
+       the arithmetic under the pointer and made pinned frames drift while
+       something was being dragged. In stage units it settles in one pass. */
+    var below = 0;
+    try { if (typeof belowStage === 'function') below = belowStage(); } catch (e) { below = 0; }
+    if (!isFinite(below) || below < 0) below = 0;
+    /* And the lower band of the browser's own frames, which is painted over
+       the window's foot whatever else is there. Reserving the furniture alone
+       left the row of dates flush with the bottom edge and the band ate it —
+       which is the shape of the complaint: whole in the app, whose toolbar
+       takes that height away, eaten on the site, where nothing does.
+
+       Only the foot. The bands at the top and the sides have always run over
+       the page and that is how it is drawn; it is the one at the bottom that
+       sits where something has to be read. */
+    /* In a try: this runs on the very first pass, before the look it reads has
+       been assembled, and a throw here takes the whole page with it. */
+    var safe = null;
+    try {
+      if (typeof viewportFrameSafeInsets === 'function') safe = viewportFrameSafeInsets();
+    } catch (e) { safe = null; }
+    var foot = (safe && isFinite(safe.bottom) && safe.bottom > 0) ? safe.bottom : 0;
+    stageFoot = foot;
+    var room = Math.max(1, h - foot);
+    stageK = Math.min(1, w / STAGE_W, room / (STAGE_H + below)) * appZoom;
     var s = document.documentElement.style;
     document.documentElement.classList.toggle('smartphone', smartphoneMode());
     s.setProperty('--stage-w', STAGE_W + 'px');
