@@ -5,7 +5,10 @@
       "bio": "AUGUSTĖ VICKUNAITĖ has worked with reel-to-reel tape recorders since 2016 — playing them, recording to them, and letting the decay of the machines take part.\n\nFound material, field recordings, voice, objects and the whole spectrum of the equipment's malfunctions are layered against each other: tape music and collage, theatrical, darkly funny, in no hurry. She has played Cafe OTO, KM28, the Volksbühne, Seanaps and Braille Satellite.",
       "image": "images/artists/auguste-vickunaite.jpg",
       "embed": "album=2332770814",
-      "aka": [],
+      "aka": [
+        "Augustė Vickunaitė",
+        "Augustė Vickunaitė & Zara Joan Miller"
+      ],
       "links": [
         {
           "label": "bandcamp",
@@ -70,30 +73,6 @@
       ]
     },
     {
-      "name": "Dur Dur Band",
-      "bio": "",
-      "image": "",
-      "embed": "",
-      "aka": [],
-      "links": []
-    },
-    {
-      "name": "Half-Light Orchestra",
-      "bio": "",
-      "image": "",
-      "embed": "",
-      "aka": [],
-      "links": []
-    },
-    {
-      "name": "Kettle & the Long Now",
-      "bio": "",
-      "image": "",
-      "embed": "",
-      "aka": [],
-      "links": []
-    },
-    {
       "name": "Marc Matter",
       "bio": "Born in Basel in 1974, working in Düsseldorf. A founding member of Institut fuer Feinmotorik and, on his own, a maker of serial word compositions and sample-poetry — speech fragments lifted from news headlines and advertising, layered and repeated until they become material.\n\nHe studied at the Kunsthochschule für Medien in Cologne, has taught music and text at the IMM in Düsseldorf since 2010, and won the Karl Sczuka Prize for radio art in 2011 for Die 50 Skulpturen des Institut fuer Feinmotorik.",
       "image": "images/artists/marc-matter.jpg",
@@ -115,54 +94,6 @@
       ]
     },
     {
-      "name": "MOTH / ANTENNA",
-      "bio": "",
-      "image": "",
-      "embed": "",
-      "aka": [],
-      "links": []
-    },
-    {
-      "name": "Nocturne for Twelve Speakers",
-      "bio": "",
-      "image": "",
-      "embed": "",
-      "aka": [],
-      "links": []
-    },
-    {
-      "name": "Orchestre Tout-Puissant Marcel Duchamp",
-      "bio": "",
-      "image": "",
-      "embed": "",
-      "aka": [],
-      "links": []
-    },
-    {
-      "name": "Ourobouros",
-      "bio": "",
-      "image": "",
-      "embed": "",
-      "aka": [],
-      "links": []
-    },
-    {
-      "name": "Sonde",
-      "bio": "",
-      "image": "",
-      "embed": "",
-      "aka": [],
-      "links": []
-    },
-    {
-      "name": "Tape Loops & Tuning Forks",
-      "bio": "",
-      "image": "",
-      "embed": "",
-      "aka": [],
-      "links": []
-    },
-    {
       "name": "Tresque",
       "bio": "TRESQUE is Laurent Peter, who also performs as d'incise and runs the INSUB. label — the name is taken from a half-forgotten medieval dance and put to work as an idea of techno.\n\nThe music is carved in circular movements out of samples and amplified noise, dub technique on one side and musique concrète on the other, grooves reduced to their shortest form and held between standing still and moving.",
       "image": "https://i1.sndcdn.com/avatars-000309884919-faviak-t1080x1080.jpg",
@@ -176,27 +107,6 @@
         {
           "label": "d'incise",
           "url": "http://www.dincise.net/"
-        }
-      ]
-    },
-    {
-      "name": "Verdure",
-      "bio": "",
-      "image": "",
-      "embed": "",
-      "aka": [],
-      "links": []
-    },
-    {
-      "name": "De Kriekelaar",
-      "bio": "Gallaitstraat 86, 1030 Schaarbeek. A gemeenschapscentrum — a Flemish community centre in Brussels — running concerts, theatre, workshops and school programmes, and lending its rooms to whoever is doing something in the neighbourhood.",
-      "image": "images/artists/de-kriekelaar.jpg",
-      "embed": "",
-      "aka": [],
-      "links": [
-        {
-          "label": "dekriekelaar.be",
-          "url": "https://www.dekriekelaar.be/"
         }
       ]
     },
@@ -215,6 +125,81 @@
       "embed": "",
       "aka": [],
       "links": []
+    },
+    {
+      "name": "Gaute Granli",
+      "bio": "GAUTE GRANLI works alone in Stavanger: voice, guitar, a bank of effects and an analogue sampler, run through each other until the parts stop being separable. Chanting over feedback, rhythm arrived at by accident, a one-man band that sounds like a bad transmission of a larger one.\n\nHe played guitar and shouted in Skadne Krek and Freddy The Dyke before the solo work took over. Records have come out on Drid Machine, Ultra Eczema, Editions Cave12, Nashazphone and Feeding Tube — the most recent, Bløt Klut, in 2024.",
+      "image": "https://f4.bcbits.com/img/0036566971_10.jpg",
+      "embed": "album=1468276135",
+      "aka": [],
+      "links": [
+        {
+          "label": "bandcamp",
+          "url": "https://gautegranli.bandcamp.com/"
+        },
+        {
+          "label": "cave12",
+          "url": "https://label-cave12.bandcamp.com/album/gaute-granli-contumace"
+        },
+        {
+          "label": "feeding tube",
+          "url": "https://feedingtuberecords.bandcamp.com/album/monstersol"
+        }
+      ]
+    },
+    {
+      "name": "Lucie Páchová & Maryia Kamarova",
+      "bio": "❦ live for voiced objects, objected voices & microphones.\n\nLUCIE PÁCHOVÁ is a Czech composer, sound artist and vocalist whose practice explores sound as a relational and physical experience. Her work emerges out of a focus on listening — to landscapes, voices, animals, everyday environments and materiality of objects.\nIt spans sound collages, multichannel sound installations, audiovisual works, solo performances, interdisciplinary collaborations, and compositions for chamber ensembles and orchestras. Lucie has been released on labels including Ma Records and Skupina. She has been active in the Czech and international improvised music scene since 2012.\n\nMARYIA KAMAROVA's practice is situated at the intersection of sound art, performance, and installation.\nShe creates spatial settings and in-situ interventions that employ displaced and reassembled objects, embracing material agency and human failure. In her recent work, she explores how sound artifacts emerge across different levels of amplification, while playing with their acoustic presence and its sonified reflection. Maryia presented her work internationally and overseas.",
+      "image": "images/487313904-702703462330297-492725036658866476-n-2026-10-09.jpg",
+      "embed": "album=3216453587",
+      "aka": [],
+      "links": [
+        {
+          "label": "LUCIEPACHOVA",
+          "url": "https://luciepachova.com/"
+        },
+        {
+          "label": "MARYIAKAMAROVA",
+          "url": "https://maryiakamarova.com/"
+        },
+        {
+          "label": "Zvířena",
+          "url": "https://maryiakamarova.bandcamp.com/album/zv-ena"
+        }
+      ],
+      "nameScale": 2.25
+    },
+    {
+      "name": "Giulia Rae",
+      "bio": "GIULIA RAE is a sound artist based in Brussels. Active in the Italian experimental music scene since 2016, she later expanded her path internationally, performing and releasing her music on labels such as Mappa, Søvn Records, Riforma, while composing acousmatic music for multiple formats.\n\nShe sometimes appears as a radio selector and works as a composer and sound designer for film, dance, performance, and multidisciplinary projects. Grounded in creative coding, Giulia Rae’s livesets form wide sonic spaces made of synthetic textures, concrete sounds, processed voice and enveloping bass.",
+      "image": "images/rae-2026-10-09.jpg",
+      "embed": "album=2772873991",
+      "aka": [],
+      "links": [
+        {
+          "label": "Bandcamp",
+          "url": "https://giuliaraemusic.bandcamp.com/"
+        },
+        {
+          "label": "Soundcloud",
+          "url": "https://soundcloud.com/rae00000"
+        }
+      ],
+      "nameScale": 3.8
+    },
+    {
+      "name": "Eve Julia Gonzalez & Myles Dillon",
+      "bio": "",
+      "image": "images/capture-d-e-cran-2026-10-09-a-08-26-30-2026-10-09.png",
+      "embed": "https://soundcloud.com/mylesdillon/stirringsstill?si=8b2dd5ab223c46caa9e439f113645395",
+      "aka": [],
+      "links": [
+        {
+          "label": "Soundcloud",
+          "url": "https://soundcloud.com/mylesdillon"
+        }
+      ],
+      "nameScale": 3.05
     }
   ]
 }

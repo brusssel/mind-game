@@ -2,43 +2,43 @@
   "concerts": [
     {
       "projects": [
-        "$hit & $hine",
-        "Officine",
-        "Új Bála"
+        "Lucie Páchová & Maryia Kamarova",
+        "Giulia Rae",
+        "Eve Julia Gonzalez & Myles Dillon"
       ],
       "projectUrls": [
-        "https://shitandshine.bandcamp.com/music",
+        "",
         "",
         ""
       ],
       "profileNames": [
-        "Shit & Shine",
+        "",
         "",
         ""
       ],
-      "location": "rue de La Campine 15, Molenbeek",
+      "location": "rue de la campine 15, Molenbeek",
       "venueName": "La Campine",
-      "locationUrl": "https://maps.app.goo.gl/UfqUJV7AdFjqniiV6",
-      "date": "2027-01-30",
-      "time": "20:30",
+      "locationUrl": "https://www.openstreetmap.org/directions?to=15+rue+de+la+campine#map=19/50.853854/4.326784",
+      "date": "2026-10-20",
+      "time": "19:30",
       "fee": "8-10€",
       "url": "",
-      "image": "images/20260809-215259-2026-08-18.jpg"
+      "image": "images/clipart4433435-2-2026-10-09.png"
     },
     {
       "projects": [
         "Tresque (Release Party)",
-        "Augustė Vickunaitė & Zara Joan Miller",
-        "Gaute Granli"
+        "Gaute Granli",
+        "TBC"
       ],
       "projectUrls": [
         "https://www.nts.live/artists/52673-tresque",
-        "https://www.q-o2.be/en/artist/auguste-vickunaite/",
-        "https://institut-fuer-feinmotorik.net/"
+        "",
+        ""
       ],
       "profileNames": [
         "Tresque",
-        "Augustė Vickunaitė",
+        "",
         ""
       ],
       "location": "Rue de la Campine 15, Molenbeek",
