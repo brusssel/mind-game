@@ -5114,6 +5114,12 @@
        itself. In the denominator it is simply one more thing the drawing is
        made of, and the arithmetic closes. */
     var footRef = (safe && isFinite(safe.bottom) && safe.bottom > 0) ? safe.bottom : 0;
+    /* And a breath. Reserving the band exactly put the row of dates flush
+       against it — three or four pixels at most, which reads as touched rather
+       than as clear, and the innermost band's own texture overhangs its
+       nominal edge. Twelve units of the drawing, so the air grows with
+       everything else. */
+    if (footRef) footRef += 12;
     stageK = Math.min(1, w / STAGE_W, h / (STAGE_H + below + footRef)) * appZoom;
     stageFoot = footRef * stageK;
     var s = document.documentElement.style;
