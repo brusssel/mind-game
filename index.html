@@ -874,11 +874,26 @@
     hyphens: none;
   }
 
+  /* A contour on the names and on the line under them. The letters here are a
+     window onto a fill — `color: transparent` with the fill clipped to the
+     text — so a stroke does not replace anything: it is drawn over the fill,
+     along the edge of each letter. At zero it costs nothing and shows
+     nothing, which is how a page that has never asked for one is left alone. */
   .concert-title {
+    -webkit-text-stroke: var(--names-outline, 0px) var(--names-outline-col, transparent);
+    paint-order: stroke fill;
     margin: 0 0 var(--lineup-info-gap, 0.35em);
     font-size: calc(1.25em * var(--artist-type-scale, 1));
     line-height: var(--artist-leading, 1.35);
     font-weight: 700;
+  }
+
+  .concert-meta {
+    /* `--info-stroke` is taken: it is the INFOS panel's own, set elsewhere and
+       holding a COLOUR. Writing it here put a colour where a width belongs and
+       quietly took the panel's stroke with it. */
+    -webkit-text-stroke: var(--meta-outline, 0px) var(--meta-outline-col, transparent);
+    paint-order: stroke fill;
   }
 
   /* one word — nothing to stretch, so centre it */
@@ -1389,6 +1404,15 @@
     background-size: cover; background-position: center;
     pointer-events: none;
   }
+  /* The stand-in is not a photograph: it is a drawing with words on it, and
+     `cover` crops whichever edge does not fit — on a tall block it ate the
+     lettering. Shown whole instead, centred, over the page's own ground. A
+     real picture goes on filling its block. */
+  .profile-board.stand-in > .pic {
+    background-size: contain; background-repeat: no-repeat;
+    background-position: center; background-color: var(--void);
+  }
+
   /* Nothing to tint: the duotone dresses a photograph, and the field block is
      already in the page's own two colours. */
   html.skinned .profile-board.empty .skin-hi,
@@ -1467,6 +1491,138 @@
     background: var(--info-link-hot, var(--ink));
     color: var(--info-link-cold, var(--info-ground, var(--void)));
     border-color: var(--info-link-hot, var(--ink));
+  }
+
+  /* ---- getting there ------------------------------------------------------
+     A venue's page carries the map, with the place already marked. The route
+     itself cannot be shown here: openstreetmap.org answers its own directions
+     page with `frame-ancestors 'self'`, so no site but theirs may frame it.
+     What is framed is their embed, which is made for it and sends no such
+     refusal — and under it a field for where you are coming from, which opens
+     the itinerary on their site with both ends already filled in.
+
+     The tiles arrive in somebody else's colours. Inverted and desaturated they
+     come back as a dark map with pale streets, which is the page's own black
+     rather than a lit window cut into it. */
+  .profile-map {
+    order: 8; margin: 0;
+    display: flex; flex-direction: column; gap: var(--profile-gap, 9px);
+  }
+  .profile-map[hidden] { display: none; }
+  .profile-map iframe {
+    width: 100%; height: var(--profile-map, 190px);
+    display: block; border: 1px solid var(--info-link-col, rgba(255, 255, 255, 0.35));
+    background: var(--void);
+    filter: var(--map-treatment, invert(1) grayscale(1) contrast(0.92) brightness(0.96));
+  }
+  .map-ask { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: stretch; }
+  /* Its own line, always: three controls across a panel this narrow is three
+     controls nobody can hit. */
+  .map-ask .map-here { flex: 1 0 100%; }
+  .map-ask .map-here[hidden] { display: none; }
+  .map-ask input {
+    /* A basis of zero, not auto: with wrapping on, a flex item whose basis is
+       its own content wraps before it shrinks, and the field was pushing the
+       button onto a line of its own at panel width. */
+    flex: 1 1 0; min-width: 3.5rem;
+    background: transparent; color: var(--info-words-col, inherit);
+    border: 1px solid var(--info-link-col, rgba(255, 255, 255, 0.35));
+    font-family: var(--info-body-font, var(--body-font));
+    font-size: calc(0.72rem * var(--profile-words, 1));
+    letter-spacing: var(--info-word-track, 0.04em);
+    padding: 0.25rem 0.4rem;
+  }
+  .map-ask input::placeholder { color: inherit; opacity: 0.5; }
+  .map-ask button {
+    flex: 0 0 auto; cursor: pointer; white-space: nowrap;
+    background: transparent; color: var(--info-link-col, inherit);
+    border: 1px solid var(--info-link-col, rgba(255, 255, 255, 0.35));
+    font: inherit; font-size: calc(0.72rem * var(--profile-words, 1));
+    text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 0.25rem 0.5rem;
+  }
+  .map-ask button:hover, .map-ask button:focus-visible {
+    background: var(--info-link-hot, var(--ink));
+    color: var(--info-link-cold, var(--info-ground, var(--void)));
+    border-color: var(--info-link-hot, var(--ink));
+  }
+
+  /* ---- a frame made of cells, or of characters --------------------------
+     CSS can draw a line round a box and nothing else, so a band of Macintosh
+     cells or of one repeated character is drawn as a ring: a layer over the
+     whole box, masked to everything *except* its content area, with the
+     padding of that mask set to the border's own width. The box keeps a
+     transparent border of that width, so the picture inside does not move
+     when the kind of frame changes.
+
+     On the concert's board only, and never on the profile's — the two
+     pictures answer to their own edges, as they do everywhere else. */
+  html.be-cell .poster:not(.profile-board)::after,
+  html.be-glyph .poster:not(.profile-board)::after {
+    content: ""; position: absolute; inset: 0; z-index: 9;
+    pointer-events: none;
+    padding: var(--board-edge-w, 0);
+    border-radius: var(--board-radius, 0);
+    background-color: var(--board-band-ground, transparent);
+    background-image: var(--board-band, none);
+    background-size: var(--board-band-tile, 8px) var(--board-band-tile, 8px);
+    background-repeat: repeat;
+    /* The ring: the whole box, less the box inside the padding. */
+    -webkit-mask: linear-gradient(#000, #000) content-box,
+                  linear-gradient(#000, #000);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000, #000) content-box,
+          linear-gradient(#000, #000);
+    mask-composite: exclude;
+  }
+
+  /* ---- a bill that says "&" ----------------------------------------------
+     A duo or a trio is announced as one name and is several people. The panel
+     keeps the collaboration at its head — its own name, its own picture, which
+     is neither member's — and then runs the artists underneath, in the order
+     the bill prints them, each with their own words and their own record.
+
+     The parts reuse the panel's own classes, `.profile-bio`, `.profile-player`
+     and `.profile-links`, so every treatment chosen for a single artist — the
+     textured words, the two windows, the player's height, the link buttons —
+     arrives here already written rather than being said a second time. */
+  .profile-crew {
+    order: 7;
+    display: flex; flex-direction: column;
+    gap: calc(var(--profile-gap, 9px) * 1.6);
+  }
+  .profile-crew:empty { display: none; }
+  .crew-act {
+    display: flex; flex-direction: column; gap: var(--profile-gap, 9px);
+    border-top: 1px solid var(--info-link-col, rgba(255, 255, 255, 0.22));
+    padding-top: calc(var(--profile-gap, 9px) * 1.4);
+  }
+  /* The borrowed classes carry the panel's own `order` values, and inside a
+     member's section those mean nothing — left alone they shuffled the parts
+     by accident, and an arrangement chosen for the page would have shuffled
+     them again. Here the sequence is the one they are written in. */
+  .crew-act > * { order: 0; }
+  /* The name beside the face, always along the reading edge: the collaboration
+     above may be centred, but a list of people is a list. */
+  .crew-head {
+    display: flex; align-items: center; gap: var(--profile-gap, 9px);
+    text-align: left;
+  }
+  .crew-face {
+    flex: 0 0 auto; width: 3.2rem; height: 3.2rem;
+    background-size: cover; background-position: center;
+    filter: grayscale(1) contrast(1.3);
+    border: 1px solid var(--info-link-col, rgba(255, 255, 255, 0.22));
+  }
+  .crew-name {
+    margin: 0; flex: 1 1 auto; min-width: 0;
+    font-family: var(--info-wm-font, var(--wm-font, inherit)); font-weight: 700;
+    font-size: calc(clamp(0.8rem, 3.6vw, 1rem) * var(--profile-name, 1));
+    letter-spacing: var(--info-track, 0.12em);
+    text-transform: var(--info-case, uppercase);
+    font-variant-caps: var(--info-variant, normal);
+    line-height: 1.15;
+    overflow-wrap: break-word;
   }
 
   /* The arrangements. Each is the same six blocks in a different order —
@@ -1840,8 +1996,17 @@
   /* Decorative frames around the viewport itself. They are fixed overlays,
      deliberately outside #stage: adding, widening or animating one can never
      participate in the page's 1600 x 900 layout or change its scale. */
+  /* The frames ring the DRAWING, not the window. Left at the window's edges,
+     a shape far from the drawing's own — a phone asking for the desktop page,
+     980 by 1800 — put a tall rectangle of border around a short composition
+     floating in the middle of it: the thickness was proportional and the frame
+     was not. The four variables are the drawing's box, written by `fit`;
+     without them it falls back to the window, which is what it always was. */
   #viewport-frames {
-    position: fixed; inset: 0; z-index: 40; overflow: hidden;
+    position: fixed;
+    top: var(--vf-box-top, 0px); right: var(--vf-box-right, 0px);
+    bottom: var(--vf-box-bottom, 0px); left: var(--vf-box-left, 0px);
+    z-index: 40; overflow: hidden;
     pointer-events: none; contain: layout paint; isolation: isolate;
   }
   .vf-layer { position: absolute; inset: 0; pointer-events: none; }
@@ -2203,6 +2368,120 @@
       justify-content: flex-end; padding: 0.2rem 0;
     }
     .corner button { min-height: 2.5rem; padding-inline: 0.35rem; }
+
+    /* ---- one page, read downwards -------------------------------------
+       The two-window switch is gone: everything the date has to say is on the
+       same page now, in the order it is read. */
+    /* The CSS ones too — the bands' travel, the lanes, the hovers. Nothing on
+       a phone moves of its own accord. */
+    * , *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+    html.phone .mobile-view-switch { display: none !important; }
+    html.phone body { overflow-y: auto; overflow-x: hidden; }
+    /* The ground runs the whole way down, behind the poster and behind the
+       bill alike — it is what joins them. */
+    html.phone body::before { opacity: 1 !important; }
+    /* What belongs to the desktop composition and has no place in a column:
+       the lanes that edge a 900-pixel stage, the row of other dates, the
+       gutter standing between two frames that are no longer side by side. */
+    html.phone .crest, html.phone .dates, html.phone .gutter,
+    html.phone .ring, html.phone #viewport-frames { display: none !important; }
+    html.phone #stage::after { visibility: hidden !important; }
+    /* The panel beside the poster is the thing this page replaces. */
+    html.phone .listen { display: none !important; }
+
+    html.phone .phone-doc {
+      display: flex; flex-direction: column;
+      min-height: 100%;
+      position: relative; z-index: 2;
+    }
+    /* The bands come out of their fixed corners and stand at the two ends of
+       the page, which is where they were always drawn. */
+    html.phone .ticker {
+      position: static !important; visibility: visible !important;
+      width: 100% !important; left: auto !important; right: auto !important;
+      top: auto !important; bottom: auto !important;
+      transform: none !important; flex: 0 0 auto;
+    }
+
+    /* The poster: the stage itself, clipped to its own frame and scaled so
+       that frame is the width of the screen. Nothing inside it is reflowed —
+       it is the saved drawing, at another size. */
+    html.phone .phone-poster {
+      position: relative; overflow: hidden;
+      width: 100%; flex: 0 0 auto;
+      height: var(--phone-poster-h, 60vh);
+    }
+    html.phone #stage {
+      position: absolute !important;
+      left: 0 !important; top: 0 !important;
+      transform: scale(var(--phone-k, 1))
+                 translate(var(--phone-tx, 0px), var(--phone-ty, 0px)) !important;
+      transform-origin: 0 0 !important;
+    }
+
+    /* The gutter's glyph, laid on its side. Same glyph, same colour, same
+       fill — it answers to the same classes on the root — set in a row
+       instead of a column. */
+    html.phone .phone-lane {
+      flex: 0 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+      overflow: hidden; padding: 0.55rem 0.9rem;
+      font-family: var(--gut-font, var(--wm-font, inherit));
+      font-size: var(--gut-size, 18px);
+      line-height: 1;
+      max-height: 4.5rem;
+      color: var(--gut-col, var(--ink));
+      opacity: var(--gut-fade, 1);
+      pointer-events: none;
+    }
+    html.phone .phone-lane:empty { display: none; }
+    html.phone .phone-lane i { font-style: normal; display: inline-block; }
+
+    /* The bill, read downwards. The sections are the panel's own, so every
+       treatment chosen for an artist page arrives here already written. */
+    html.phone .phone-acts {
+      flex: 1 0 auto;
+      display: flex; flex-direction: column;
+      gap: 1.2rem;
+      padding: 0.6rem 0.9rem 1.4rem;
+      color: var(--info-ink, var(--ink));
+    }
+    html.phone .phone-acts:empty { display: none; }
+    html.phone .phone-acts .crew-act:first-child { border-top: 0; padding-top: 0; }
+    html.phone .phone-acts .crew-face { width: 4.5rem; height: 4.5rem; }
+    html.phone .phone-acts .crew-name { font-size: 1.1rem; }
+    html.phone .phone-acts .profile-bio { font-size: 0.95rem; }
+    html.phone .phone-acts .profile-player { height: 120px; }
+
+    /* The place, last. */
+    html.phone .phone-map {
+      flex: 0 0 auto; margin: 0;
+      display: flex; flex-direction: column; gap: 0.5rem;
+      padding: 0 0.9rem 1.4rem;
+    }
+    html.phone .phone-map[hidden] { display: none; }
+    html.phone .phone-map iframe {
+      width: 100%; height: clamp(170px, 40vw, 260px);
+      display: block; border: 1px solid var(--info-link-col, rgba(255,255,255,0.35));
+      background: var(--void);
+      filter: var(--map-treatment, invert(1) grayscale(1) contrast(0.92) brightness(0.96));
+    }
+    html.phone .phone-map .map-ask input { font-size: 1rem; padding: 0.5rem 0.6rem; }
+    html.phone .phone-map .map-ask button { padding: 0.5rem 0.7rem; }
+    html.phone .phone-venue {
+      font-family: var(--info-wm-font, var(--wm-font, inherit));
+      font-weight: 700; text-transform: var(--info-case, uppercase);
+      letter-spacing: var(--info-track, 0.12em);
+      font-size: 1rem; margin: 0 0 0.1rem;
+    }
+    html.phone .phone-where {
+      margin: 0; font-family: var(--info-body-font, var(--body-font));
+      font-size: 0.95rem; color: var(--info-words-col, inherit);
+      opacity: var(--info-fade, 0.85);
+    }
   }
 
   .ring {
@@ -4205,6 +4484,30 @@
              parameters. -->
         <iframe class="profile-player" id="profile-player" title="Music" hidden
                 allow="autoplay" loading="lazy"></iframe>
+        <!-- And, when the name on the bill is several people, each of them
+             underneath in the order the bill names them. Empty, and the rule
+             above hides it; a single artist's page is untouched. -->
+        <div class="profile-crew" id="profile-crew"></div>
+        <!-- The venue's map, and the way to ask for the route. Both stay
+             hidden until a place with coordinates is opened, and the frame is
+             given no address until then: nothing is fetched from anybody
+             else's server for a page nobody has asked to see. -->
+        <figure class="profile-map" id="profile-map" hidden>
+          <iframe id="profile-map-frame" title="Map" loading="lazy"
+                  referrerpolicy="no-referrer"></iframe>
+          <!-- A plain GET form onto their directions page: no script is
+               needed for it to work, since what it sends is exactly the query
+               that page reads. The button below needs one, and says so by not
+               being there until a script reveals it. -->
+          <form class="map-ask" id="profile-map-ask" method="get" target="_blank"
+                rel="noopener" action="https://www.openstreetmap.org/directions">
+            <input type="hidden" name="to" id="profile-map-to">
+            <input type="text" name="from" id="profile-map-from" autocomplete="off"
+                   placeholder="coming from…" aria-label="Coming from">
+            <button type="submit">route ↗</button>
+            <button type="button" class="map-here" id="profile-map-here" hidden>from here ⌖</button>
+          </form>
+        </figure>
       </article>
       <p class="listen-note" id="listen-note">Pick a name.</p>
     </div>
@@ -4316,6 +4619,34 @@
 
   <!-- Fixed viewport decoration. It is not inside #stage and therefore never
        changes the page's measurements, scale or proportions. -->
+  <!-- ---- the phone's page -------------------------------------------------
+       Below 600px the stage stops being a window onto a 1600 by 900
+       composition and becomes the head of a document. The poster is the same
+       stage, moved in here and scaled so that its own frame fills the screen;
+       under it the gutter's glyph laid on its side, then every artist on the
+       bill one after another, then the place. The bands move in too, so they
+       stand at the top and the foot of the page rather than over it.
+
+       Empty and hidden on a desktop, and nothing in it is built until a phone
+       asks for it. -->
+  <div class="phone-doc" id="phone-doc" hidden>
+    <div class="phone-poster" id="phone-poster"></div>
+    <div class="phone-lane" id="phone-lane" aria-hidden="true"></div>
+    <div class="phone-acts" id="phone-acts"></div>
+    <figure class="phone-map" id="phone-map" hidden>
+      <iframe id="phone-map-frame" title="Map" loading="lazy"
+              referrerpolicy="no-referrer"></iframe>
+      <form class="map-ask" id="phone-map-ask" method="get" target="_blank"
+            rel="noopener" action="https://www.openstreetmap.org/directions">
+        <input type="hidden" name="to" id="phone-map-to">
+        <input type="text" name="from" id="phone-map-from" autocomplete="off"
+               placeholder="coming from…" aria-label="Coming from">
+        <button type="submit">route ↗</button>
+        <button type="button" class="map-here" id="phone-map-here" hidden>from here ⌖</button>
+      </form>
+    </figure>
+  </div>
+
   <div id="viewport-frames" aria-hidden="true"></div>
 
   <!-- Smartphone browser furniture. The poster and the artist page remain the
@@ -4599,17 +4930,33 @@
   function smartphoneMode() {
     return (document.documentElement.clientWidth || window.innerWidth || STAGE_W) <= 600;
   }
+  /* Decided once, at the width the page opened at. Not re-read on a resize: a
+     field that has been standing still has no state to resume with, and a page
+     that started animating should not stop halfway because a window was
+     narrowed — the question is what kind of machine is reading it, and that
+     does not change while it is being read. */
+  stillAlways = smartphoneMode();
   function viewportFrameMetricScale() {
     var w = document.documentElement.clientWidth || window.innerWidth || STAGE_W;
-    /* The viewport frames are browser furniture, not poster content. On a
-       phone they shrink a little faster than the 1600px stage so a deliberately
-       broad horizontal rail still reads as a border rather than consuming half
-       the display. Individual lines and glyphs keep a one-pixel floor below. */
-    return w <= 600 ? Math.max(0.12, Math.min(1, w / 2400)) : 1;
+    /* On a phone they shrink a little faster than the 1600px stage so a
+       deliberately broad horizontal rail still reads as a border rather than
+       consuming half the display. Individual lines and glyphs keep a
+       one-pixel floor below. */
+    if (w <= 600) return Math.max(0.12, Math.min(1, w / 2400));
+    /* Everywhere else they follow the stage. Drawn at a fixed thickness in the
+       window's own pixels, a band was heavy against a small poster and thin
+       against a large one: the same page in two windows was two different
+       compositions, and the published page could not be the app's page. On the
+       stage's scale, everything on screen is one uniform scaling of the same
+       1600 by 900 drawing, whatever shape the window is. */
+    return Math.max(0.1, Math.min(1, stageK || 1));
   }
-  function viewportFrameSafeInsets() {
+  /* `scale` is passed as 1 by whatever needs the figure in the drawing's own
+     units rather than in the window's — `fitStage` does, because it is deciding
+     the scale and cannot ask for an answer that depends on it. */
+  function viewportFrameSafeInsets(scale) {
     var frames = viewportFrames();
-    var scale = viewportFrameMetricScale();
+    if (!isFinite(scale)) scale = viewportFrameMetricScale();
     var previousFrame = null, previousInset = null;
     var safe = { top: 0, right: 0, bottom: 0, left: 0 };
     for (var i = 0; i < frames.length; i++) {
@@ -4680,6 +5027,46 @@
      assembly's, and centring the stage left the whole thing sitting high. */
   var PAGE_PARTS = ['dates-top', 'crest', 'ticker-top', 'crest-mid', 'dates'];
   var centring = false;
+  /* How much of the window's foot the browser's own frames cover. Set by
+     fitStage, read by centrePage: the assembly is placed inside the room the
+     bands leave, not inside the window. */
+  var stageFoot = 0;
+
+  /* Where the drawing stands in the window, so the frames can ring it. The
+     box is the composition — the stage and everything that hangs off it —
+     grown by the frames' own thickness, so the bands sit outside what they
+     frame rather than over it. */
+  function frameTheDrawing() {
+    var st = document.documentElement.style;
+    var W = document.documentElement.clientWidth || 0;
+    var H = document.documentElement.clientHeight || 0;
+    var lo = Infinity, hi = -Infinity, x0 = Infinity, x1 = -Infinity;
+    function take(el) {
+      if (!el) return;
+      var r = el.getBoundingClientRect();
+      if (!r.width && !r.height) return;
+      if (r.top < lo) lo = r.top;
+      if (r.bottom > hi) hi = r.bottom;
+      if (r.left < x0) x0 = r.left;
+      if (r.right > x1) x1 = r.right;
+    }
+    for (var i = 0; i < PAGE_PARTS.length; i++) take(document.getElementById(PAGE_PARTS[i]));
+    take(document.querySelector('.wm-box'));
+    take(document.getElementById('stage'));
+    var keys = ['top', 'right', 'bottom', 'left'];
+    if (!isFinite(lo) || !isFinite(x0) || hi <= lo || x1 <= x0) {
+      for (i = 0; i < keys.length; i++) st.removeProperty('--vf-box-' + keys[i]);
+      return;
+    }
+    var safe = null;
+    try { safe = viewportFrameSafeInsets(); } catch (e) { safe = null; }
+    var g = function (k) { return (safe && isFinite(safe[k])) ? safe[k] : 0; };
+    st.setProperty('--vf-box-top', Math.max(0, lo - g('top')).toFixed(1) + 'px');
+    st.setProperty('--vf-box-bottom', Math.max(0, H - hi - g('bottom')).toFixed(1) + 'px');
+    st.setProperty('--vf-box-left', Math.max(0, x0 - g('left')).toFixed(1) + 'px');
+    st.setProperty('--vf-box-right', Math.max(0, W - x1 - g('right')).toFixed(1) + 'px');
+  }
+
   function centrePage() {
     if (centring) return;
     var lo = Infinity, hi = -Infinity, i, el, r;
@@ -4704,7 +5091,7 @@
        centring would leave, so the whole assembly sits above the middle by that
        same half. Stated as a rule rather than as a one-off nudge, so it holds
        at any window height and through any change to what the strips carry. */
-    var H2 = Math.max(0, (document.documentElement.clientHeight || 0) - appTopInset);
+    var H2 = Math.max(0, (document.documentElement.clientHeight || 0) - appTopInset - stageFoot);
     var centredGap = Math.max(0, (H2 - (hi - lo)) / 2);
     /* The user's page offset is deliberate and must not be mistaken for a
        centring error. It is stored in stage pixels and seen here after scale. */
@@ -4761,7 +5148,53 @@
        the arithmetic under the pointer, and the frame drifts even when frames
        are pinned. A feedback loop in the middle of the layout editor is worse
        than a row of dates that needs a taller window. */
-    stageK = Math.min(1, w / STAGE_W, h / STAGE_H) * appZoom;
+    /* The room asked for is the stage *and* what hangs under it: the row of
+       dates, the top line and the middle lane all stand below the stage's own
+       box. Asking only for the stage, a 1280 by 720 window was told 900 would
+       do, the stage took the whole height, and the dates were placed twenty
+       pixels past the bottom edge — eaten by the frame's lower band on the
+       site, while the app, whose own toolbar takes that height away, showed
+       them whole.
+
+       `belowStage()` is in the stage's units, not the window's: `R()` divides
+       what it measures by the scale, so the figure does not move when the
+       scale does. That is what makes this safe to feed back in — a reservation
+       measured in screen pixels would chase its own tail, and did: it moved
+       the arithmetic under the pointer and made pinned frames drift while
+       something was being dragged. In stage units it settles in one pass. */
+    var below = 0;
+    try { if (typeof belowStage === 'function') below = belowStage(); } catch (e) { below = 0; }
+    if (!isFinite(below) || below < 0) below = 0;
+    /* And the lower band of the browser's own frames, which is painted over
+       the window's foot whatever else is there. Reserving the furniture alone
+       left the row of dates flush with the bottom edge and the band ate it —
+       which is the shape of the complaint: whole in the app, whose toolbar
+       takes that height away, eaten on the site, where nothing does.
+
+       Only the foot. The bands at the top and the sides have always run over
+       the page and that is how it is drawn; it is the one at the bottom that
+       sits where something has to be read. */
+    /* In a try: this runs on the very first pass, before the look it reads has
+       been assembled, and a throw here takes the whole page with it. */
+    var safe = null;
+    try {
+      if (typeof viewportFrameSafeInsets === 'function') safe = viewportFrameSafeInsets(1);
+    } catch (e) { safe = null; }
+    /* In the drawing's units, because the band now scales with the stage: ask
+       for it in window pixels here and the scale would be defined in terms of
+       itself. In the denominator it is simply one more thing the drawing is
+       made of, and the arithmetic closes. */
+    var band = function (k) { return (safe && isFinite(safe[k]) && safe[k] > 0) ? safe[k] : 0; };
+    /* The whole drawing: the stage, what hangs under it, and the bands on all
+       four sides — they ring it now rather than lying over the window, so they
+       are part of what has to fit. Plus a breath under the dates: reserving
+       the band exactly put the row flush against it, three or four pixels,
+       which reads as touched rather than as clear. */
+    var footRef = band('bottom') + (band('bottom') ? 12 : 0);
+    var needW = STAGE_W + band('left') + band('right');
+    var needH = STAGE_H + below + band('top') + footRef;
+    stageK = Math.min(1, w / needW, h / needH) * appZoom;
+    stageFoot = footRef * stageK;
     var s = document.documentElement.style;
     document.documentElement.classList.toggle('smartphone', smartphoneMode());
     s.setProperty('--stage-w', STAGE_W + 'px');
@@ -5635,6 +6068,14 @@
     s.setProperty('--text-size', textParam('size', 1));
     s.setProperty('--text-track', textParam('tracking', 0.06) + 'em');
     s.setProperty('--text-leading', textParam('leading', 1.5));
+    /* The two contours. In the drawing's own pixels, so they thicken with
+       everything else rather than staying a hairline on a large poster. */
+    s.setProperty('--names-outline', textParam('names outline', 0) + 'px');
+    s.setProperty('--meta-outline', textParam('info outline', 0) + 'px');
+    s.setProperty('--names-outline-col',
+      /^#[0-9a-f]{6}$/i.test(look.namesStrokeCol || '') ? look.namesStrokeCol : 'transparent');
+    s.setProperty('--meta-outline-col',
+      /^#[0-9a-f]{6}$/i.test(look.metaStrokeCol || '') ? look.metaStrokeCol : 'transparent');
     s.setProperty('--board-h', h.toFixed(2) + 'px');
     s.setProperty('--info-bottom', (inset - layout.infoDy).toFixed(2) + 'px');
     /* Free of the anchor once its place has been taken. */
@@ -5798,8 +6239,14 @@
     clampBlock();           // and it may have run out of window
     if (frameRefresh) frameRefresh();   // a static panel is redrawn by hand
     if (remeasureTunnel) remeasureTunnel();
+    /* The browser's frames are drawn at the stage's scale now, so a window
+       that changed size has to have them drawn again. Cheap, and only here:
+       `fit` is what runs when the room changes. */
+    if (typeof renderViewportFrames === 'function') renderViewportFrames();
     centrePage();
+    if (typeof frameTheDrawing === 'function') frameTheDrawing();
     applyWordmarkShape();
+    if (typeof syncPhone === 'function') syncPhone();
   }
 
   /* ---- the concert's picture ------------------------------------------
@@ -5848,6 +6295,20 @@
   /* One Image for every board: it is the same picture whichever ground is under
      it, and each board minting its own meant a fresh decode on every switch. */
   var capture = null;
+  /* The house picture for a name nobody has found a photograph of. Probed once
+     rather than assumed: a missing file would otherwise leave an empty block
+     where the page's own field used to run, which is worse than no change. The
+     answer is not fed back into applyProfile — a picture that asks for the
+     routine that asked for it is how two of this page's functions once called
+     each other until the stack gave out. */
+  var DEFAULT_ARTIST_PIC = 'images/no-image.png';
+  var defaultArtistPic = false;
+  (function () {
+    var probe = new Image();
+    probe.onload = function () { defaultArtistPic = true; };
+    probe.src = DEFAULT_ARTIST_PIC;
+  })();
+
   function loadCapture(then) {
     if (!(window.MG && MG.overlay)) return null;
     if (capture) { if (capture.complete && then) then(); return capture; }
@@ -6087,18 +6548,49 @@
   /* An edge for each surface: how far its corners are rounded, and what border
      it carries. Three surfaces, four numbers each, and they are independent —
      a rounded picture in a square frame is a choice someone might want. */
+  /* A border is a line, until it is not. The last two are bands rather than
+     lines: the picture's frame made of the page's own Macintosh cells, or of
+     one character repeated the whole way round. Neither is a thing CSS can do
+     with `border-style`, so they are drawn as a ring — see `edge-band` in the
+     stylesheet — and the line styles are left exactly as they were. */
   var BORDERS = [
     ['none', 'no border'], ['solid', 'solid'], ['dashed', 'dashed'],
     ['dotted', 'dotted'], ['double', 'double'], ['groove', 'groove'],
-    ['ridge', 'ridge'], ['inset', 'inset'], ['outset', 'outset']
+    ['ridge', 'ridge'], ['inset', 'inset'], ['outset', 'outset'],
+    ['cell', 'a band of Macintosh cells'], ['glyph', 'a band of characters']
   ];
-  var EDGE0 = { r: 0, w: 0, s: 'none', c: '#ffffff' };
+  function bandStyle(v) { return v === 'cell' || v === 'glyph'; }
+  var EDGE0 = { r: 0, w: 0, s: 'none', c: '#ffffff',
+                cell: 'grid', g: '✦', c2: '#000000', u: 8 };
   function edgeOf(which) {
     var e = (typeof look === 'object' && look.edge && look.edge[which]) || null;
     return { r: e && isFinite(e.r) ? e.r : EDGE0.r,
              w: e && isFinite(e.w) ? e.w : EDGE0.w,
              s: (e && e.s) || EDGE0.s,
-             c: (e && /^#[0-9a-f]{6}$/i.test(e.c || '')) ? e.c : EDGE0.c };
+             c: (e && /^#[0-9a-f]{6}$/i.test(e.c || '')) ? e.c : EDGE0.c,
+             /* Which cell, which character, the ground under the band and how
+                big one of them is — read only by the two band styles. */
+             cell: (e && e.cell) || EDGE0.cell,
+             g: (e && e.g) || EDGE0.g,
+             c2: (e && /^#[0-9a-f]{6}$/i.test(e.c2 || '')) ? e.c2 : EDGE0.c2,
+             /* Eight is a Macintosh cell; a character at eight pixels is a
+                smudge, so a band of them starts bigger. Either way the step is
+                a control of its own. */
+             u: (e && isFinite(e.u) && e.u > 1) ? e.u
+                : ((e && e.s === 'glyph') ? 18 : EDGE0.u) };
+  }
+
+  /* One character, as a tile. The band repeats it; the tile is square so the
+     corners meet the sides on the same rhythm. */
+  function glyphTile(ch, size, ink) {
+    var n = Math.max(4, Math.round(size));
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + n + '" height="' + n + '">' +
+      '<text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" ' +
+      'font-family="Geneva, Verdana, sans-serif" font-size="' + Math.round(n * 0.78) +
+      '" fill="' + ink + '">' +
+      String(ch || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') +
+      '</text></svg>';
+    return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
   }
   /* The page's own furniture: the arrows, and where the block sits. */
   /* The two ends of the duotone: the ink the concert is set in, and the ground
@@ -6306,6 +6798,60 @@
       }
     }
     return null;
+  }
+
+  /* A bill can announce several people under one name: "A & B", "A & B & C".
+     The ampersand is the only separator read as one. A comma, a slash or the
+     word "and" can all be part of somebody's name, and guessing wrong cuts an
+     artist in half — so those are left alone, and a duo that wants to be read
+     as two is written with an &. Anything in brackets is a qualifier on the
+     billing, not a member, and goes the way it goes everywhere else. */
+  /* Quotes say that an ampersand belongs to the name rather than joining two
+     of them: «"Earth & Fire"» is one act, «"Earth & Fire" & Zohastre» is two.
+     They are a mark for the editor's fields and never reach the page, so every
+     place that prints a bill name takes them out first. Straight and curly and
+     the French pair are all read, since all three arrive by paste. */
+  var BILL_QUOTES = /["\u201c\u201d\u00ab\u00bb]/g;
+  function unquoteName(v) {
+    return String(v == null ? '' : v).replace(BILL_QUOTES, '');
+  }
+
+  function billParts(name) {
+    var raw = String(name || '').replace(/\s*\(.*?\)\s*/g, ' ');
+    if (raw.indexOf('&') === -1) return null;
+    /* Walked a character at a time rather than split: an ampersand only parts
+       two names when it stands outside the quotes. A plain list of the quote
+       characters, because a /g regexp carries a lastIndex between calls and
+       this is read in a loop. */
+    var MARKS = '"\u201c\u201d\u00ab\u00bb';
+    var out = [], cur = '', quoted = false, i, ch;
+    for (i = 0; i < raw.length; i++) {
+      ch = raw.charAt(i);
+      if (MARKS.indexOf(ch) !== -1) { quoted = !quoted; continue; }
+      if (ch === '&' && !quoted) { out.push(cur); cur = ''; continue; }
+      cur += ch;
+    }
+    out.push(cur);
+    out = out.map(function (v) { return v.replace(/\s+/g, ' ').trim(); })
+             .filter(Boolean);
+    return out.length > 1 ? out : null;
+  }
+
+  /* Who is behind a collaboration, in the order the bill prints them. Only the
+     ones the roster has something to say about: a name with nothing behind it
+     would be a heading over a hole, and every name is on the bill already. The
+     collaboration's own card is never one of its own members — a card called
+     "A & B" answers to "A & B", not to "A". */
+  function crewFor(billed, collab) {
+    var names = billParts(billed), out = [], i, a;
+    if (!names) return out;
+    for (i = 0; i < names.length; i++) {
+      a = artistFor(names[i]);
+      if (!a || a === collab) continue;
+      if (!(a.bio || a.embed || a.image || (a.links && a.links.length))) continue;
+      out.push({ billed: names[i], artist: a });
+    }
+    return out;
   }
 
   /* ---- the lane over the bands ------------------------------------------
@@ -7021,12 +7567,184 @@
     return /^https:\/\//i.test(v) ? v : '';
   }
 
+  /* Each of them underneath the collaboration, in the bill's order: the face,
+     the name, what is written about them and their own record. Built as nodes
+     rather than as a string — these are addresses and words out of a file the
+     studio writes, and they go in as text, never as markup.
+
+     A member with no photograph gets none here. The house stand-in is right for
+     a page that would otherwise be blank; three copies of it down one panel is
+     just three copies of it. */
+  function buildCrew(billed, collab) {
+    var crew = document.getElementById('profile-crew');
+    if (!crew) return;
+    crew.textContent = '';
+    var members = crewFor(billed, collab), i;
+    for (i = 0; i < members.length; i++) {
+      crew.appendChild(crewSection(members[i].artist, members[i].billed));
+    }
+  }
+
+  /* One artist as a block: the face, the name, their addresses, what is
+     written about them and their own record. Built as nodes rather than as a
+     string — these are addresses and words out of a file the studio writes,
+     and they go in as text, never as markup.
+
+     Used under a collaboration in the panel, and down the phone's page for
+     every name on the bill. */
+  function crewSection(a, fallbackName) {
+    a = a || {};
+    var j;
+    var act = document.createElement('section');
+    act.className = 'crew-act';
+
+    var head = document.createElement('div');
+    head.className = 'crew-head';
+    /* A member with no photograph gets none here. The house stand-in is right
+       for a page that would otherwise be blank; several copies of it down one
+       column is just several copies of it. */
+    if (a.image) {
+      var face = document.createElement('i');
+      face.className = 'crew-face';
+      face.setAttribute('aria-hidden', 'true');
+      face.style.backgroundImage = 'url("' + srcFor(a.image) + '")';
+      head.appendChild(face);
+    }
+    var title = document.createElement('h4');
+    title.className = 'crew-name';
+    title.textContent = a.name || fallbackName || '';
+    head.appendChild(title);
+    act.appendChild(head);
+
+    /* The addresses stay with the name, the way the collaboration's own sit
+       in the bar beside its name. */
+    var ls = a.links || [], nav = document.createElement('nav');
+    nav.className = 'profile-links';
+    for (j = 0; j < ls.length; j++) {
+      if (!ls[j] || !ls[j].url) continue;
+      var link = document.createElement('a');
+      link.href = ls[j].url;
+      link.target = '_blank';
+      link.rel = 'noreferrer noopener';
+      link.textContent = ls[j].label ||
+        String(ls[j].url).replace(/^https?:\/\//, '').split('/')[0];
+      nav.appendChild(link);
+    }
+    if (nav.childNodes.length) act.appendChild(nav);
+
+    if (a.bio) {
+      var bio = document.createElement('div');
+      bio.className = 'profile-bio';
+      bio.textContent = a.bio;
+      act.appendChild(bio);
+    }
+
+    var src = embedSrc(a.embed);
+    if (src) {
+      var player = document.createElement('iframe');
+      player.className = 'profile-player';
+      player.title = 'Music — ' + (a.name || fallbackName || '');
+      player.setAttribute('allow', 'autoplay');
+      player.setAttribute('loading', 'lazy');
+      player.src = src;
+      act.appendChild(player);
+    }
+    return act;
+  }
+
+  /* ---- the venue's map ---------------------------------------------------
+     The point comes out of the address the bill already carries. An
+     openstreetmap.org link written from their own page ends in
+     `#map=19/50.853854/4.326784`, and a link to a marked place carries
+     `mlat`/`mlon`; either says where the place is, so nothing new has to be
+     typed and nothing is geocoded at the time somebody reads the page. An
+     address that is not one of theirs simply has no map, as before. */
+  function osmPoint(url) {
+    var s = String(url || '');
+    if (!/openstreetmap\.org/i.test(s)) return null;
+    var m = s.match(/[#&?]map=(\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)/);
+    if (m) return { zoom: Number(m[1]), lat: Number(m[2]), lon: Number(m[3]) };
+    var la = s.match(/[?&#]mlat=(-?\d+(?:\.\d+)?)/);
+    var lo = s.match(/[?&#]mlon=(-?\d+(?:\.\d+)?)/);
+    if (la && lo) return { zoom: 17, lat: Number(la[1]), lon: Number(lo[1]) };
+    return null;
+  }
+
+  /* Their embed takes a box rather than a centre and a zoom, so the box is
+     worked back from the zoom — halved for every step in, which is what a
+     zoom level is. */
+  function osmEmbedSrc(pt) {
+    var k = Math.pow(2, 17 - Math.min(19, Math.max(12, pt.zoom || 17)));
+    var dLon = 0.0048 * k, dLat = 0.0021 * k;
+    return 'https://www.openstreetmap.org/export/embed.html?bbox=' +
+      [pt.lon - dLon, pt.lat - dLat, pt.lon + dLon, pt.lat + dLat]
+        .map(function (n) { return n.toFixed(6); }).join('%2C') +
+      '&layer=mapnik&marker=' + pt.lat.toFixed(6) + '%2C' + pt.lon.toFixed(6);
+  }
+
+  var mapPoint = null;
+
+  function buildMap(pt) {
+    var fig = document.getElementById('profile-map');
+    var frame = document.getElementById('profile-map-frame');
+    if (!fig || !frame) return;
+    mapPoint = pt || null;
+    if (!pt) {
+      fig.hidden = true;
+      /* Dropped, not merely hidden: a frame left with an address goes on being
+         a request to their server on every page that is not the venue's. */
+      frame.removeAttribute('src');
+      return;
+    }
+    var src = osmEmbedSrc(pt);
+    if (frame.getAttribute('src') !== src) frame.setAttribute('src', src);
+    var to = document.getElementById('profile-map-to');
+    if (to) to.value = pt.lat.toFixed(6) + ',' + pt.lon.toFixed(6);
+    fig.hidden = false;
+  }
+
+  /* "From here". Shown only where it can work: the browser must have
+     geolocation and the page must be served securely, which rules out a page
+     opened from a file or over plain http — there the button would ask for a
+     permission the browser will refuse anyway.
+
+     It fills the field rather than merely submitting: a fix takes a moment and
+     may be refused, and either way the reader should see what was put in their
+     name. The submit is attempted after, and if a popup blocker stops it the
+     field is filled and one press finishes the job. */
+  (function () {
+    var here = document.getElementById('profile-map-here');
+    var form = document.getElementById('profile-map-ask');
+    if (!here || !form || !navigator.geolocation || !window.isSecureContext) return;
+    here.hidden = false;
+    var idle = here.textContent;
+    here.addEventListener('click', function () {
+      var field = document.getElementById('profile-map-from');
+      here.disabled = true;
+      here.textContent = 'locating…';
+      function done(msg) {
+        here.disabled = false;
+        here.textContent = msg || idle;
+        if (msg) setTimeout(function () { here.textContent = idle; }, 2600);
+      }
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        if (field) {
+          field.value = pos.coords.latitude.toFixed(6) + ',' + pos.coords.longitude.toFixed(6);
+        }
+        done();
+        if (form.requestSubmit) form.requestSubmit(); else form.submit();
+      }, function (err) {
+        done(err && err.code === 1 ? 'not allowed' : 'no fix');
+      }, { enableHighAccuracy: false, timeout: 9000, maximumAge: 120000 });
+    });
+  })();
+
   /* Every name gets a page of ours. A name the roster has not been filled in for
      yet still gets one — its own name, the field running in the picture block,
      and whatever address the bill carries offered as a link — because a page
      waiting to be written is a truer thing to show than somebody else's site
      refusing to be framed. */
-  function showProfile(name, href, matchedArtist, forceDisplayName) {
+  function showProfile(name, href, matchedArtist, forceDisplayName, billed, isVenue) {
     var p = document.getElementById('profile');
     var note = document.getElementById('listen-note');
     var a = matchedArtist || artistFor(name) || { name: name, bio: '', image: '', links: [] };
@@ -7038,8 +7756,13 @@
 
     var pic = document.getElementById('profile-pic');
     var board = document.getElementById('profile-board');
-    if (a.image) {
-      pic.style.backgroundImage = 'url("' + srcFor(a.image) + '")';
+    /* A name with no photograph of its own gets the house one, so a profile is
+       never a blank. The field-texture block below remains the fallback to the
+       fallback: if `images/no-image.png` is not there, nothing changes. */
+    var shown = a.image || (defaultArtistPic ? DEFAULT_ARTIST_PIC : '');
+    board.classList.toggle('stand-in', !!shown && shown === DEFAULT_ARTIST_PIC);
+    if (shown) {
+      pic.style.backgroundImage = 'url("' + srcFor(shown) + '")';
       board.classList.remove('empty');
     } else {
       pic.style.backgroundImage = '';
@@ -7051,6 +7774,13 @@
     var src = embedSrc(a.embed);
     if (src) { player.src = src; player.hidden = false; }
     else { player.removeAttribute('src'); player.hidden = true; }
+    /* Split on the wording as it was written, not on what was printed: the
+       quotes that decide where the names part have been taken out of the
+       text by then. */
+    buildCrew(billed || name, a);
+    /* Only a place gets a map. An artist's address is an artist's address,
+       even in the unlikely event that it points at a map. */
+    buildMap(isVenue ? osmPoint(href) : null);
     applyProfile();
 
     var nav = document.getElementById('profile-links'), h = '';
@@ -7739,11 +8469,13 @@
     var a = el.closest && el.closest('a[href]');
     var billName = el.textContent;
     var profileName = profileNameForHue(el);
-    openName(profileName || billName, a && a.getAttribute('href'), billName, !!profileName);
+    openName(profileName || billName, a && a.getAttribute('href'), billName, !!profileName,
+             el.getAttribute('data-billed') || billName,
+             el.classList.contains('venue'));
   }
 
   /* Opening one, from wherever it was clicked. */
-  function openName(name, href, billName, forceDisplayName) {
+  function openName(name, href, billName, forceDisplayName, billed, isVenue) {
     name = (name || '').replace(/\s+/g, ' ').trim();
     if (!name) return;
     billName = (billName || name).replace(/\s+/g, ' ').trim();
@@ -7754,7 +8486,7 @@
     if (t2) t2.textContent = forceDisplayName ? name : ((found && found.name) || name);
     markCurrent(billName);
     showProfile(forceDisplayName ? name : ((found && found.name) || name),
-                href || '', found, forceDisplayName);
+                href || '', found, forceDisplayName, billed || billName, !!isVenue);
   }
 
   /* A name in the concert list opens in the panel beside it, not in a new tab.
@@ -7777,7 +8509,9 @@
     e.preventDefault();
     var billName = el.textContent;
     var profileName = profileNameForHue(el);
-    openName(profileName || billName, a && a.getAttribute('href'), billName, !!profileName);
+    openName(profileName || billName, a && a.getAttribute('href'), billName, !!profileName,
+             el.getAttribute('data-billed') || billName,
+             el.classList.contains('venue'));
     if (smartphoneMode()) setMobilePane('info');
   }
 
@@ -7864,7 +8598,7 @@
       var key = artistKey(name);
       if (!name || !key || seen[key]) return;
       seen[key] = true;
-      entries.push({ key: key, name: (artist && artist.name) || name,
+      entries.push({ key: key, name: (artist && artist.name) || unquoteName(name),
                      billName: name, artist: artist || null });
     }
     var artists = editorArtists();
@@ -7906,19 +8640,118 @@
     return valid ? clampNum(0.2, 6, scale) : null;
   }
 
-  function saveEdits() {
+  /* ---- the bill feeds the roster ----------------------------------------
+     A name typed on a bill is an artist, whether or not ARTISTS has heard of
+     it yet. Both tabs used to have to be filled in by hand, and a name entered
+     in EDIT simply had no card — which is how Gaute Granli came to be on an
+     affiche with nothing behind the name.
+
+     Names are matched the way the page matches them: brackets and punctuation
+     ignored, so a bill reading "Tresque (Release Party)" lands on the roster's
+     existing "Tresque" instead of making a second one of him. The card that
+     gets created is headed with the plain name, without the bill's qualifier.
+
+     A place held open is not an artist, so TBC and TBA are passed over.
+
+     Taking one back is deliberately timid. Only a card this session created
+     from a bill, which is still completely blank and which no bill names any
+     more, is removed — that is the corrected typo. Anything added by hand, and
+     anything with a word or a picture in it, stays. */
+  var billBorn = {}, billDismissed = {};
+
+  /* True when the roster actually moved, so a caller can leave the stage alone
+     when nothing happened. */
+  function syncRosterWithBills() {
+    var artists = editorArtists(), concerts = editorConcerts();
+    var named = {}, moved = false, c, p, i;
+
+    function want(billed) {
+      var key = artistKey(billed);
+      if (!key || key === 'tbc' || key === 'tba') return;
+      named[key] = true;
+      if (billDismissed[key] || artistFor(billed)) return;
+      var plain = unquoteName(billed).replace(/\s*\(.*?\)\s*/g, ' ')
+        .replace(/\s+/g, ' ').trim() || unquoteName(billed);
+      artists.push({ name: plain, bio: '', image: '', embed: '', aka: [], links: [] });
+      billBorn[artistKey(plain)] = true;
+      moved = true;
+    }
+
+    for (c = 0; c < concerts.length; c++) {
+      var projects = concerts[c].projects || [];
+      for (p = 0; p < projects.length; p++) {
+        var billed = String(((concerts[c].profileNames || [])[p] || projects[p]) || '')
+          .replace(/\s+/g, ' ').trim();
+        want(billed);
+        /* "A & B" is three cards and not one: the collaboration, which carries
+           the picture that is nobody's in particular, and each artist, whose
+           page is filled in on its own and read underneath the duo's name. */
+        var crew = billParts(billed);
+        if (crew) for (i = 0; i < crew.length; i++) want(crew[i]);
+      }
+    }
+    for (i = artists.length - 1; i >= 0; i--) {
+      var k = artistKey(artists[i].name), a = artists[i];
+      if (!billBorn[k] || named[k]) continue;
+      if (a.bio || a.image || a.embed || a.nameScale ||
+          (a.aka && a.aka.length) || (a.links && a.links.length)) continue;
+      artists.splice(i, 1);
+      delete billBorn[k];
+      moved = true;
+    }
+    return moved;
+  }
+
+  /* An edit has two halves, and they cost nothing alike. Writing it down is a
+     line of JSON into localStorage — a tenth of a millisecond. Showing it
+     relays out the whole stage, and that is the expensive one. */
+  function storeEdits() {
     try { localStorage.setItem(EDIT_STORE, JSON.stringify({
       revision: (window.MG && MG.contentRevision) || '', edits: window.MG_EDITS
     })); } catch (e) {}
+  }
+
+  function reflectEdits() {
     applyConcertEdits();
+    /* fit() ends by calling buildListen() itself, so the line-up has already
+       been rebuilt by the time it returns. The second call is dropped. It is
+       worth less than it looks: the first pass leaves the layout clean, so the
+       second forces few relayouts of its own — measured A/B from a fresh page,
+       437 layout reads and 331 ms against 419 and 296, about 35 ms off a
+       redraw. What makes it safe is the other half of the same measurement:
+       86 fixed elements of the stage, identical geometry to the hundredth of a
+       pixel on both sides. */
     fit();
-    buildListen();
     /* EDIT and INFO can stand side by side. Rebuild INFO immediately while the
        user is typing in EDIT, but never replace one of INFO's own active
        controls underneath its pointer or keyboard focus. */
     var infoPanel = document.getElementById('infos');
     if (document.documentElement.classList.contains('infos-open') &&
         (!infoPanel || !infoPanel.contains(document.activeElement))) drawInfos();
+  }
+
+  var editEcho = 0;
+
+  function saveEdits() {
+    if (editEcho) { clearTimeout(editEcho); editEcho = 0; }
+    storeEdits();
+    reflectEdits();
+  }
+
+  /* Typing is the one case where that order has to be broken. Measured on a
+     roster of twenty, a single keystroke in a card cost 330 to 600 ms: around twenty forced relayouts of the 1600 by 900 stage, 350 ms of
+     them spent inside getBoundingClientRect alone — the dates strip, the
+     wordmark's ink, the crest, each measured again after a write. Held at
+     arm's length the letters arrived in bursts.
+
+     So the keystroke writes the edit down and nothing else; the stage catches
+     up once the typing stops. The pause is short enough that a word typed and
+     left shows up at once, and long enough that a sentence costs one relayout
+     instead of forty. */
+  function saveEditsTyping() {
+    storeEdits();
+    if (editEcho) clearTimeout(editEcho);
+    editEcho = setTimeout(function () { editEcho = 0; reflectEdits(); }, 220);
   }
 
   var editorFilters = { concert: '', artist: '' };
@@ -8017,7 +8850,7 @@
      pre-built bill in place: add/remove, line-up length, links, date order and
      metadata now all change in the same session. */
   function setProjectName(node, value) {
-    var source = String(value == null ? '' : value), at = 0;
+    var source = unquoteName(value), at = 0;
     node.textContent = '';
     function appendCore(value) {
       var match = String(value).match(/^(\s*)([\s\S]*?)(\s*)$/);
@@ -8078,7 +8911,12 @@
     var title = (names.length ? names : ['Untitled']).map(function (name, i) {
       var profile = String(profiles[i] || '').trim();
       var profileAttr = profile ? ' data-profile-name="' + esc(profile) + '"' : '';
-      var span = '<span class="proj hue" tabindex="0"' + profileAttr + '>' +
+      /* The quotes are gone from the text, so the wording as written is kept
+         here — it is the only thing that still says which ampersands join two
+         names and which belong inside one. */
+      var billedAttr = unquoteName(name) === String(name) ? ''
+        : ' data-billed="' + esc(name) + '"';
+      var span = '<span class="proj hue" tabindex="0"' + profileAttr + billedAttr + '>' +
         projectNameHTML(name) + '</span>';
       var href = String(urls[i] || '').trim();
       var project = href ? '<a href="' + esc(href) + '">' + span + '</a>' : span;
@@ -8332,8 +9170,17 @@
               if (f === 'date') migrateDraftDate(previousDate, this.value);
             }
             else { a.links = a.links || []; a.links[Number(j)][f] = this.value; }
-            saveEdits();
+            saveEditsTyping();
           });
+          /* On commit, not on the keystroke: typing "Gaute" one letter at a
+             time must not leave G, Ga, Gau behind in ARTISTS. */
+          if (kind === 'concert') {
+            ins[k].addEventListener('change', function () {
+              var f = this.getAttribute('data-f');
+              if (f !== 'proj' && f !== 'profileName') return;
+              if (syncRosterWithBills()) saveEdits();
+            });
+          }
         }
         var bs = card.querySelectorAll('button');
         for (var b2 = 0; b2 < bs.length; b2++) {
@@ -8352,7 +9199,12 @@
               return;
             }
             if (act === 'addlink') { a.links = a.links || []; a.links.push({ label: '', url: '' }); }
-            else if (act === 'drop') { all.splice(idx, 1); }
+            else if (act === 'drop') {
+              /* Deleted on purpose. The bill still names them, so without this
+                 the next visit to ARTISTS would hand the card straight back. */
+              if (kind === 'artist' && a) billDismissed[artistKey(a.name)] = true;
+              all.splice(idx, 1);
+            }
             else if (act === 'addname') {
               a.projects.push(''); a.projectUrls = a.projectUrls || []; a.projectUrls.push('');
               a.profileNames = a.profileNames || []; a.profileNames.push('');
@@ -8360,6 +9212,7 @@
               a.projects.pop(); if (a.projectUrls) a.projectUrls.pop();
               if (a.profileNames) a.profileNames.pop();
             } else if (act === 'dropconcert') { all.splice(idx, 1); }
+            if (kind === 'concert') syncRosterWithBills();
             saveEdits(); drawEditor();
           });
         }
@@ -8889,13 +9742,30 @@
       }
       var e = edgeOf(which);
       if (which === 'board') {
-        cl.remove('be-ridge', 'be-groove');
+        cl.remove('be-ridge', 'be-groove', 'be-cell', 'be-glyph');
         if (e.s === 'ridge' || e.s === 'groove') cl.add('be-' + e.s);
+        if (bandStyle(e.s) && e.w) cl.add('be-' + e.s);
       }
       s.setProperty('--' + which + '-radius', e.r + 'px');
       s.setProperty('--' + which + '-edge-w', e.w + 'px');
+      /* A band is not a border: the element keeps none, and the ring is drawn
+         over it. Written as transparent rather than `none` so the box keeps
+         the same size either way — a frame that changes the picture's size
+         when you change its kind is a frame that moves the poster. */
       s.setProperty('--' + which + '-border',
-        (e.s === 'none' || !e.w) ? 'none' : (e.w + 'px ' + e.s + ' ' + e.c));
+        (e.s === 'none' || !e.w) ? 'none'
+          : (bandStyle(e.s) ? (e.w + 'px solid transparent')
+                            : (e.w + 'px ' + e.s + ' ' + e.c)));
+      if (bandStyle(e.s) && e.w) {
+        s.setProperty('--' + which + '-band',
+          e.s === 'glyph' ? glyphTile(e.g, e.u, e.c) : fillFor(e.cell, e.c));
+        s.setProperty('--' + which + '-band-tile', Math.max(4, e.u) + 'px');
+        s.setProperty('--' + which + '-band-ground', e.c2);
+      } else {
+        s.removeProperty('--' + which + '-band');
+        s.removeProperty('--' + which + '-band-tile');
+        s.removeProperty('--' + which + '-band-ground');
+      }
       /* The colour on its own as well as in the shorthand: the tickers are
          painted in the frame's edge colour, and a shorthand cannot be taken
          apart in CSS. */
@@ -9389,6 +10259,7 @@
 
     function tick() {
       if (dead) return;
+      if (stillAlways) return;
       if (frozen) { timer = setTimeout(tick, 120); return; }
       step();
       paint();
@@ -10087,6 +10958,14 @@
      picture rather than a page in motion. Each runner keeps its state; nothing
      is torn down, so letting go resumes rather than restarts. */
   var frozen = false;
+  /* Held still for good on a telephone. Every field on this page is a canvas
+     redrawn on a timer and handed to CSS as an encoded image; four of them run
+     at once, and on a phone that is most of what the page spends before it can
+     be read. One frame is painted — the organisms are what the page is made
+     of, so they are drawn — and nothing is scheduled after it. */
+  /* Declared, not initialised: the value is decided far above, beside
+     `smartphoneMode`, and `var` would hand it back a false from here. */
+  var stillAlways;
 
   /* What the letters show: the same field in the page's own purples. */
   /* The letters' livery, set light: the shading multiplies it down toward the
@@ -11829,6 +12708,7 @@
 
     function tick() {
       if (dead) return;
+      if (stillAlways) return;
       if (frozen) { timer = setTimeout(tick, 120); return; }
       if (build()) {
         if (back >= 0) {
@@ -12579,7 +13459,7 @@
     }
 
     if (!measure()) return null;
-    if (still) { paint(); } else { frame(); }
+    if (still || stillAlways) { paint(); } else { frame(); }
     return {
       remeasure: measure,
       stop: function () { dead = true; clearTimeout(timer); }
@@ -12859,7 +13739,7 @@
 
     seed();
     paint();
-    timer = setTimeout(tick, delay());
+    if (!stillAlways) timer = setTimeout(tick, delay());
 
     return function () { if (timer) { clearTimeout(timer); timer = null; } };
   }
@@ -12912,6 +13792,10 @@
      without this, arriving at a page would record what it was handed as a
      choice of its own, and the template could never reach it again. */
   var applyingPage = false;
+  /* Declared here, far above where they are used: `fit()` can run before the
+     foot of the script is reached, and an initialiser down there would undo
+     what the first pass had already decided. */
+  var phoneOn = false, phoneHomes = null, phonePosterH = -1, phoneLaneW = -1;
   function saveLook() {
     if (baseLook && !applyingPage) {
       /* Onto the date on screen, and nowhere else. */
@@ -13026,6 +13910,11 @@
            written any more: see the migration at boot, which reads any left
            over and drops the ones that no longer name a concert. */
         dates: dateDress,
+        /* Which theme this copy was made from. Without it, a browser's own
+           dressing outlived the file: a theme changed anywhere else — another
+           machine, git, a second window — came back overruled on the next
+           start by an older opinion stored here. */
+        themeRevision: (window.MG && MG.themeRevision) || '',
         baseLayout: baseLayout,
         life: look.life, boardGround: look.boardGround, gen: look.gen, edge: look.edge,
         bgLo: look.bgLo, bgHi: look.bgHi, boardLo: look.boardLo, boardHi: look.boardHi,
@@ -14096,6 +14985,41 @@
           + ' — click to let it follow again, wearing exactly what it wears now.'
       : 'Pin everything ' + key + ' is wearing, so later design work cannot reach it.';
   }
+  /* What a date overrules. Inheriting is the resting state: an unfrozen date
+     states only what it changes and takes the rest from the template. But
+     there was no way back — a value stated once stayed stated, and a template
+     changed afterwards could never reach it again. This drops what the date
+     says for itself and nothing else: the bill, the freeze, the publishing and
+     the frozen pictures are facts about the date rather than its dressing, and
+     they stay. ⌘Z puts the dressing back. */
+  /* What a date actually overrules — which is not everything it states. A
+     setting the template is silent about is overruling nothing: the picture's
+     texture dials, say, which exist on a date made since they were added and
+     nowhere in a template saved before. Counting those kept the button lit
+     after a reset that had in fact given everything back. */
+  function overruleCount(entry) {
+    var n = 0, k;
+    for (k in (entry.look || {})) if (baseLook && baseLook[k] !== undefined) n++;
+    for (k in (entry.layout || {})) if (baseLayout && baseLayout[k] !== undefined) n++;
+    return n;
+  }
+
+  function templateLabel() {
+    var b = document.getElementById('date-template');
+    if (!b) return;
+    var key = pageKey(page);
+    var e = key ? dateDress[key] : null;
+    var own = e ? overruleCount(e) : 0;
+    /* Hidden when there is nothing to give back, and while the date is frozen:
+       a frozen date is read-only until it is released, and a button that
+       silently does nothing is worse than no button. */
+    b.hidden = !key || !own || frozenAt(key);
+    if (b.hidden) return;
+    b.title = key + ' overrules the template on ' + own + ' setting'
+      + (own === 1 ? '' : 's') + ' — click to drop them and follow it again.'
+      + ' ⌘Z puts them back.';
+  }
+
   /* Is this date for the open web yet? Private is the resting state — a date
      says nothing about itself until somebody says it is ready — so a bill can
      be drafted, dressed and left alone for weeks without ever being reachable
@@ -14145,6 +15069,23 @@
       }
     });
   }
+
+  on('date-template', function () {
+    var key = pageKey(page);
+    if (!key || frozenAt(key)) return;
+    var entry = dateDress[key];
+    if (!entry || !overruleCount(entry)) return;
+    delete entry.look;
+    delete entry.layout;
+    if (!saysSomething(entry)) delete dateDress[key];
+    /* The template's dressing on screen, by the one path that knows how to put
+       it there — then written down, which with nothing of its own left is the
+       entry being cleared rather than rewritten. */
+    applyPageLook(page);
+    saveLook();
+    templateLabel();
+    persistDates(this, 'Template');
+  });
 
   on('date-public', function () {
     var key = pageKey(page);
@@ -14252,6 +15193,37 @@
     persistDates(this, frozenAt(key) ? 'Frozen' : 'Freeze');
   });
 
+  /* The template and every date's standing over it, written to the site's own
+     file. Both the layout toolbar's default and the panel's apply go through
+     here: a template that lives only in this browser is a template that the
+     next start, another machine and the published page all know nothing
+     about — which is exactly how an "apply to every page" could seem to do
+     nothing at all. */
+  function persistTheme(btn, said) {
+    var body = JSON.stringify({
+      look: baseLook || snapNow().look,
+      layout: baseLayout || layout,
+      dates: dateDress,
+      font: look.font, bodyFont: look.bodyFont
+    });
+    return fetch('/api/theme', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body
+    }).then(function (r) {
+      if (!r.ok) throw new Error('the site said no');
+      return r.json();
+    }).then(function () {
+      if (btn && said) btn.textContent = said;
+    }).catch(function (e) {
+      /* Off the local admin there is nothing to write to — say so rather than
+         failing quietly. */
+      if (btn) {
+        btn.textContent = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+          ? 'could not: ' + e.message
+          : 'only when the local admin is serving — use Copy JSON';
+      }
+    });
+  }
+
   on('snap-default', function () {
     var btn = document.getElementById('snap-default');
     /* The template *and* what every date says over it. Sending only what was
@@ -14263,28 +15235,7 @@
        The template is `baseLook`, not what is on screen: what is on screen is
        the template as this particular date has overruled it, and adopting that
        would quietly push one poster's choices onto every other date. */
-    var body = JSON.stringify({
-      look: baseLook || snapNow().look,
-      layout: baseLayout || layout,
-      dates: dateDress,
-      font: look.font, bodyFont: look.bodyFont
-    });
-    fetch('/api/theme', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body
-    }).then(function (r) {
-      if (!r.ok) throw new Error('the site said no');
-      return r.json();
-    }).then(function () {
-      if (btn) btn.textContent = 'this is the default now';
-    }).catch(function (e) {
-      /* Off the local admin there is nothing to write to — say so rather than
-         failing quietly. */
-      if (btn) {
-        btn.textContent = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-          ? 'could not: ' + e.message
-          : 'only when the local admin is serving — use Copy JSON';
-      }
-    });
+    persistTheme(btn, 'this is the default now');
   });
 
   /* Pushing, from the page's own corner: the app is this page, so the button
@@ -14543,6 +15494,35 @@
              (BORDERS[i][0] === e.s ? ' selected' : '') + '>' + BORDERS[i][1] + '</option>';
     }
     out += '</select>';
+    /* What a band needs and a line does not: which cell or which character,
+       how big one of them is, and the ground it sits on. Shown only for the
+       two band kinds — a line has no use for any of it. */
+    if (bandStyle(e.s)) {
+      if (e.s === 'cell') {
+        var cells = Object.keys((window.MG && MG.patterns) || {});
+        out += '<select class="edge-cell" data-edge="' + which + '">';
+        for (var c = 0; c < cells.length; c++) {
+          out += '<option value="' + cells[c] + '"' +
+                 (cells[c] === e.cell ? ' selected' : '') + '>' + cells[c] + '</option>';
+        }
+        out += '</select>';
+      } else {
+        out += '<select class="edge-glyph" data-edge="' + which + '">';
+        for (var g = 1; g < GLYPHS.length; g++) {
+          out += '<option value="' + GLYPHS[g] + '"' +
+                 (GLYPHS[g] === e.g ? ' selected' : '') + '>' + GLYPHS[g] + '</option>';
+        }
+        out += '</select>';
+      }
+      out += '<dl><dt>band step</dt><dd><input type="number" class="edge" step="1" min="2" ' +
+             'max="96" data-edge="' + which + '" data-key="u" value="' + e.u + '"></dd></dl>';
+      out += '<div class="swatches"><label class="swatch" title="band ground">' +
+             '<input type="color" class="edge-colour2" data-edge="' + which +
+             '" value="' + e.c2 + '">' +
+             '<input type="text" class="hex" value="' + e.c2 +
+             '" spellcheck="false" autocomplete="off" aria-label="band ground">' +
+             '</label></div>';
+    }
     /* The border's colour gets the same pair as every other: a well and a value.
        It had only the well, which is fine for choosing and no use for matching. */
     out += '<div class="swatches"><label class="swatch" title="border colour">' +
@@ -15230,7 +16210,11 @@
     html += paramsRows({ size: textParam('size', 1),
                          tracking: textParam('tracking', 0.06),
                          leading: textParam('leading', 1.5),
-                         inset: textParam('inset', BOARD_INSET) }, 'text');
+                         inset: textParam('inset', BOARD_INSET),
+                         'names outline': textParam('names outline', 0),
+                         'info outline': textParam('info outline', 0) }, 'text');
+    html += swatchRow([['namesStrokeCol', look.namesStrokeCol || textInk(), 'names outline'],
+                       ['metaStrokeCol', look.metaStrokeCol || textInk(), 'info outline']]);
 
     /* The gutter, chosen by looking at it: every glyph drawn at the size it will
        be, and the page showing what each would look like as the pointer passes
@@ -15944,6 +16928,28 @@
     for (var e2 = 0; e2 < eSel.length; e2++) {
       eSel[e2].addEventListener('change', function () {
         edgeSet(this.getAttribute('data-edge'), 's', this.value);
+        /* The two band kinds bring controls of their own, and the line kinds
+           take them away again — so the rows are rebuilt when the kind
+           changes, and only then. */
+        if (typeof drawParams === 'function') drawParams();
+      });
+    }
+    var eCell = body.querySelectorAll('select.edge-cell');
+    for (var e4 = 0; e4 < eCell.length; e4++) {
+      eCell[e4].addEventListener('change', function () {
+        edgeSet(this.getAttribute('data-edge'), 'cell', this.value);
+      });
+    }
+    var eGly = body.querySelectorAll('select.edge-glyph');
+    for (var e5 = 0; e5 < eGly.length; e5++) {
+      eGly[e5].addEventListener('change', function () {
+        edgeSet(this.getAttribute('data-edge'), 'g', this.value);
+      });
+    }
+    var eCol2 = body.querySelectorAll('input.edge-colour2');
+    for (var e6 = 0; e6 < eCol2.length; e6++) {
+      eCol2[e6].addEventListener('input', function () {
+        edgeSet(this.getAttribute('data-edge'), 'c2', this.value);
       });
     }
     var eCol = body.querySelectorAll('input.edge-colour');
@@ -16058,13 +17064,29 @@
       baseLayout = takeLayout();
       var kept = 0;
       for (var dk in dateDress) {
-        if (dateDress[dk] && dateDress[dk].frozen) { kept++; continue; }
-        delete dateDress[dk];
+        var de = dateDress[dk];
+        if (!de) continue;
+        if (de.frozen) { kept++; continue; }
+        /* Its dressing, and only its dressing. Whether the date is published
+           and where its frozen pictures were copied are facts about the date,
+           not what it is wearing — wiping the whole entry quietly un-published
+           a bill and lost the copies taken when it was frozen. */
+        delete de.look;
+        delete de.layout;
+        if (!saysSomething(de)) delete dateDress[dk];
       }
       saveLook();
-      this.textContent = kept
-        ? 'applied to every page — ' + kept + ' frozen date' + (kept > 1 ? 's' : '') + ' left alone'
-        : 'applied to every page';
+      /* …and written to the file. Left in this browser alone it did not
+         survive a reload: the next start read the old template back out of
+         theme.json and every date that had just given up its own values
+         inherited the old one again — which looked exactly like the frames
+         and the colours refusing to follow. */
+      var btn2 = this;
+      persistTheme(btn2, kept
+        ? 'applied to every page — ' + kept + ' frozen date' + (kept > 1 ? 's' : '')
+            + ' left alone, release it to include it'
+        : 'applied to every page');
+      if (typeof templateLabel === 'function') templateLabel();
     });
     var rst = body.querySelector('#params-reset');
     if (rst) rst.addEventListener('click', function () {
@@ -16556,7 +17578,9 @@
     showCellControls();
     redrawPanels();
     if (typeof freezeLabel === 'function') freezeLabel();
+    if (typeof templateLabel === 'function') templateLabel();
     if (typeof publicLabel === 'function') publicLabel();
+    if (typeof buildPhone === 'function') { buildPhone(); fitPhone(); }
     applyingPage = false;
   }
 
@@ -16639,7 +17663,20 @@
     var shipped = (window.MG && MG.dates && typeof MG.dates === 'object') ? MG.dates : null;
     var d;
     if (shipped) for (d in shipped) dateDress[d] = shipped[d];
-    if (saved.dates && typeof saved.dates === 'object') {
+    /* A copy made from a theme that is no longer the one on disk is a copy of
+       something that has been replaced. It is dropped whole and the file
+       stands — which is the only way a design applied elsewhere can reach a
+       browser that was already dressing these dates.
+
+       Work in progress is not lost by this: nothing writes the file without
+       writing this copy in the same breath, so the two agree for as long as
+       the only thing changing them is this window. */
+    /* A copy with no stamp at all predates this rule, and there is no way to
+       know what it was made from — so it is treated as old. It costs one
+       reload, once, and after it every copy says. */
+    var sameTheme = !!saved.themeRevision &&
+      saved.themeRevision === ((window.MG && MG.themeRevision) || '');
+    if (sameTheme && saved.dates && typeof saved.dates === 'object') {
       /* Field by field, not entry by entry. Replacing the whole entry meant a
          browser that had stored one before some fact existed — being public,
          say — shadowed the shipped entry and took that fact away with it. What
@@ -16697,8 +17734,257 @@
       if (!saysSomething(dateDress[d])) delete dateDress[d];
     }
   })();
+  /* ---- the phone's page -------------------------------------------------
+     On a phone the stage stops being a window onto a 1600 by 900 composition
+     and becomes the head of a document. Nothing of the drawing is rewritten:
+     the poster is that same stage, moved into a box in the flow and scaled so
+     its own frame is the width of the screen. Under it the gutter's glyph laid
+     on its side, then every name on the bill one after another with its words
+     and its record, then the place and the way to it.
+
+     The two-window switch goes. Everything the date has to say is on one page,
+     in the order it is read, over one continuous ground. */
+  function phoneAble() {
+    return !!document.getElementById('phone-doc') && smartphoneMode();
+  }
+
+  /* The bill this page stands on, read from the data rather than the DOM so a
+     name nobody has opened is still accounted for. */
+  function phoneBill() {
+    var key = pageKey(page), list = (window.MG && MG.concerts) || [], i;
+    for (i = 0; i < list.length; i++) if (String(list[i].date) === key) return list[i];
+    return null;
+  }
+
+  function phoneActs() {
+    var host = document.getElementById('phone-acts');
+    if (!host) return;
+    host.textContent = '';
+    var bill = phoneBill();
+    if (!bill) return;
+    var names = bill.projects || [], profiles = bill.profileNames || [], i, j;
+    for (i = 0; i < names.length; i++) {
+      var billed = String(profiles[i] || names[i] || '').replace(/\s+/g, ' ').trim();
+      if (!billed) continue;
+      var card = artistFor(billed);
+      host.appendChild(crewSection(card, unquoteName(billed)));
+      /* …and when the name is several people, each of them under it, in the
+         order the bill prints them. */
+      var crew = crewFor(billed, card);
+      for (j = 0; j < crew.length; j++) {
+        host.appendChild(crewSection(crew[j].artist, crew[j].billed));
+      }
+    }
+  }
+
+  /* The same glyph as the gutter, in the same colour and the same fill — it
+     answers to the same classes on the root — simply set in a row. Empty when
+     the gutter is off, and the rule hides it. */
+  /* Relative luminance, the sRGB one, for deciding whether two colours can be
+     told apart at a glance. */
+  function lumOf(hex) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+    if (!m) return null;
+    var n = parseInt(m[1], 16), c = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    for (var i = 0; i < 3; i++) {
+      var v = c[i] / 255;
+      c[i] = v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    }
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function pageGroundCol() {
+    var cs = getComputedStyle(document.documentElement);
+    return (cs.getPropertyValue('--void') || '#000000').trim();
+  }
+  function readableOn(col, ground) {
+    var a = lumOf(col), b = lumOf(ground);
+    var ink = (getComputedStyle(document.documentElement)
+                 .getPropertyValue('--ink') || '#ffffff').trim();
+    if (a === null) return ink;
+    if (b === null) return col;
+    /* The WCAG ratio, loosely: under three to one a mark this size is a smudge
+       on the ground rather than a mark on it. */
+    var hi = Math.max(a, b) + 0.05, lo = Math.min(a, b) + 0.05;
+    return (hi / lo) < 3 ? ink : col;
+  }
+
+  function phoneLane() {
+    var lane = document.getElementById('phone-lane');
+    if (!lane) return;
+    lane.textContent = '';
+    if (!document.documentElement.classList.contains('guttering')) return;
+    var g = (typeof currentGlyph === 'function') ? currentGlyph() : 'none';
+    if (!g || g === 'none') return;
+    /* Laid out rather than cloned: the gutter's markup is a column, and a
+       column dropped into a row is 578 pixels of nothing. The glyph, its size
+       and its spacing are the gutter's own; only the direction changes. */
+    /* The gutter's glyph is drawn at the size of a column running the height
+       of a 900-pixel stage. Laid across a phone it is a rule between two
+       things, not a column, so it is capped — large enough to read as the same
+       mark, small enough not to be a third block of its own. */
+    var size = Math.min(34, Math.max(4, genValue('gutter', 'size', 18)));
+    var step = Math.max(0.6, genValue('gutter', 'step', 1.6));
+    lane.style.fontSize = size + 'px';
+    /* The gutter's colour is chosen against the strip of stage between the two
+       frames, which is not the ground this lane lies on: Daniel's is black, and
+       on the phone's black page it was a row of nothing. Kept when it can be
+       seen, and the page's ink when it cannot. */
+    lane.style.color = readableOn(look.glyphCol || '', pageGroundCol());
+    var room = lane.clientWidth || document.documentElement.clientWidth || 360;
+    var n = Math.max(3, Math.min(60, Math.floor(room / Math.max(6, size * step))));
+    for (var i = 0; i < n; i++) {
+      var el = document.createElement('i');
+      el.textContent = g;
+      lane.appendChild(el);
+    }
+  }
+
+  function phoneMap() {
+    var fig = document.getElementById('phone-map');
+    var frame = document.getElementById('phone-map-frame');
+    if (!fig || !frame) return;
+    var bill = phoneBill();
+    var place = bill ? String(bill.location || '').trim() : '';
+    var named = bill ? venueNameForConcert(bill) : '';
+    var pt = bill ? osmPoint(String(bill.locationUrl || '')) : null;
+    var old = fig.querySelectorAll('.phone-venue, .phone-where'), i;
+    for (i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
+    if (!pt && !place) { fig.hidden = true; frame.removeAttribute('src'); return; }
+    var first = fig.firstChild;
+    if (place) {
+      var where = document.createElement('p');
+      where.className = 'phone-where';
+      where.textContent = place;
+      fig.insertBefore(where, first);
+    }
+    if (named) {
+      var h = document.createElement('p');
+      h.className = 'phone-venue';
+      h.textContent = named;
+      fig.insertBefore(h, fig.firstChild);
+    }
+    if (pt) {
+      var src = osmEmbedSrc(pt);
+      if (frame.getAttribute('src') !== src) frame.setAttribute('src', src);
+      frame.hidden = false;
+      var to = document.getElementById('phone-map-to');
+      if (to) to.value = pt.lat.toFixed(6) + ',' + pt.lon.toFixed(6);
+    } else {
+      frame.removeAttribute('src');
+      frame.hidden = true;
+    }
+    fig.hidden = false;
+  }
+
+  function buildPhone() {
+    if (!phoneOn) return;
+    phoneLane();
+    phoneActs();
+    phoneMap();
+  }
+
+  /* The poster at the width of the screen. Its box is read with `offsetLeft`
+     and friends, which are the stage's own units and say nothing about the
+     scale the stage happens to be wearing — measuring through the scale would
+     be measuring the answer with the answer. */
+  function fitPhone() {
+    if (!phoneOn) return;
+    var host = document.getElementById('phone-poster');
+    var stage = document.getElementById('stage');
+    if (!host || !stage) return;
+    function offsetIn(el) {
+      var x = 0, y = 0;
+      while (el && el !== stage && el.offsetParent) {
+        x += el.offsetLeft; y += el.offsetTop; el = el.offsetParent;
+      }
+      return [x, y];
+    }
+    /* The poster is the card, not the picture in it. The bill's words are
+       dragged where they look right and regularly stand outside the picture's
+       own box — framing on the picture cut the line-up off at the left. The
+       boxed outline is exactly the card, so it is the frame when there is one;
+       without it the card is whatever the bill's parts add up to. */
+    var card = document.querySelector('.wm-box');
+    var x, y, w, h;
+    if (card && card.offsetWidth && card.offsetHeight) {
+      var o = offsetIn(card);
+      x = o[0]; y = o[1]; w = card.offsetWidth; h = card.offsetHeight;
+    } else {
+      var parts = (pages[page] || document).querySelectorAll(
+        '.concerts, .concert-title, .concert-meta, .poster');
+      var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, i;
+      for (i = 0; i < parts.length; i++) {
+        if (!parts[i].offsetWidth && !parts[i].offsetHeight) continue;
+        var q = offsetIn(parts[i]);
+        x0 = Math.min(x0, q[0]); y0 = Math.min(y0, q[1]);
+        x1 = Math.max(x1, q[0] + parts[i].offsetWidth);
+        y1 = Math.max(y1, q[1] + parts[i].offsetHeight);
+      }
+      if (!isFinite(x0)) return;
+      /* A hair of air, so nothing sits flush against the cut. */
+      x = x0 - 12; y = y0 - 12; w = (x1 - x0) + 24; h = (y1 - y0) + 24;
+    }
+    if (!w || !h) return;
+    var room = host.clientWidth || document.documentElement.clientWidth;
+    var k = room / w;
+    var st = document.documentElement.style;
+    st.setProperty('--phone-k', String(k));
+    st.setProperty('--phone-tx', (-x) + 'px');
+    st.setProperty('--phone-ty', (-y) + 'px');
+    /* Written only when it has actually moved: the height feeds the layout the
+       next measurement is taken from, and setting it on every pass would be a
+       loop looking for a reason. */
+    var want = Math.round(h * k);
+    if (want !== phonePosterH) {
+      phonePosterH = want;
+      host.style.height = want + 'px';
+    }
+    /* The lane counts its glyphs against the width, so a turned phone re-counts
+       them — but only when the width has actually changed. */
+    var lane = document.getElementById('phone-lane');
+    if (lane && lane.clientWidth !== phoneLaneW) {
+      phoneLaneW = lane.clientWidth;
+      phoneLane();
+    }
+  }
+
+  function syncPhone() {
+    var doc = document.getElementById('phone-doc');
+    var stage = document.getElementById('stage');
+    if (!doc || !stage) return;
+    var on = phoneAble();
+    if (on !== phoneOn) {
+      phoneOn = on;
+      document.documentElement.classList.toggle('phone', on);
+      doc.hidden = !on;
+      var top = document.getElementById('ticker-top');
+      var foot = document.getElementById('ticker-foot');
+      if (on) {
+        /* Where each of them stood, so a window widened again puts the page
+           back exactly as it was rather than approximately. */
+        phoneHomes = [stage, top, foot].filter(Boolean).map(function (n) {
+          return { node: n, parent: n.parentNode, next: n.nextSibling };
+        });
+        if (top) doc.insertBefore(top, doc.firstChild);
+        document.getElementById('phone-poster').appendChild(stage);
+        if (foot) doc.appendChild(foot);
+        phonePosterH = -1;
+        buildPhone();
+      } else if (phoneHomes) {
+        for (var i = 0; i < phoneHomes.length; i++) {
+          var hm = phoneHomes[i];
+          hm.parent.insertBefore(hm.node, hm.next);
+        }
+        phoneHomes = null;
+        document.getElementById('phone-poster').style.removeProperty('height');
+      }
+    }
+    fitPhone();
+  }
+
   applyPageLook(page);
   if (typeof freezeLabel === 'function') freezeLabel();
+  if (typeof templateLabel === 'function') templateLabel();
   if (typeof publicLabel === 'function') publicLabel();
 
   /* /edit, or ?edit, or #edit — whichever way someone arrives at it. */
@@ -16736,7 +18022,13 @@
     });
     function tab(id, which) {
       var e = document.getElementById(id);
-      if (e) e.addEventListener('click', function () { editorTab = which; drawEditor(); });
+      if (e) e.addEventListener('click', function () {
+        editorTab = which;
+        /* Opening ARTISTS is the moment the list has to be true, including for
+           bills written before any of this existed. */
+        if (which === 'artists' && syncRosterWithBills()) saveEdits();
+        drawEditor();
+      });
     }
     tab('ed-tab-concerts', 'concerts');
     tab('ed-tab-artists', 'artists');
