@@ -17349,6 +17349,19 @@
      change made in one has to show in the other. */
   function redrawPanels() { drawParams(); drawInfos(); }
 
+  /* Eleven handlers in the panels end on `redraw()`, and there was no such
+     function anywhere: every one of them threw a ReferenceError on that line.
+
+     The frame chooser is the visible casualty. Picking "Cadre 3" set the index
+     and then died before the fields were rebuilt, so the panel went on showing
+     the first frame's numbers under the third frame's name — and every edit
+     went to the first frame while the name said otherwise. Which is exactly
+     what "I cannot change the size of this frame" looks like from outside.
+
+     What all eleven want is the panels drawn again from what the look now
+     says; each has already done its own work on the page before calling. */
+  function redraw() { redrawPanels(); }
+
   /* A panel that rebuilds itself under the hand using it is a panel that cannot
      be used. The pointer over it and the focus inside it were being watched
      already; the colour well is the case they miss — the system's colour window
