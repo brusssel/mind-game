@@ -489,9 +489,9 @@
         "tex": "grid",
         "text": "moire",
         "hover": "noise",
-        "hoverInk": "#88bc6c",
+        "hoverInk": "#3bce67",
         "hoverAltInk": "#000000",
-        "textInk": "#d1dae0",
+        "textInk": "#e1e9ef",
         "contour": "normal",
         "bg": "physarum",
         "frame": "smoothlife",
@@ -737,12 +737,14 @@
             "timePriceGap": 0,
             "placeTimeGap": 12,
             "pictureLineupGap": 6.2,
-            "artistLeading": 1.2,
-            "lineupInfoGap": 0,
-            "metaLeading": 0.75,
+            "artistLeading": 1.15,
+            "lineupInfoGap": 0.3,
+            "metaLeading": 0.8,
             "inset": 0.04,
             "tracking": 0.06,
-            "leading": 1.35
+            "leading": 1.35,
+            "names outline": 2.5,
+            "info outline": 0.2
           },
           "nav": {
             "size": 5,
@@ -754,7 +756,7 @@
           },
           "contour": {
             "seconds": 5,
-            "width": 2
+            "width": 1.9
           },
           "motion": {
             "seconds": 2,
@@ -838,7 +840,8 @@
           "top": {
             "height": 7.1,
             "size": 4,
-            "strip cell": 10
+            "strip cell": 10,
+            "cell": 8
           },
           "wmpos": {
             "offsetX": 0
@@ -905,7 +908,9 @@
         "picTexBlend": "multiply",
         "picTexScale": 8,
         "picTexInk": null,
-        "picTexGround": null
+        "picTexGround": null,
+        "namesStrokeCol": "#000000",
+        "metaStrokeCol": "#d17233"
       },
       "layout": {
         "wmW": 672,
