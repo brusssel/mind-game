@@ -17595,6 +17595,13 @@
       drawPosters();
     }
     applyEdges();
+    /* The organic distortions with the rest. They were applied only when the
+       panel was touched and when a font changed — never when a date's dressing
+       was put on, which is every load and every page turn. So a force stored on
+       a date was painted once, in the session that set it, and was dead ever
+       after: on the next start, and on the published page, the names carried no
+       distortion however high the dial stood. */
+    applyOrganicDistortion();
     applyProfile();
     applyProfileHover();
     startPicSkin();
