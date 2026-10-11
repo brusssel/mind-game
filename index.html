@@ -1521,15 +1521,27 @@
      same corners and frame — and the field for where you are coming from
      stands under it. A venue whose address says nothing keeps the stand-in. */
   html.map-instead .profile-board { display: none; }
-  html.map-instead .profile-map { order: 3; }
+  /* And it fills what is left. The place is the one page with nothing to read
+     on it — no words, no record — so the map has the room, and takes it: the
+     block grows to the foot of the panel, the field and the two buttons keep
+     their own height under it. `.profile > *` pins every child at its natural
+     size, which is why this has to say otherwise. */
+  html.map-instead .profile-map {
+    order: 3;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
   html.map-instead .profile-map iframe {
     width: var(--profile-picw, 100%);
-    height: auto;
-    aspect-ratio: 1 / var(--profile-shape, 0.5526);
     align-self: center;
+    flex: 1 1 auto;
+    min-height: 8rem;
+    height: auto;
+    aspect-ratio: auto;
     border-radius: var(--profilepic-radius, var(--pic-radius, 0));
     border: var(--profilepic-border, var(--pic-border, none));
   }
+  html.map-instead .profile-map .map-ask { flex: 0 0 auto; }
 
   .map-ask { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: stretch; }
   /* Its own line, always: three controls across a panel this narrow is three
