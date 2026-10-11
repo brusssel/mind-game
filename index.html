@@ -1515,6 +1515,22 @@
     background: var(--void);
     filter: var(--map-treatment, invert(1) grayscale(1) contrast(0.92) brightness(0.96));
   }
+  /* A place has a map, and a map is a truer picture of it than the house
+     stand-in. When there is one the picture block gives up its room: the map
+     takes the picture's own box — the same width, the same proportion, the
+     same corners and frame — and the field for where you are coming from
+     stands under it. A venue whose address says nothing keeps the stand-in. */
+  html.map-instead .profile-board { display: none; }
+  html.map-instead .profile-map { order: 3; }
+  html.map-instead .profile-map iframe {
+    width: var(--profile-picw, 100%);
+    height: auto;
+    aspect-ratio: 1 / var(--profile-shape, 0.5526);
+    align-self: center;
+    border-radius: var(--profilepic-radius, var(--pic-radius, 0));
+    border: var(--profilepic-border, var(--pic-border, none));
+  }
+
   .map-ask { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: stretch; }
   /* Its own line, always: three controls across a panel this narrow is three
      controls nobody can hit. */
@@ -7689,6 +7705,8 @@
     var frame = document.getElementById('profile-map-frame');
     if (!fig || !frame) return;
     mapPoint = pt || null;
+    /* The map stands in for the picture only when there is one to show. */
+    document.documentElement.classList.toggle('map-instead', !!pt);
     if (!pt) {
       fig.hidden = true;
       /* Dropped, not merely hidden: a frame left with an address goes on being
