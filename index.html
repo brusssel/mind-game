@@ -1686,10 +1686,7 @@
   .profile-player[hidden] { display: none; }
 
   .profile-bio {
-    /* Même loi : le texte de la fiche est peint par son fond quand il porte une
-       texture, et son interligne serré laissait la dernière ligne sortir de la
-       boîte — « overseas. » coupé en deux. */
-    padding: 0.35em 0; margin: -0.35em 0;
+    margin: 0;
     color: var(--info-words-col, inherit);
     hyphens: auto;
     font-family: var(--info-body-font, var(--body-font));
@@ -1704,9 +1701,16 @@
      as the name — clipped exactly the same way. Left at the page's own, the
      words stay flat, which is what body text at this size wants. */
   /* Un paragraphe par bloc de texte (voir `setBio`), et l'espacement qu'une
-     ligne vide donnait. */
-  .profile-bio > p { margin: 0; }
-  .profile-bio > p + p { margin-top: calc(var(--info-leading, 1.65) * 1em); }
+     ligne vide donnait.
+
+     La rallonge du fond est portée par le PARAGRAPHE, puisque c'est lui qui
+     peint : un tiers de cadratin en haut et en bas, repris par la marge. Posée
+     sur le bloc entier, elle ne servait qu'à sa dernière ligne à lui, et chaque
+     paragraphe coupait la sienne. */
+  .profile-bio > p { padding: 0.35em 0; margin: -0.35em 0; }
+  .profile-bio > p + p {
+    margin-top: calc(var(--info-leading, 1.65) * 1em - 0.35em);
+  }
   /* Le fond découpé à la forme des lettres est porté par chaque paragraphe, et
      non par le bloc entier : c'est ce qui garde chaque masque loin de la borne
      de surface de WebKit. Un texte posé autrement qu'en paragraphes garde sa
