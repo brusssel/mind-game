@@ -1580,8 +1580,10 @@
   .profile h3 {
     /* Peint par son fond, découpé à la forme des lettres : ce fond s'arrête à
        la boîte, et les glyphes dépassent la boîte — voir `.concert-title`, même
-       loi. Un tiers de cadratin de rallonge, repris par la marge. */
-    padding: 0.35em 0; margin: -0.35em 0;
+       loi. La rallonge est au plus juste : le dépassement mesuré est d'un pixel
+       sur 152, et sur le téléphone cette rallonge fait l'air sous le nom. Trop
+       large, elle écarte le nom de ses adresses. */
+    padding: 0.18em 0; margin: -0.18em 0;
     text-align: var(--profile-name-align, center);
     /* Its own face when it has been given one, the wordmark's otherwise. */
     font-family: var(--info-wm-font, var(--wm-font, inherit)); font-weight: 700;
@@ -1707,9 +1709,9 @@
      peint : un tiers de cadratin en haut et en bas, repris par la marge. Posée
      sur le bloc entier, elle ne servait qu'à sa dernière ligne à lui, et chaque
      paragraphe coupait la sienne. */
-  .profile-bio > p { padding: 0.35em 0; margin: -0.35em 0; }
+  .profile-bio > p { padding: 0.2em 0; margin: -0.2em 0; }
   .profile-bio > p + p {
-    margin-top: calc(var(--info-leading, 1.65) * 1em - 0.35em);
+    margin-top: calc(var(--info-leading, 1.65) * 1em - 0.2em);
   }
   /* Le fond découpé à la forme des lettres est porté par chaque paragraphe, et
      non par le bloc entier : c'est ce qui garde chaque masque loin de la borne
@@ -2848,7 +2850,7 @@
     html.phone .phone-acts .phone-profile > h3 { margin: 0; }
     html.phone .phone-acts .profile-bio > p:first-child { margin-top: 0; }
     html.phone .phone-acts .profile-bio > p:last-child { margin-bottom: 0; }
-    html.phone .phone-acts .profile-board { margin-top: 0.8rem; }
+    html.phone .phone-acts .profile-board { margin-top: 0.3rem; }
     html.phone .phone-acts .profile-player { margin-top: 1.2rem; }
     /* Les contours du site, repris tels quels : celui du cadre autour de
        l'affiche, celui du panneau d'écoute autour de chaque fiche — c'est le
