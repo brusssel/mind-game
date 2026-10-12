@@ -2858,7 +2858,10 @@
     html.phone .phone-acts .phone-profile {
       border: var(--listen-border, none);
       border-radius: var(--listen-radius, 0);
-      padding: 1.1rem;
+      /* Moins d'air sur le haut que sur les côtés : le nom porte déjà sa propre
+         rallonge, et les deux s'additionnaient en une bande vide sous le trait
+         du cadre. */
+      padding: 0.4rem 1.1rem 1.1rem;
     }
     /* A name arrived at from the poster should land under the top of the
        screen, not flush against it. */
