@@ -13256,24 +13256,36 @@
      rideau les attend : chacun s'annonce en démarrant et se décompte en
      publiant. Deux secondes au plus — un champ dont la boîte est vide ne
      publiera jamais, et la page n'a pas à l'attendre pour autant. */
-  var stillPending = 0, stillSeen = {}, stillCap = 0;
+  var stillPending = 0, stillSeen = {}, stillCap = 0, stillBeatAt = 0;
   function stillWaitFor(name) {
     if (!stillAlways || stillSeen[name]) return;
     stillSeen[name] = 'attendu';
     stillPending++;
-    if (!stillCap) {
-      stillCap = setTimeout(function () {
-        stillPending = 0;
-        if (typeof revealFinishedPage === 'function') revealFinishedPage(false);
-      }, 2000);
-    }
+    stillBeat();
+  }
+  /* Le garde-fou ne compte pas le temps : il regarde si le travail AVANCE. Une
+     limite fixe lâche sur l'appareil lent — celui qui en a le plus besoin —, et
+     la page s'ouvre alors sur son damier nu, le temps que les champs finissent.
+     Tant qu'un champ fait des pas, on l'attend ; s'il se tait une seconde et
+     demie, c'est qu'il ne publiera pas, et la page s'ouvre sans lui. */
+  function stillBeat() {
+    if (!stillAlways) return;
+    stillBeatAt = (window.performance && performance.now) ? performance.now() : +new Date();
+    if (stillCap) return;
+    stillCap = setInterval(function () {
+      var t = (window.performance && performance.now) ? performance.now() : +new Date();
+      if (t - stillBeatAt < 1500) return;
+      clearInterval(stillCap); stillCap = 0;
+      stillPending = 0;
+      if (typeof revealFinishedPage === 'function') revealFinishedPage(false);
+    }, 400);
   }
   function stillShown(name) {
     if (!stillAlways || stillSeen[name] !== 'attendu') return;
     stillSeen[name] = 'montré';
     if (--stillPending <= 0) {
       stillPending = 0;
-      if (stillCap) { clearTimeout(stillCap); stillCap = 0; }
+      if (stillCap) { clearInterval(stillCap); stillCap = 0; }
       if (typeof revealFinishedPage === 'function') revealFinishedPage(false);
     }
   }
@@ -13410,6 +13422,7 @@
          — done at every step of the opening it is the whole of the delay, and
          the phone has nothing left for the finger. Only the last step speaks. */
       quiet = stillAlways && (warm + 1 < STILL_WARMUP);
+      stillBeat();              /* le garde-fou voit que ça travaille */
       if (build()) {
         if (back >= 0) {
           /* A frame a tick. Timing the wind-back to the length of the run it
