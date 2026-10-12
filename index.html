@@ -2795,6 +2795,12 @@
     /* Entre deux artistes, le signe de la gouttière plutôt qu'un trait : le
        même que sous l'affiche, beaucoup plus petit. */
     html.phone .phone-acts .phone-sep { padding: 0.9rem 0; }
+    /* Un peu d'air entre les parties d'une fiche. Le texte tombait exactement
+       sur le bord du lecteur — zéro pixel entre la dernière ligne et le haut de
+       la page de Bandcamp —, et il avait l'air d'y entrer. Dans la fenêtre du
+       site cette suite se lit en défilant ; dans une colonne elle se lit d'un
+       trait, et les blocs ont besoin d'être séparés. */
+    html.phone .phone-acts .phone-profile { row-gap: 0.8rem; }
     /* Les contours du site, repris tels quels : celui du cadre autour de
        l'affiche, celui du panneau d'écoute autour de chaque fiche — c'est le
        même objet que sur le site, lu dans une colonne au lieu d'une fenêtre. */
