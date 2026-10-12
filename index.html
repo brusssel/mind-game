@@ -6,6 +6,15 @@
 <title>「MIND GAME」</title>
 <meta name="description" content="MIND GAME — concert series.">
 <meta name="color-scheme" content="dark">
+<!-- Les lettres de l'affiche, demandées avant tout le reste. La composition est
+     réglée sur leurs métriques : si elles arrivent après la première mise en
+     page, le texte se refait sous les images qui le peignent — le panneau et le
+     masque des lettres creuses sont gravés une fois — et des mots entiers
+     cessent d'être peints. Préchargées, elles sont là avant la première
+     mesure. -->
+<link rel="preload" as="font" type="font/woff2" href="fonts/charter-400.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/charter-700.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/charter-400-italic.woff2" crossorigin>
 <style>
   /* ------------------------------------------------------------------
      1-bit Macintosh: black screen, white pixels, no antialiasing.
@@ -16543,6 +16552,19 @@
   function takePins() { takeFramePin(); takeInfoPin(); }
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function () { fit(); raf2(takePins); });
+    /* `fonts.ready` ne promet qu'une chose : que les chargements EN COURS sont
+       finis. Une police demandée plus tard — parce qu'un caractère tchèque la
+       réclame, parce que le navigateur a attendu de la voir servir — arrive
+       après, le texte se refait, et les images qui le peignent, elles, restent
+       gravées comme avant : des mots entiers cessent d'être peints. Chaque
+       arrivée redemande donc une mesure, et `fit` regrave le panneau. */
+    if (document.fonts.addEventListener) {
+      var fontPass = 0;
+      document.fonts.addEventListener('loadingdone', function () {
+        if (++fontPass > 6) return;    /* une page n'a pas six polices */
+        fit();
+      });
+    }
   } else { raf2(takePins); }
   addEventListener('load', function () { raf2(takePins); });
 })();
