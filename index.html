@@ -16628,6 +16628,52 @@
     placeZones();
     settleSoon();
   });
+  /* ---- un relevé, à la demande ------------------------------------------
+     `?mg-diag=1` affiche en haut de la page ce que CET appareil fait d'elle :
+     sa taille, son échelle, les tailles de police qu'il calcule et les écarts
+     entre les blocs d'une fiche, mesurés d'encre à encre. Un défaut qui ne se
+     voit que sur un téléphone se répare à l'aveugle sans cela. Rien ne
+     s'affiche sans le paramètre. */
+  if (/(^|[?&])mg-diag=1/.test(location.search || '')) {
+    setTimeout(function () {
+      var c = document.querySelector('.phone-profile');
+      var host = document.getElementById('phone-acts');
+      var z = (host && parseFloat(getComputedStyle(host).zoom)) || 1;
+      function n(x) { return Math.round(x || 0); }
+      function px(e, side) {
+        if (!e) return 0;
+        var r = e.getBoundingClientRect(), k = getComputedStyle(e);
+        return side === 'bas' ? r.bottom - parseFloat(k.paddingBottom || 0) * z
+                              : r.top + parseFloat(k.paddingTop || 0) * z;
+      }
+      var l = ['écran ' + innerWidth + '×' + innerHeight + ' ×' + (window.devicePixelRatio || 1) +
+               ' · échelle ' + z.toFixed(3)];
+      if (c) {
+        var h3 = c.querySelector('h3'), nav = c.querySelector('.profile-links');
+        var bd = c.querySelector('.profile-board'), bio = c.querySelector('.profile-bio');
+        var pl = c.querySelector('.profile-player');
+        var p1 = bio && bio.querySelector('p:first-child');
+        var p2 = bio && bio.querySelector('p:last-child');
+        l.push('nom ' + (h3 ? getComputedStyle(h3).fontSize : '?') +
+               ' · texte ' + (p1 ? getComputedStyle(p1).fontSize : '?') +
+               ' · lignes du nom ' + (h3 ? Math.round(h3.offsetHeight /
+                 parseFloat(getComputedStyle(h3).lineHeight)) : '?'));
+        l.push('écarts : nom-liens ' + n(nav && (nav.getBoundingClientRect().top - px(h3, 'bas'))) +
+               ' · liens-image ' + n(bd && nav && (bd.getBoundingClientRect().top - nav.getBoundingClientRect().bottom)) +
+               ' · image-texte ' + n(p1 && bd && (px(p1, 'haut') - bd.getBoundingClientRect().bottom)) +
+               ' · texte-lecteur ' + n(pl && p2 && (pl.getBoundingClientRect().top - px(p2, 'bas'))));
+        l.push('paragraphes ' + (bio ? bio.querySelectorAll('p').length : 0) +
+               ' · rallonge ' + (p1 ? getComputedStyle(p1).paddingBottom : '?') +
+               ' · police du texte ' + (p1 ? getComputedStyle(p1).fontFamily.split(',')[0] : '?'));
+      }
+      l.push('version du 12 octobre, écarts proportionnés');
+      var box = document.createElement('pre');
+      box.textContent = l.join('\n');
+      box.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;margin:0;' +
+        'background:#fff;color:#000;font:12px/1.35 Monaco,monospace;padding:6px 8px;white-space:pre-wrap';
+      document.body.appendChild(box);
+    }, 2500);
+  }
   function takePins() { takeFramePin(); takeInfoPin(); }
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function () { fit(); raf2(takePins); });
