@@ -10920,7 +10920,9 @@
     if (!force && (!bootFontsPainted || !bootBoardPainted ||
         (bootHasPicture() && !bootPicturePainted) ||
         /* …et, sur téléphone, les photographies et les lecteurs de la colonne. */
-        (typeof phoneOn !== 'undefined' && phoneOn && !bootColumnLoaded))) return;
+        (typeof phoneOn !== 'undefined' && phoneOn && !bootColumnLoaded) ||
+        /* …et les champs de l'affiche, qui doivent être mûrs. */
+        (typeof stillPending !== 'undefined' && stillPending > 0))) return;
     bootRevealQueued = true;
     if (bootFallback) { clearTimeout(bootFallback); bootFallback = 0; }
     raf2(function () {
@@ -13244,7 +13246,39 @@
 
   /* One driver for all of them: size a grid to the surface, tick it, paint it
      through a ramp, and hand the frame to CSS. */
+  /* ---- une page fixe ne s'ouvre pas sur un champ vert -------------------
+     Un champ part d'une graine et met vingt-quatre pas à faire son réseau. Le
+     premier pas était publié pour que quelque chose soit là tout de suite — et
+     ce quelque chose est un lavis rose, remplacé trois cents millisecondes plus
+     tard par le champ mûr : un clignement, juste à l'ouverture.
+
+     Sur une page fixe les champs ne publient donc que leur dernier pas, et le
+     rideau les attend : chacun s'annonce en démarrant et se décompte en
+     publiant. Deux secondes au plus — un champ dont la boîte est vide ne
+     publiera jamais, et la page n'a pas à l'attendre pour autant. */
+  var stillPending = 0, stillSeen = {}, stillCap = 0;
+  function stillWaitFor(name) {
+    if (!stillAlways || stillSeen[name]) return;
+    stillSeen[name] = 'attendu';
+    stillPending++;
+    if (!stillCap) {
+      stillCap = setTimeout(function () {
+        stillPending = 0;
+        if (typeof revealFinishedPage === 'function') revealFinishedPage(false);
+      }, 2000);
+    }
+  }
+  function stillShown(name) {
+    if (!stillAlways || stillSeen[name] !== 'attendu') return;
+    stillSeen[name] = 'montré';
+    if (--stillPending <= 0) {
+      stillPending = 0;
+      if (stillCap) { clearTimeout(stillCap); stillCap = 0; }
+      if (typeof revealFinishedPage === 'function') revealFinishedPage(false);
+    }
+  }
   function runField(name, opts, apply) {
+    stillWaitFor(name);
     var make = GENERATORS[name];
     if (!make) return null;
     var canvas = document.createElement('canvas');
@@ -13350,14 +13384,15 @@
     function publish() {
       ctx.putImageData(img, 0, 0);
       if (opts.overlay) opts.overlay(ctx, gw, gh);
-      if (quiet && warm > 0) return;
+      if (quiet) return;
       apply(canvas.toDataURL(), gw * opts.cell, gh * opts.cell);
+      stillShown(name);
     }
 
     function publishAlt(idx, lut) {
       if (!alt || !altImg) return;
       if (opts.altActive && !opts.altActive()) return;
-      if (quiet && warm > 0) return;
+      if (quiet) return;
       paintIndices(idx, altImg.data, lut || opts.altLut);
       altCtx.putImageData(altImg, 0, 0);
       opts.altApply(alt.toDataURL());
