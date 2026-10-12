@@ -2605,15 +2605,13 @@
       opacity: var(--gut-fade, 1);
       pointer-events: none;
     }
-    /* Two layers that belong to the window the column replaced. Both are
-       placed with `position: fixed` at the wordmark box's coordinates — numbers
-       worked out for the desktop composition, in the window's own pixels — so
-       on a phone they land across the whole screen: a gradient wash over
-       everything, and an animated one at that. The poster is drawn inside the
-       column now, scaled into its own box, and these two have nothing left to
-       outline. */
+    /* The void title's contour is what PAINTS the letters — they are a hole cut
+       in the page and this is what shows through them — so it stays. It was
+       mistaken for a veil because it covers the poster's box exactly, and the
+       box is the whole top of the screen here. What is taken away is only its
+       travelling, which is the one thing that had to stop. */
     html.phone .wm-void-contour,
-    html.phone .wm-box-edge { display: none !important; }
+    html.phone .wm-box-edge { animation: none !important; }
     html.phone .phone-lane:empty { display: none; }
     html.phone .phone-lane i { font-style: normal; display: inline-block; }
 
@@ -10870,12 +10868,13 @@
       publishBoard(fig, cv.toDataURL());
     }
 
+    var warm = 0;
     function tick() {
       if (dead) return;
-      if (stillAlways) return;
       if (frozen) { timer = setTimeout(tick, 120); return; }
       step();
       paint();
+      if (stillAlways && ++warm >= STILL_WARMUP) return;
       timer = setTimeout(tick, Math.max(20, genValue('life', 'ms a generation', POSTER_TICK)));
     }
 
@@ -11595,6 +11594,13 @@
   /* Declared, not initialised: the value is decided far above, beside
      `smartphoneMode`, and `var` would hand it back a false from here. */
   var stillAlways;
+  /* Figé veut dire une image arrêtée, pas une absence d'image. Un champ coupé
+     à son premier battement n'a jamais rien dessiné : la page montrait la
+     couleur plate qui est dessous — le voile — et le titre en creux n'avait
+     rien à montrer à travers ses lettres. Chacun fait donc son ouverture, puis
+     tient. Trente-six pas : assez pour que le motif soit celui qu'on reconnaît
+     du site, assez peu pour que le téléphone ne travaille qu'une seconde. */
+  var STILL_WARMUP = 36;
 
   /* What the letters show: the same field in the page's own purples. */
   /* The letters' livery, set light: the shading multiplies it down toward the
@@ -13358,9 +13364,9 @@
     }
 
 
+    var warm = 0;
     function tick() {
       if (dead) return;
-      if (stillAlways) return;
       if (frozen) { timer = setTimeout(tick, 120); return; }
       if (build()) {
         if (back >= 0) {
@@ -13413,6 +13419,7 @@
           }
         }
       }
+      if (stillAlways && ++warm >= STILL_WARMUP) return;
       timer = setTimeout(tick, opts.tick || 40);
     }
 
@@ -14382,16 +14389,18 @@
       layout(cells[ci], old, oldW, oldH);
     }
 
+    var warm = 0;
     function tick() {
       step();
       maybeResize();
       paint();
+      if (stillAlways && ++warm >= STILL_WARMUP) return;
       timer = setTimeout(tick, delay());   // re-timed each generation
     }
 
     seed();
     paint();
-    if (!stillAlways) timer = setTimeout(tick, delay());
+    timer = setTimeout(tick, delay());
 
     return function () { if (timer) { clearTimeout(timer); timer = null; } };
   }
