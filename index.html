@@ -2850,7 +2850,14 @@
     html.phone .phone-acts .phone-profile > h3 { margin: 0; }
     html.phone .phone-acts .profile-bio > p:first-child { margin-top: 0; }
     html.phone .phone-acts .profile-bio > p:last-child { margin-bottom: 0; }
+    /* Sous une ligne de CAPITALES, la boîte du texte garde la place des
+       jambages — qu'aucune capitale n'occupe — plus la moitié de l'interligne.
+       Une quinzaine de pixels de vide qu'aucun réglage ne remplit : les
+       adresses les reprennent. De même, la première ligne du texte garde
+       au-dessus d'elle la place des accents. */
+    html.phone .phone-acts .profile-links { margin-top: -0.75rem; }
     html.phone .phone-acts .profile-board { margin-top: 0.3rem; }
+    html.phone .phone-acts .profile-bio { margin-top: -0.4rem; }
     html.phone .phone-acts .profile-player { margin-top: 1.2rem; }
     /* Les contours du site, repris tels quels : celui du cadre autour de
        l'affiche, celui du panneau d'écoute autour de chaque fiche — c'est le
