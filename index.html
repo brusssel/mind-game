@@ -2547,7 +2547,17 @@
       transition: none !important;
     }
     html.phone .mobile-view-switch { display: none !important; }
-    html.phone body { overflow-y: auto; overflow-x: hidden; }
+    /* The document scrolls, not a box inside it. The page holds `html, body`
+       at the window's height with the overflow hidden — a stage does not
+       scroll — and the phone had the body scrolling inside that. It works in a
+       desktop browser and barely on a phone: no momentum, and a touch that
+       lands on anything that takes the gesture leaves the column stuck. Here
+       the root is given its height back and the column is simply a tall page. */
+    html.phone, html.phone body {
+      height: auto; min-height: 100%;
+      overflow: visible;
+      -webkit-overflow-scrolling: touch;
+    }
     /* The ground runs the whole way down, behind the poster and behind the
        bill alike — it is what joins them. */
     html.phone body::before { opacity: 1 !important; }
@@ -2608,9 +2618,12 @@
       font-family: var(--gut-font, var(--wm-font, inherit));
       font-size: var(--gut-size, 18px);
       line-height: 1;
-      /* No ceiling: the glyph is kept at the size the gutter is set to, which
-         is the whole point of laying the gutter's own mark across instead of
-         inventing a second one. */
+      /* The gutter's own size, at the page's own scale. Kept at its full value
+         the mark was the right one drawn far too large: the gutter is a column
+         inside a 1600-wide drawing, and everything else here is that drawing
+         brought down. Scaled like the rest, it holds the proportion it has on
+         the site — which is what « the same as the web page » means. */
+      zoom: var(--phone-k, 1);
       color: var(--gut-col, var(--ink));
       opacity: var(--gut-fade, 1);
       pointer-events: none;
@@ -8258,6 +8271,17 @@
     art.setAttribute('data-act', actKey(displayName || shownName));
     art.setAttribute('data-act-alt', actKey(shownName));
 
+    /* The panel's own header: the name to the left, its addresses to the
+       right, on one line and divided by the same rule. Built first and placed
+       first, so a card opens the way the panel opens. */
+    var bar = document.createElement('div');
+    bar.className = 'listen-bar';
+    var small = document.createElement('span');
+    small.className = 'listen-title';
+    small.textContent = shownName;
+    bar.appendChild(small);
+    art.appendChild(bar);
+
     var title = document.createElement('h3');
     title.textContent = shownName;
     art.appendChild(title);
@@ -8305,7 +8329,7 @@
       h = '<a href="' + esc(href) + '" target="_blank" rel="noreferrer noopener">open \u2197</a>';
     }
     nav.innerHTML = h;
-    art.appendChild(nav);
+    bar.appendChild(nav);
     return art;
   }
   function showProfile(name, href, matchedArtist, forceDisplayName, billed, isVenue) {
@@ -13406,10 +13430,15 @@
     }
 
 
-    var warm = 0;
+    var warm = 0, quiet = false;
     function tick() {
       if (dead) return;
       if (frozen) { timer = setTimeout(tick, 120); return; }
+      /* A still page pays for ONE picture, not sixty. The steps are cheap; what
+         is not is encoding the canvas to a PNG and handing it to the stylesheet
+         — done at every step of the opening it is the whole of the delay, and
+         the phone has nothing left for the finger. Only the last step speaks. */
+      quiet = stillAlways && (warm + 1 < STILL_WARMUP);
       if (build()) {
         if (back >= 0) {
           /* A frame a tick. Timing the wind-back to the length of the run it
@@ -13462,7 +13491,9 @@
         }
       }
       if (stillAlways && ++warm >= STILL_WARMUP) return;
-      timer = setTimeout(tick, opts.tick || 40);
+      /* Back to back while the opening runs, so it is over in a breath rather
+         than in two and a half seconds of a page that will not scroll. */
+      timer = setTimeout(tick, quiet ? 0 : (opts.tick || 40));
     }
 
     tick();
