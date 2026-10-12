@@ -11648,10 +11648,15 @@
      couleur plate qui est dessous — le voile — et le titre en creux n'avait
      rien à montrer à travers ses lettres. Chacun fait donc son ouverture, puis
      tient. Trente-six pas : assez pour que le motif soit celui qu'on reconnaît
-     du site, assez peu pour que le téléphone ne travaille qu'un instant. Huit :
-     la page doit s'ouvrir, pas se dérouler, et un champ dit déjà ce qu'il est
-     au huitième pas. */
-  var STILL_WARMUP = 8;
+     du site, assez peu pour que le téléphone ne travaille qu'un instant.
+
+     Huit avait été essayé, et c'était trop tôt : un champ dit ce qu'il est au
+     huitième pas, mais ses couleurs ne sont pas encore celles qu'on voit sur
+     le site, où il tourne depuis longtemps. Soixante le portent à une densité
+     comparable, et la mesure dit que ça ne coûte rien de visible : à huit
+     comme à trente-six, le document devenait interactif en quatre secondes,
+     parce que ce qui pèse est la page elle-même et non ce qui s'y calcule. */
+  var STILL_WARMUP = 60;
 
   /* What the letters show: the same field in the page's own purples. */
   /* The letters' livery, set light: the shading multiplies it down toward the
