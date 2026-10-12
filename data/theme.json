@@ -63,7 +63,7 @@
     "profileNameAlign": "right",
     "infoNameCol": "#837272",
     "infoWordsCol": "#2b2727",
-    "infoNameGround": "#261e33",
+    "infoNameGround": "#291d3e",
     "infoWordsGround": "#9a978d",
     "infoLinkCol": "#756f7b",
     "infoLinkHot": "#898b84",
@@ -166,7 +166,7 @@
         "name": "Cadre 2",
         "enabled": false,
         "inset": 9,
-        "insetTop": 23,
+        "insetTop": 31,
         "insetRight": 16,
         "insetBottom": 55,
         "insetLeft": 16,
@@ -359,7 +359,7 @@
       },
       "crest": {
         "seconds": 8,
-        "height": 3,
+        "height": 3.15,
         "size": 27,
         "spacing": 0.635
       },
@@ -367,13 +367,24 @@
         "gap": 15.5
       },
       "top": {
-        "height": 7.1,
-        "size": 4,
-        "strip cell": 10,
+        "height": 7.9,
+        "size": 4.05,
+        "strip cell": 9.45,
         "cell": 8
       },
       "wmpos": {
         "offsetX": 0
+      },
+      "organic_posterimage": {
+        "distortion": 0,
+        "frequencyX": 0.002,
+        "frequencyY": 0.002,
+        "seed": 14
+      },
+      "organic_postertext": {
+        "distortion": 4,
+        "frequencyX": 0.034,
+        "frequencyY": 0.068
       },
       "wmcell": {
         "scale": 0.095
@@ -386,9 +397,6 @@
       },
       "smoothlife": {
         "outer radius": 9
-      },
-      "organic_postertext": {
-        "distortion": 40
       }
     },
     "edge": {
@@ -418,7 +426,7 @@
       },
       "profilepic": {
         "w": 1,
-        "s": "ridge",
+        "s": "none",
         "r": 0,
         "c": "#3c470b"
       },
@@ -501,7 +509,7 @@
         "tagStrokeCol": "#755681",
         "tagCell": "grey-50",
         "namesCell": "stipple",
-        "infoNameGround": "#291d3e",
+        "infoNameGround": "#1d1825",
         "namesStrokeCol": "#585c6f",
         "metaStrokeCol": "#807b93"
       },
