@@ -1578,7 +1578,11 @@
      as ghosts: most of its cells are dark, and a name cut out of them is a name
      you cannot see. */
   .profile h3 {
-    margin: 0; text-align: var(--profile-name-align, center);
+    /* Peint par son fond, découpé à la forme des lettres : ce fond s'arrête à
+       la boîte, et les glyphes dépassent la boîte — voir `.concert-title`, même
+       loi. Un tiers de cadratin de rallonge, repris par la marge. */
+    padding: 0.35em 0; margin: -0.35em 0;
+    text-align: var(--profile-name-align, center);
     /* Its own face when it has been given one, the wordmark's otherwise. */
     font-family: var(--info-wm-font, var(--wm-font, inherit)); font-weight: 700;
     font-size: calc(clamp(0.95rem, 5.2vw, 1.35rem) * var(--profile-name, 1));
@@ -1682,7 +1686,10 @@
   .profile-player[hidden] { display: none; }
 
   .profile-bio {
-    margin: 0;
+    /* Même loi : le texte de la fiche est peint par son fond quand il porte une
+       texture, et son interligne serré laissait la dernière ligne sortir de la
+       boîte — « overseas. » coupé en deux. */
+    padding: 0.35em 0; margin: -0.35em 0;
     color: var(--info-words-col, inherit);
     hyphens: auto;
     font-family: var(--info-body-font, var(--body-font));
@@ -2816,7 +2823,11 @@
        la page de Bandcamp —, et il avait l'air d'y entrer. Dans la fenêtre du
        site cette suite se lit en défilant ; dans une colonne elle se lit d'un
        trait, et les blocs ont besoin d'être séparés. */
-    html.phone .phone-acts .phone-profile { row-gap: 0.8rem; }
+    /* L'écart doit survivre aux marges négatives que le nom et le texte portent
+       maintenant (elles reprennent la rallonge de leur fond, un tiers de
+       cadratin chacune) : 1,6 rem brut laisse 7 px entre le texte et le
+       lecteur, mesurés à l'écran. */
+    html.phone .phone-acts .phone-profile { row-gap: 1.6rem; }
     /* Les contours du site, repris tels quels : celui du cadre autour de
        l'affiche, celui du panneau d'écoute autour de chaque fiche — c'est le
        même objet que sur le site, lu dans une colonne au lieu d'une fenêtre. */
