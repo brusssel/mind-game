@@ -975,7 +975,19 @@
   .concert-title {
     -webkit-text-stroke: var(--names-outline, 0px) var(--names-outline-col, transparent);
     paint-order: stroke fill;
-    margin: 0 0 var(--lineup-info-gap, 0.35em);
+    /* Les noms sont peints par leur propre fond, découpé à la forme des lettres
+       — et un fond s'arrête à la boîte. L'interligne des noms, voulu serré
+       (0,75 em), laisse les glyphes dépasser cette boîte : mesuré ici, 421 px
+       de lettres dans une boîte de 404. Sur un Mac les 17 px manquants tombent
+       sous des capitales, là où il n'y a rien à montrer, et personne ne les
+       voit ; avec d'autres métriques — un iPhone — le manque est plus grand et
+       coupe la dernière ligne en deux dans sa hauteur.
+
+       La boîte est donc rallongée de quatre dixièmes de cadratin en haut comme
+       en bas, et les marges reprennent exactement autant : la composition ne
+       bouge pas d'un pixel, seul le fond va plus loin que les lettres. */
+    padding: 0.4em 0;
+    margin: -0.4em 0 calc(var(--lineup-info-gap, 0.35em) - 0.4em);
     font-size: calc(1.25em * var(--artist-type-scale, 1));
     line-height: var(--artist-leading, 1.35);
     font-weight: 700;
@@ -1223,7 +1235,11 @@
   .concert-meta a { color: inherit; text-decoration: none; }
 
   .concert-meta {
-    margin: 0;
+    /* Même raison que pour les noms, à sa mesure : l'interligne de la ligne
+       d'infos est plus serré encore (0,6 em) et ses lettres dépassaient de
+       5 px leur boîte. */
+    padding: 0.4em 0;
+    margin: -0.4em 0;
     font-size: 1em;
     line-height: var(--meta-leading, var(--text-leading, 1.5));
   }
