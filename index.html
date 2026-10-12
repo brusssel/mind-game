@@ -1595,6 +1595,10 @@
      already in the page's own two colours. */
   html.skinned .profile-board.empty .skin-hi,
   html.skinned .profile-board.empty .skin-lo { display: none; }
+  /* Une fiche de la colonne du téléphone ne porte ses aplats qu'une fois sa
+     photographie arrivée : voir `pic-on` dans `profileCard`. */
+  html.skinned .phone-profile .profile-board:not(.pic-on) .skin-hi,
+  html.skinned .phone-profile .profile-board:not(.pic-on) .skin-lo { display: none; }
 
   /* No picture yet: the block runs the page's field, so it is alive from the
      moment a name exists and long before anyone has found a photograph. */
@@ -2755,7 +2759,11 @@
        number — the name is 1, the picture 3 — and a nav without one came
        first; it takes the place just after the name, and follows it when an
        arrangement sends the name further down. */
-    html.phone .phone-acts .profile-links { order: 2; }
+    html.phone .phone-acts .profile-links {
+      order: 2;
+      /* Du même côté que le nom qu'elles suivent. */
+      justify-content: var(--profile-name-justify, flex-start);
+    }
     html.pa-picture.phone .phone-acts .profile-links { order: 4; }
 
     /* The place, last. */
@@ -8131,7 +8139,13 @@
        page, and `justify` has nothing to say to a row of buttons. */
     s.setProperty('--profile-justify',
       align === 'center' ? 'center' : (align === 'right' ? 'flex-end' : 'flex-start'));
-    s.setProperty('--profile-name-align', look.profileNameAlign || 'center');
+    var nameAlign = look.profileNameAlign || 'center';
+    s.setProperty('--profile-name-align', nameAlign);
+    /* Les adresses sont une rangée, pas un paragraphe : `text-align` ne leur dit
+       rien. Elles prennent le côté du NOM — c'est sous lui qu'elles sont, dans
+       la colonne du téléphone — traduit pour une rangée. */
+    s.setProperty('--profile-name-justify',
+      nameAlign === 'center' ? 'center' : (nameAlign === 'right' ? 'flex-end' : 'flex-start'));
     s.setProperty('--profile-pad', genValue('profile', 'margin', 18) + 'px');
     s.setProperty('--profile-gap', genValue('profile', 'gap', 9) + 'px');
     var ownNameScale = storedProfileNameScale(
@@ -8386,11 +8400,25 @@
     var pic = document.createElement('div');
     pic.className = 'pic profile-pic';
     var shown = a.image || (defaultArtistPic ? DEFAULT_ARTIST_PIC : '');
-    /* L'adresse de la photographie est retenue comme celle des lecteurs : la
-       colonne en compte une par nom, à pleine taille, et elles descendaient
-       toutes dès l'ouverture alors qu'une seule est regardée. Elle est posée
-       quand la fiche approche de l'écran. */
-    if (shown) { pic.setAttribute('data-pic', srcFor(shown)); watchNear(pic); }
+    /* Demandée tout de suite. Elle l'a été un temps à l'approche de l'écran :
+       l'ouverture y gagnait, mais les photographies apparaissaient sous le
+       doigt. La colonne se lit d'un trait, et ce qu'on y voit doit y être avant
+       qu'on y arrive — ce que l'ouverture attend est dit dans `awaitColumn`. */
+    if (shown) {
+      var url = srcFor(shown);
+      pic.style.backgroundImage = 'url("' + url + '")';
+      /* La bichromie est faite de deux aplats posés SUR la photographie : un
+         mauve multiplié, un noir écranté. Tant que la photographie n'est pas
+         arrivée, le mauve se voit seul sur le vide — c'est le voile rose qui
+         passait sur la fiche avant qu'elle ne devienne normale. Les aplats
+         n'arrivent donc qu'avec elle, et si elle ne vient pas ils ne viennent
+         pas non plus. */
+      (function (bd, src) {
+        var probe = new Image();
+        probe.onload = function () { bd.classList.add('pic-on'); };
+        probe.src = src;
+      })(board, url);
+    }
     else board.classList.add('empty');
     if (shown && shown === DEFAULT_ARTIST_PIC) board.classList.add('stand-in');
     var hi = document.createElement('b'); hi.className = 'skin-hi';
@@ -8412,13 +8440,10 @@
       player.title = 'Music';
       player.setAttribute('allow', 'autoplay');
       player.setAttribute('loading', 'lazy');
-      /* The address is held back, not given. A player is a whole web page of
-         somebody else's — three of them opening at once while the column is
-         still being read is what made the page refuse to move. It is fetched
-         when the card it belongs to comes within a screen of being looked at,
-         and never before. */
-      player.setAttribute('data-src', src);
-      watchNear(player);
+      /* Donnée tout de suite elle aussi. Ce qui faisait refuser la page n'était
+         pas le nombre de lecteurs : c'était la remesure de toute la composition
+         à chaque repli de la barre d'adresse, corrigée là où elle était. */
+      player.src = src;
       art.appendChild(player);
     }
 
@@ -8440,35 +8465,49 @@
     art.insertBefore(nav, title.nextSibling);
     return art;
   }
-  /* One watcher for every held-back player. A fifth of a screen of margin: just
-     ahead of the finger, and not a page of someone else's for every name on the
-     bill the moment the column opens. */
-  var playerWatch = null;
-  /* Ce qui est retenu l'est de deux façons : un lecteur garde son adresse dans
-     `data-src` et la prend comme `src`, une photographie garde la sienne dans
-     `data-pic` et la prend comme fond. Un seul guetteur pour les deux. */
-  function serveNear(el) {
-    var src = el.getAttribute('data-src');
-    if (src) { el.src = src; el.removeAttribute('data-src'); return; }
-    var pic = el.getAttribute('data-pic');
-    if (pic) {
-      el.style.backgroundImage = 'url("' + pic + '")';
-      el.removeAttribute('data-pic');
+  /* ---- la colonne est là avant que la page s'ouvre ----------------------
+     Les photographies et les lecteurs de toutes les fiches sont demandés dès
+     que la colonne est montée, et la page attend qu'ils soient arrivés pour se
+     montrer : on ne voit pas une fiche se remplir sous le doigt.
+
+     Les photographies sont les nôtres — trois ou quatre fichiers de ce site,
+     ramenés à 1 400 pixels —, la page peut les attendre. Un lecteur est une
+     page entière d'un autre serveur, dont le temps ne nous appartient pas :
+     il est demandé en même temps, et attendu lui aussi, mais pas au-delà de
+     trois secondes et demie. Passé ce délai la page s'ouvre, et le lecteur
+     finit d'arriver derrière — un rideau qui ne se lève plus parce que
+     Bandcamp est lent serait pire que le défaut qu'il corrige. */
+  var bootColumnLoaded = false, columnWait = 0;
+  function awaitColumn() {
+    bootColumnLoaded = false;
+    if (!phoneOn) { bootColumnLoaded = true; return; }
+    var left = 0, done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      if (columnWait) { clearTimeout(columnWait); columnWait = 0; }
+      bootColumnLoaded = true;
+      revealFinishedPage(false);
     }
-  }
-  function watchNear(el) {
-    if (!el || !(el.getAttribute('data-src') || el.getAttribute('data-pic'))) return;
-    if (!('IntersectionObserver' in window)) { serveNear(el); return; }
-    if (!playerWatch) {
-      playerWatch = new IntersectionObserver(function (entries) {
-        for (var i = 0; i < entries.length; i++) {
-          if (!entries[i].isIntersecting) continue;
-          playerWatch.unobserve(entries[i].target);
-          serveNear(entries[i].target);
-        }
-      }, { rootMargin: '20% 0px' });
+    function one() { if (--left <= 0) finish(); }
+    var pics = document.querySelectorAll('#phone-acts .profile-pic');
+    for (var i = 0; i < pics.length; i++) {
+      var u = /url\("?([^"')]+)"?\)/.exec(pics[i].style.backgroundImage || '');
+      if (!u) continue;
+      left++;
+      var im = new Image();
+      im.onload = im.onerror = one;
+      im.src = u[1];
     }
-    playerWatch.observe(el);
+    var frames = document.querySelectorAll('#phone-acts .profile-player');
+    for (var j = 0; j < frames.length; j++) {
+      if (!frames[j].getAttribute('src')) continue;
+      left++;
+      frames[j].addEventListener('load', one);
+      frames[j].addEventListener('error', one);
+    }
+    if (!left) { finish(); return; }
+    columnWait = setTimeout(finish, 3500);
   }
   function showProfile(name, href, matchedArtist, forceDisplayName, billed, isVenue) {
     var p = document.getElementById('profile');
@@ -9516,94 +9555,7 @@
 
   var editorFilters = { concert: '', artist: '' };
   var editorEntryState = { concert: {}, artist: {} };
-  function organizeEditorCards(body, kind) {
-    var cards = Array.prototype.slice.call(body.querySelectorAll('.ed-card'));
-    if (!cards.length) return;
-    body.textContent = '';
-    var tools = document.createElement('div'); tools.className = 'editor-list-tools';
-    var search = document.createElement('input'); search.type = 'search';
-    search.placeholder = kind === 'concert' ? 'Rechercher un concert…' : 'Rechercher un artiste…';
-    search.setAttribute('aria-label', search.placeholder.replace('…', ''));
-    search.value = editorFilters[kind] || '';
-    var expand = document.createElement('button'); expand.type = 'button';
-    tools.append(search, expand); body.appendChild(tools);
-    var entries = [];
-
-    function value(card, field) {
-      var el = card.querySelector('[data-f="' + field + '"]');
-      return el ? String(el.value || '').trim() : '';
-    }
-    function titleFor(card, index) {
-      if (kind === 'artist') return value(card, 'name') || 'Artiste sans nom';
-      var parts = [value(card, 'date'), value(card, 'location')].filter(Boolean);
-      var projects = card.querySelectorAll('[data-f="proj"]'), names = [];
-      for (var p = 0; p < projects.length; p++) if (projects[p].value.trim()) names.push(projects[p].value.trim());
-      if (names.length) parts.push(names.join(' + '));
-      return parts.join(' — ') || 'Concert sans titre';
-    }
-    function haystack(card) {
-      var values = [], inputs = card.querySelectorAll('input,textarea');
-      for (var n = 0; n < inputs.length; n++) values.push(inputs[n].value || '');
-      return values.join(' ').toLowerCase();
-    }
-    function updateExpand() {
-      var closed = false;
-      for (var i = 0; i < entries.length; i++) if (!entries[i].details.hidden && !entries[i].details.open) closed = true;
-      expand.textContent = closed ? 'Tout ouvrir' : 'Tout fermer';
-    }
-    function filter() {
-      var q = (editorFilters[kind] || '').trim().toLowerCase(), visible = 0;
-      for (var i = 0; i < entries.length; i++) {
-        var entry = entries[i], show = !q || haystack(entry.card).indexOf(q) !== -1;
-        entry.details.hidden = !show;
-        if (q && show) entry.details.open = true;
-        else if (!q) entry.details.open = !!editorEntryState[kind][entry.index];
-        if (show) visible++;
-      }
-      var old = body.querySelector('.editor-list-empty'); if (old) old.remove();
-      if (!visible) {
-        var empty = document.createElement('p'); empty.className = 'editor-list-empty';
-        empty.textContent = 'Aucun résultat.'; body.appendChild(empty);
-      }
-      updateExpand();
-    }
-
-    for (var i = 0; i < cards.length; i++) {
-      var card = cards[i], index = Number(card.getAttribute('data-i'));
-      var details = document.createElement('details'); details.className = 'ed-entry';
-      if (editorEntryState[kind][index] == null) editorEntryState[kind][index] = index === 0;
-      details.open = !!editorEntryState[kind][index];
-      var summary = document.createElement('summary');
-      var label = document.createElement('span'); label.className = 'ed-entry-summary';
-      label.textContent = titleFor(card, index);
-      var number = document.createElement('span'); number.className = 'ed-entry-number';
-      number.textContent = String(index + 1).padStart(2, '0');
-      summary.append(label, number); details.append(summary, card); body.appendChild(details);
-      details.addEventListener('toggle', (function (idx, node) {
-        return function () { if (!editorFilters[kind]) editorEntryState[kind][idx] = node.open; };
-      })(index, details));
-      card.addEventListener('input', (function (entryLabel, entryCard, idx) {
-        return function () {
-          entryLabel.textContent = titleFor(entryCard, idx);
-          if (editorFilters[kind]) filter();
-        };
-      })(label, card, index));
-      entries.push({ details: details, card: card, index: index });
-    }
-    search.addEventListener('input', function () {
-      editorFilters[kind] = search.value; filter();
-    });
-    expand.addEventListener('click', function () {
-      var open = expand.textContent === 'Tout ouvrir';
-      for (var i = 0; i < entries.length; i++) {
-        if (entries[i].details.hidden) continue;
-        editorEntryState[kind][entries[i].index] = open;
-        entries[i].details.open = open;
-      }
-      updateExpand();
-    });
-    filter();
-  }
+  function organizeEditorCards() {}
 
   /* The builder and the live editor use the same DOM vocabulary. Rebuilding
      these two small list nodes is both safer and cheaper than trying to patch a
@@ -9661,58 +9613,7 @@
     return c._mgid;
   }
 
-  function liveConcertHTML(c) {
-    var names = Array.isArray(c.projects) ? c.projects.map(function (n) {
-      return String(n || '').trim();
-    }).filter(Boolean) : [];
-    var plainName = names.length ? names.join(' + ') : 'Untitled';
-    var urls = Array.isArray(c.projectUrls) ? c.projectUrls : [];
-    var profiles = Array.isArray(c.profileNames) ? c.profileNames : [];
-    var title = (names.length ? names : ['Untitled']).map(function (name, i) {
-      var profile = String(profiles[i] || '').trim();
-      var profileAttr = profile ? ' data-profile-name="' + esc(profile) + '"' : '';
-      /* The quotes are gone from the text, so the wording as written is kept
-         here — it is the only thing that still says which ampersands join two
-         names and which belong inside one. */
-      var billedAttr = unquoteName(name) === String(name) ? ''
-        : ' data-billed="' + esc(name) + '"';
-      var span = '<span class="proj hue" tabindex="0"' + profileAttr + billedAttr + '>' +
-        projectNameHTML(name) + '</span>';
-      var href = String(urls[i] || '').trim();
-      var project = href ? '<a href="' + esc(href) + '">' + span + '</a>' : span;
-      return '<span class="billing-act">' + project + '</span>';
-    }).join(' ');
-    var named = urls.some(function (u) { return String(u || '').trim(); });
-    var heading = c.url && !named ? '<a href="' + esc(c.url) + '">' + title + '</a>' : title;
-    var single = plainName.trim().split(/\s+/).length < 2 ? ' single' : '';
-    var place = String(c.location || '').trim();
-    var venueName = venueNameForConcert(c);
-    var venueProfileAttr = venueName
-      ? ' data-profile-name="' + esc(venueName) + '"' : '';
-    var venue = '<span class="venue hue" tabindex="0"' + venueProfileAttr + '>' +
-      esc(place).replace(/ /g, '&nbsp;') + '</span>';
-    if (place && c.locationUrl) venue = '<a href="' + esc(c.locationUrl) + '">' + venue + '</a>';
-    var time = String(c.time || '').trim(), fee = String(c.fee || '').trim();
-    var datetime = esc(c.date) + (time ? 'T' + esc(time) : '');
-    var seedText = plainName + String(c.date || ''), seed = 7;
-    for (var q = 0; q < seedText.length; q++) seed = (seed * 31 + seedText.charCodeAt(q)) >>> 0;
-    var id = esc(draftId(c));
-    var tag = String(c.tag || '').trim();
-    function tagLine(where) {
-      return '<p class="concert-tag at-' + where + '"' + (tag ? '' : ' hidden') + '>' +
-             esc(tag) + '</p>';
-    }
-    return '<li class="poster-row" data-concert-id="' + id + '"><figure class="poster"' +
-      (c.image ? ' data-src="' + esc(c.image) + '"' : '') + ' data-seed="' + seed + '"></figure></li>' +
-      '<li data-concert-id="' + id + '">' + tagLine('head') +
-      '<h2 class="concert-title' + single + '">' + heading + '</h2>' +
-      '<p class="concert-meta"><span class="meta-date"><time datetime="' + datetime + '">' +
-      esc(liveDateLabel(c.date)) + '</time></span>' +
-      (place ? '<span class="meta-place"><span class="meta-divider" aria-hidden="true"> - </span>' + venue + '</span>' : '') +
-      '<span class="meta-time"' + (time ? '' : ' hidden') + '><span class="meta-divider" aria-hidden="true"> - </span><span class="meta-value">' + esc(time) + '</span></span>' +
-      '<span class="meta-fee"' + (fee ? '' : ' hidden') + '><span class="meta-divider" aria-hidden="true"> / </span><span class="meta-value">' + esc(fee) + '</span></span></p>' +
-      tagLine('foot') + '</li>';
-  }
+  function liveConcertHTML() {}
 
   function migrateDraftDate(from, to) {
     if (!validConcertDate(from) || !validConcertDate(to) || from === to) return;
@@ -9722,71 +9623,7 @@
     }
   }
 
-  function rebuildConcertPages() {
-    var currentKey = pageKey(page), currentId = null;
-    var oldPage = list();
-    if (oldPage) {
-      var oldRow = editorConcerts().filter(function (c) {
-        return c.date === currentKey || c._originalDate === currentKey;
-      })[0];
-      if (oldRow) currentId = draftId(oldRow);
-    }
-    var sorted = editorConcerts().slice().filter(function (c) {
-      return c && (String(c.date || '').trim() || (c.projects || []).some(function (n) {
-        return String(n || '').trim();
-      }));
-    }).sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
-    var per = Math.max(1, Math.min(20, Math.round(Number((window.MG && MG.perPage) || 6))));
-    var chunks = [];
-    for (var end = sorted.length; end > 0; end -= per) {
-      chunks.unshift(sorted.slice(Math.max(0, end - per), end));
-    }
-    var old = wrap.querySelectorAll('.concerts, .concert-meta[data-live-empty]');
-    for (var r = old.length - 1; r >= 0; r--) old[r].remove();
-    for (var i = 0; i < chunks.length; i++) {
-      var ul = document.createElement('ul');
-      ul.className = 'concerts'; ul.setAttribute('data-page', String(i));
-      var reversed = chunks[i].slice().reverse(), html = '';
-      for (var j = 0; j < reversed.length; j++) html += liveConcertHTML(reversed[j]);
-      ul.innerHTML = html; wrap.appendChild(ul);
-    }
-    if (!chunks.length) {
-      var empty = document.createElement('p'); empty.className = 'concert-meta';
-      empty.setAttribute('data-live-empty', '1'); empty.textContent = 'No concerts announced yet.';
-      wrap.appendChild(empty);
-    }
-    pages = [].slice.call(wrap.querySelectorAll('.concerts'));
-    var wanted = -1;
-    if (currentId) {
-      for (var p = 0; p < pages.length; p++) {
-        if (pages[p].querySelector('[data-concert-id="' + currentId + '"]')) { wanted = p; break; }
-      }
-    }
-    page = wanted >= 0 ? wanted : frontIndex();
-    for (var k = 0; k < pages.length; k++) pages[k].hidden = k !== page;
-    document.documentElement.classList.toggle('paging', pages.length > 1);
-    if (prev) prev.hidden = pages.length < 2;
-    if (next) next.hidden = pages.length < 2;
-    posterCache = {}; picKey = null;
-    applyLineupLayout();
-    if (baseLook && pages.length) applyPageLook(page);
-    else { fit(); drawPosters(); buildListen(); buildDates(); }
-    if (pages.length) {
-      var keep = currentName, match = null;
-      if (keep) {
-        var candidates = list().querySelectorAll('.hue');
-        for (var n = 0; n < candidates.length; n++) {
-          if (artistKey(candidates[n].textContent) === artistKey(keep)) { match = candidates[n]; break; }
-        }
-      }
-      if (match) {
-        var anchor = match.closest && match.closest('a[href]');
-        var profile = profileNameForHue(match);
-        openName(profile || match.textContent, anchor && anchor.getAttribute('href'),
-          match.textContent, !!profile);
-      } else openFirst();
-    }
-  }
+  function rebuildConcertPages() {}
 
   /* Put separators back from the visible line-up rather than trusting the
      original HTML. Edit can shorten a bill without rebuilding the document;
@@ -9856,233 +9693,23 @@
       }
     }
   }
-  function applyConcertEdits() {
-    if (!document.getElementById('editor')) return;
-    var list = (window.MG_EDITS && MG_EDITS.concerts) || null;
-    if (!list) return;
-    rebuildConcertPages();
-  }
+  function applyConcertEdits() {}
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
   /* One bill: when it is, who is on it, where, and for how much. */
-  function drawConcerts(body) {
-    var list = editorConcerts(), h = '';
-    for (var i = 0; i < list.length; i++) {
-      var c = list[i];
-      h += '<div class="ed-card" data-i="' + i + '" data-kind="concert">' +
-           '<label>Date</label><input type="date" data-f="date" value="' + esc(c.date) + '">' +
-           '<label>Time</label><input data-f="time" placeholder="20:30" value="' + esc(c.time) + '">' +
-           '<label>Fee</label><input data-f="fee" placeholder="free · 8€" value="' + esc(c.fee) + '">' +
-           '<label>Poster line — the series and its number</label><input data-f="tag" ' +
-             'placeholder="MIND GAME 001" value="' + esc(c.tag || '') + '">' +
-           '<label>Venue — full address on poster</label><input data-f="location" value="' + esc(c.location) + '">' +
-           '<label>Venue name in INFOS</label><input data-f="venueName" placeholder="De Kriekelaar · optional" value="' + esc(c.venueName || '') + '">' +
-           '<label>Venue link</label><input data-f="locationUrl" placeholder="https://…" value="' + esc(c.locationUrl) + '">' +
-           '<label>Picture</label><span class="ed-pick">' +
-             '<input data-f="image" placeholder="images/… — the main frame\'s" value="' + esc(c.image) + '">' +
-             '<button type="button" data-act="pick-image" title="Choose a file on this machine and copy it into the site">Choose file…</button>' +
-           '</span>' +
-           '<label>Line-up</label><div class="ed-links">';
-      var ns = c.projects || [];
-      for (var j = 0; j < ns.length; j++) {
-        h += '<div class="ed-link ed-project"><input data-f="proj" data-j="' + j +
-             '" placeholder="nom sur l’affiche" value="' + esc(ns[j]) + '">' +
-             '<input data-f="projUrl" data-j="' + j + '" placeholder="https://… (facultatif)" value="' +
-             esc((c.projectUrls || [])[j] || '') + '">' +
-             '<input data-f="profileName" data-j="' + j +
-             '" placeholder="nom dans INFOS (facultatif)" value="' +
-             esc((c.profileNames || [])[j] || '') + '"></div>';
-      }
-      h += '<div class="ed-link"><button type="button" data-act="addname">Add name</button>' +
-           '<button type="button" data-act="dropname">Remove the last</button>' +
-           '<button type="button" data-act="dropconcert">Remove concert</button></div>';
-      h += '</div></div>';
-    }
-    body.innerHTML = h || '<p>No concerts yet — Add one.</p>';
-    organizeEditorCards(body, 'concert');
-    bindEditorCards(body, 'concert');
-  }
+  function drawConcerts() {}
 
   /* One wiring for both lists: the card knows which it is. */
-  function bindEditorCards(body, kind) {
-    var cards = body.querySelectorAll('.ed-card');
-    for (var c = 0; c < cards.length; c++) {
-      (function (card) {
-        var idx = Number(card.getAttribute('data-i'));
-        function row() {
-          return kind === 'concert' ? editorConcerts()[idx] : editorArtists()[idx];
-        }
-        var ins = card.querySelectorAll('input, textarea');
-        for (var k = 0; k < ins.length; k++) {
-          ins[k].addEventListener('input', function () {
-            var f = this.getAttribute('data-f'), j = this.getAttribute('data-j');
-            var a = row();
-            if (!a) return;
-            if (f === 'proj') { a.projects[Number(j)] = this.value; }
-            else if (f === 'projUrl') {
-              a.projectUrls = a.projectUrls || [];
-              a.projectUrls[Number(j)] = this.value;
-            }
-            else if (f === 'profileName') {
-              a.profileNames = a.profileNames || [];
-              a.profileNames[Number(j)] = this.value;
-            }
-            else if (f === 'aka') {
-              a.aka = this.value.split(',').map(function (s) { return s.trim(); })
-                .filter(function (s) { return s; });
-            }
-            else if (j == null) {
-              var previousDate = f === 'date' ? String(a.date || '') : '';
-              a[f] = this.value;
-              if (f === 'date') migrateDraftDate(previousDate, this.value);
-            }
-            else { a.links = a.links || []; a.links[Number(j)][f] = this.value; }
-            saveEditsTyping();
-          });
-          /* On commit, not on the keystroke: typing "Gaute" one letter at a
-             time must not leave G, Ga, Gau behind in ARTISTS. */
-          if (kind === 'concert') {
-            ins[k].addEventListener('change', function () {
-              var f = this.getAttribute('data-f');
-              if (f !== 'proj' && f !== 'profileName') return;
-              if (syncRosterWithBills()) saveEdits();
-            });
-          }
-        }
-        var bs = card.querySelectorAll('button');
-        for (var b2 = 0; b2 < bs.length; b2++) {
-          bs[b2].addEventListener('click', function () {
-            var act = this.getAttribute('data-act');
-            var all = kind === 'concert' ? editorConcerts() : editorArtists();
-            var a = all[idx];
-            /* A file on this machine, copied into the site. Typing a path only
-               ever worked for a file that was already in images/: anything else
-               — a picture in Downloads, say — is not an address the page can
-               fetch, so the poster simply had no picture and nothing said why.
-               Choosing the file hands it to the local admin, which writes it
-               into images/ and gives back the path the field wanted. */
-            if (act === 'pick-image') {
-              pickImageInto(this, a);
-              return;
-            }
-            if (act === 'addlink') { a.links = a.links || []; a.links.push({ label: '', url: '' }); }
-            else if (act === 'drop') {
-              /* Deleted on purpose. The bill still names them, so without this
-                 the next visit to ARTISTS would hand the card straight back. */
-              if (kind === 'artist' && a) billDismissed[artistKey(a.name)] = true;
-              all.splice(idx, 1);
-            }
-            else if (act === 'addname') {
-              a.projects.push(''); a.projectUrls = a.projectUrls || []; a.projectUrls.push('');
-              a.profileNames = a.profileNames || []; a.profileNames.push('');
-            } else if (act === 'dropname') {
-              a.projects.pop(); if (a.projectUrls) a.projectUrls.pop();
-              if (a.profileNames) a.profileNames.pop();
-            } else if (act === 'dropconcert') { all.splice(idx, 1); }
-            if (kind === 'concert') syncRosterWithBills();
-            saveEdits(); drawEditor();
-          });
-        }
-      })(cards[c]);
-    }
-  }
+  function bindEditorCards() {}
 
   /* Choosing a picture. Only where the local admin is serving: a published
      copy has no disk to write to, and saying so is better than a button that
      does nothing. */
-  function pickImageInto(btn, row) {
-    var local = location.protocol === 'http:' &&
-                /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-    var field = btn.parentNode.querySelector('input[data-f="image"]');
-    var was = btn.textContent;
-    function say(msg, hold) {
-      btn.textContent = msg;
-      setTimeout(function () { btn.textContent = was; }, hold || 2600);
-    }
-    if (!local) { say('only in the studio', 3400); return; }
-    var picker = document.createElement('input');
-    picker.type = 'file';
-    picker.accept = 'image/png,image/jpeg,image/gif,image/webp';
-    picker.addEventListener('change', function () {
-      var file = picker.files && picker.files[0];
-      if (!file) return;
-      /* The admin reads the body up to 12 MB and base64 costs a third more, so
-         a file over about 8 MB is refused here rather than failing there with
-         a message about a request body. */
-      if (file.size > 8e6) { say('too big — 8 MB max', 3400); return; }
-      btn.textContent = 'copying…';
-      var reader = new FileReader();
-      reader.onerror = function () { say('could not read it', 3400); };
-      reader.onload = function () {
-        fetch('/api/image', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: file.name, data: String(reader.result) })
-        }).then(function (r) {
-          return r.json().then(function (d) {
-            if (!r.ok) throw new Error(d.error || 'the site said no');
-            return d;
-          });
-        }).then(function (d) {
-          /* Both the field and the row: the field is what is on screen, the row
-             is what gets saved, and setting one without the other is how an
-             edit looks done and is not. */
-          if (field) field.value = d.path;
-          row.image = d.path;
-          saveEdits();
-          /* The poster reads this, so it is redrawn rather than waiting for the
-             next page turn. */
-          picKey = null;
-          drawPosters();
-          renderPicture();
-          /* The panel names the file, so it has to be told. Skipped when
-             nothing would come out different — see drawParams. */
-          if (typeof drawParams === 'function') drawParams();
-          say('copied', 2000);
-        }).catch(function (e) { say(String(e.message || e).slice(0, 30), 3400); });
-      };
-      reader.readAsDataURL(file);
-    });
-    picker.click();
-  }
+  function pickImageInto() {}
 
-  function drawEditor() {
-    var body = document.getElementById('editor-body');
-    if (!body) return;
-    var ct = document.getElementById('ed-tab-concerts');
-    var at = document.getElementById('ed-tab-artists');
-    if (ct) ct.setAttribute('aria-current', String(editorTab === 'concerts'));
-    if (at) at.setAttribute('aria-current', String(editorTab === 'artists'));
-    if (editorTab === 'concerts') { drawConcerts(body); return; }
-    var list = editorArtists(), h = '';
-    for (var i = 0; i < list.length; i++) {
-      var a = list[i];
-      h += '<div class="ed-card" data-i="' + i + '">' +
-           '<label>Name</label><input data-f="name" value="' + esc(a.name) + '">' +
-           '<label>On bills as</label><input data-f="aka" placeholder="only if the bill says it differently — comma separated" value="' +
-             esc((a.aka || []).join(', ')) + '">' +
-           '<label>Picture</label><span class="ed-pick">' +
-             '<input data-f="image" placeholder="images/… or https://…" value="' + esc(a.image) + '">' +
-             '<button type="button" data-act="pick-image" title="Choose a file on this machine and copy it into the site">Choose file…</button>' +
-           '</span>' +
-           '<label>Music</label><input data-f="embed" placeholder="bandcamp embed address, album=123456, or a soundcloud page" value="' + esc(a.embed || '') + '">' +
-           '<label>Words</label><textarea data-f="bio" placeholder="Whatever the site should say about them.">' + esc(a.bio) + '</textarea>' +
-           '<label>Links</label><div class="ed-links">';
-      var ls = a.links || [];
-      for (var j = 0; j < ls.length; j++) {
-        h += '<div class="ed-link"><input data-f="label" data-j="' + j + '" placeholder="label" value="' +
-             esc(ls[j].label) + '"><input data-f="url" data-j="' + j + '" placeholder="https://…" value="' +
-             esc(ls[j].url) + '"></div>';
-      }
-      h += '<div class="ed-link"><button type="button" data-act="addlink">Add link</button>' +
-           '<button type="button" data-act="drop">Remove artist</button></div>';
-      h += '</div></div>';
-    }
-    body.innerHTML = h || '<p>No artists yet — Add one.</p>';
-    organizeEditorCards(body, 'artist');
-    bindEditorCards(body, 'artist');
-  }
+  function drawEditor() {}
   function editorJSON() {
     return editorTab === 'concerts'
       ? JSON.stringify({ concerts: concertPayload() }, null, 2)
@@ -10107,13 +9734,7 @@
   }
   /* Not `setEditing` — the layout editor already owns that name, and the later
      declaration wins, so the call opened the drag editor instead of this one. */
-  function setSiteEditing(site) {
-    document.documentElement.classList.toggle('editing-site', !!site);
-    if (site) {
-      drawEditor();
-      if (window.MG_PANEL_REFIT) requestAnimationFrame(window.MG_PANEL_REFIT);
-    }
-  }
+  function setSiteEditing() {}
 
   /* The three authoring panels are workspace windows, not page content. Their
      title bars move them, the marked corner resizes them, and the last useful
@@ -11134,7 +10755,9 @@
   function revealFinishedPage(force) {
     if (!bootPainting || bootRevealQueued) return;
     if (!force && (!bootFontsPainted || !bootBoardPainted ||
-        (bootHasPicture() && !bootPicturePainted))) return;
+        (bootHasPicture() && !bootPicturePainted) ||
+        /* …et, sur téléphone, les photographies et les lecteurs de la colonne. */
+        (typeof phoneOn !== 'undefined' && phoneOn && !bootColumnLoaded))) return;
     bootRevealQueued = true;
     if (bootFallback) { clearTimeout(bootFallback); bootFallback = 0; }
     raf2(function () {
@@ -11163,6 +10786,7 @@
        Five seconds is a fail-open only; the normal path reveals as soon as both
        canvases and the fonts report ready. */
     bootFallback = setTimeout(function () { revealFinishedPage(true); }, 5000);
+    if (typeof awaitColumn === 'function') awaitColumn();
   }
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function () {
@@ -11964,14 +11588,7 @@
      things can be set in it now, and the picker used to appear only when the
      frame was one of them — so choosing a cell board or cell letters left no
      way to say which cell, or in what colour. */
-  function showCellControls() {
-    var on = look.frame === 'texture' || look.board === 'cell' || look.wm === 'cell';
-    var ids = ['pick-tex', 'pick-cellink', 'pick-cellground'];
-    for (var i = 0; i < ids.length; i++) {
-      var el = document.getElementById(ids[i]);
-      if (el) el.hidden = !on;
-    }
-  }
+  function showCellControls() {}
 
   function setFrame(name) {
     if (frameStop) { frameStop(); frameStop = null; }
@@ -14668,186 +14285,7 @@
      foot of the script is reached, and an initialiser down there would undo
      what the first pass had already decided. */
   var phoneOn = false, phoneHomes = null, phonePosterH = -1, phoneLaneW = -1;
-  function saveLook() {
-    if (baseLook && !applyingPage) {
-      /* Onto the date on screen, and nowhere else. */
-      var key = pageKey(page);
-      if (key) {
-        var entry = dateDress[key] || (dateDress[key] = {});
-        if (entry.frozen) {
-          /* Nothing. A frozen date is read-only until it is released.
-
-             This used to capture whatever was on screen, on every change —
-             which meant the badge said FROZEN while the entry was being
-             rewritten continuously underneath it. Anything that touched the
-             shared `layout` while the date was up went straight into its
-             stored set: the frame pins re-measured on a font load, a value
-             carried over from the bill edited a moment earlier. The poster
-             drifted, and the one thing that was supposed to stop it was doing
-             the writing.
-
-             Freezing captures once, deliberately, in the freeze button.
-             Releasing captures again. Between the two, this leaves it alone. */
-        } else {
-          /* Everything else states only what it changes, so the template still
-             reaches it on all the rest. */
-          var lk = only(takeLook(), baseLook);
-          var ly = only(takeLayout(), baseLayout);
-          if (lk) entry.look = lk; else delete entry.look;
-          if (ly) entry.layout = ly; else delete entry.layout;
-          if (!saysSomething(entry)) delete dateDress[key];
-        }
-      }
-      /* Inside this guard on purpose: while a date's dressing is being put on,
-         nothing has been chosen and there is nothing to write down. */
-      persistSoon();
-    }
-    if (typeof noteHistory === 'function') noteHistory();
-    /* And to the file. Until now a date's dressing lived in this browser and
-       reached the file only when one of three buttons happened to write it —
-       freeze, public, template. Everything else — a dial, a drag, a colour —
-       stayed here. That was already fragile, and a PUSH made it fatal: writing
-       the theme changes its revision, and a stored copy made against another
-       revision is judged stale and dropped WHOLE at the next start. So the
-       distortion, the frame taken off the artists' pictures and the block
-       moved down all went back at once, which is « the app puts it back after
-       the push ». Written a beat after the last change, so a drag is one write
-       and not sixty, and only where there is a server to write to. */
-    try {
-      localStorage.setItem(STORE, JSON.stringify({
-        font: look.font, bodyFont: look.bodyFont, bg: look.bg, frame: look.frame,
-        wm: look.wm, board: look.board, tex: look.tex, text: look.text,
-        hoverAltInk: look.hoverAltInk,
-        scale: look.scale, motion: look.motion,
-        tiling: look.tiling, tileGap: look.tileGap, justify: look.justify,
-        lineupAlign: look.lineupAlign, lineupPlus: look.lineupPlus,
-        lineupUnit: look.lineupUnit, lineupFlow: look.lineupFlow,
-        picHover: look.picHover,
-        listen: look.listen, skin: look.skin, skinAnim: look.skinAnim,
-        picPlace: look.picPlace,
-        picTex: look.picTex, picTexBlend: look.picTexBlend,
-        picTexScale: look.picTexScale, picTexInk: look.picTexInk,
-        picTexGround: look.picTexGround,
-        picSkin: look.picSkin, picSkinAnim: look.picSkinAnim,
-        picSkinInk: look.picSkinInk, picSkinGround: look.picSkinGround,
-        picScreen: look.picScreen, pfScreen: look.pfScreen,
-        profileArr: look.profileArr, profileAlign: look.profileAlign,
-        surround: look.surround, surroundCell: look.surroundCell,
-        surroundCol: look.surroundCol, surroundInk: look.surroundInk,
-        surroundMotion: look.surroundMotion, surroundImage: look.surroundImage,
-        wmAlign: look.wmAlign, wmContourMode: look.wmContourMode,
-        datesFont: look.datesFont, datesInk: look.datesInk, datesGround: look.datesGround,
-        datesBack: look.datesBack, datesChip: look.datesChip, datesEdge: look.datesEdge,
-        datesText: look.datesText, datesCase: look.datesCase,
-        datesNowBg: look.datesNowBg, datesNowInk: look.datesNowInk,
-        datesNowEdge: look.datesNowEdge,
-        datesHover: look.datesHover, datesHotBg: look.datesHotBg, datesHotInk: look.datesHotInk,
-        datesChipFill: look.datesChipFill, datesChipCell: look.datesChipCell,
-        datesChipInk: look.datesChipInk, datesEase: look.datesEase,
-        datesHomeBg: look.datesHomeBg, datesHomeInk: look.datesHomeInk,
-        datesHomeEdge: look.datesHomeEdge,
-        datesShape: look.datesShape, datesHomeShape: look.datesHomeShape,
-        crestGlyph: look.crestGlyph, crestInk: look.crestInk, crestGround: look.crestGround,
-        crestBack: look.crestBack, crestBackCell: look.crestBackCell,
-        crestBackInk: look.crestBackInk, crestBody: look.crestBody,
-        crestEdge: look.crestEdge, crestEdgeKind: look.crestEdgeKind,
-        crestEdgeInk: look.crestEdgeInk,
-        datesBackCell: look.datesBackCell, datesBackInk: look.datesBackInk,
-        topText: look.topText, topFont: look.topFont,
-        topSpread: look.topSpread, topInk: look.topInk,
-        topCell: look.topCell, topCellInk: look.topCellInk,
-        topCellGround: look.topCellGround,
-        topBack: look.topBack, topGround: look.topGround,
-        topBackCell: look.topBackCell, topBackInk: look.topBackInk,
-        crestMotion: look.crestMotion,
-        datesNextHover: look.datesNextHover,
-        datesNextHotBg: look.datesNextHotBg, datesNextHotInk: look.datesNextHotInk,
-        datesNextCellInk: look.datesNextCellInk,
-        datesNextText: look.datesNextText, datesNextTextInk: look.datesNextTextInk,
-        glyph: look.glyph, glyphFill: look.glyphFill, glyphCell: look.glyphCell,
-        glyphMotion: look.glyphMotion, glyphCol: look.glyphCol,
-        glyphCellInk: look.glyphCellInk, glyphCellGround: look.glyphCellGround,
-        glyphEdge: look.glyphEdge, glyphEdgeKind: look.glyphEdgeKind,
-        glyphEdgeInk: look.glyphEdgeInk,
-        ticker: look.ticker, tickerMotion: look.tickerMotion,
-        tickerField: look.tickerField,
-        tickerInk: look.tickerInk, tickerGround: look.tickerGround,
-        infoGround: look.infoGround, infoPalette: look.infoPalette,
-        infoInk: look.infoInk, infoCol: look.infoCol,
-        infoFont: look.infoFont, infoBodyFont: look.infoBodyFont,
-        infoText: look.infoText, infoNameText: look.infoNameText, infoCase: look.infoCase,
-        infoContour: look.infoContour, infoStroke: look.infoStroke,
-        profileNameAlign: look.profileNameAlign,
-        infoNameCol: look.infoNameCol, infoWordsCol: look.infoWordsCol,
-        infoNameGround: look.infoNameGround, infoWordsGround: look.infoWordsGround,
-        infoLinkCol: look.infoLinkCol, infoLinkHot: look.infoLinkHot,
-        profileHover: look.profileHover,
-        skinInk: look.skinInk, skinGround: look.skinGround,
-        wmCell: look.wmCell, wmCellInk: look.wmCellInk, wmCellGround: look.wmCellGround,
-        contourLo: look.contourLo, contourHi: look.contourHi,
-        navInk: look.navInk,
-        viewportFrames: viewportFrames(),
-        viewportFramesMagnet: !!look.viewportFramesMagnet,
-        hover: look.hover, hoverInk: look.hoverInk,
-        textInk: look.textInk,
-        cellInk: look.cellInk, cellGround: look.cellGround,
-        /* Keyed by date. `pages` — keyed by index — is deliberately not
-           written any more: see the migration at boot, which reads any left
-           over and drops the ones that no longer name a concert. */
-        dates: dateDress,
-        /* Which theme this copy was made from. Without it, a browser's own
-           dressing outlived the file: a theme changed anywhere else — another
-           machine, git, a second window — came back overruled on the next
-           start by an older opinion stored here. */
-        themeRevision: (window.MG && MG.themeRevision) || '',
-        baseLayout: baseLayout,
-        life: look.life, boardGround: look.boardGround, gen: look.gen, edge: look.edge,
-        bgLo: look.bgLo, bgHi: look.bgHi, boardLo: look.boardLo, boardHi: look.boardHi,
-        frameLo: look.frameLo, frameHi: look.frameHi,
-        contour: look.contour,
-        /* stamped with the stage it was dragged against — see cleanLayout */
-        layout: (function () {
-          var o = {}, kk;
-          for (kk in layout) o[kk] = layout[kk];
-          o.stage = STAGE_W;
-          return o;
-        })(),
-        /* what the site defaulted to when this was stored */
-        baseFont: MG.font, baseBodyFont: MG.bodyFont, baseBg: DEFAULT_BG,
-        baseFrame: DEFAULT_FRAME, baseWm: DEFAULT_WM, baseBoard: DEFAULT_BOARD,
-        baseTex: DEFAULT_TEX, baseText: DEFAULT_TEXT, baseContour: DEFAULT_CONTOUR,
-        baseScale: DEFAULT_SCALE, baseHover: DEFAULT_HOVER, baseMotion: DEFAULT_MOTION,
-        baseTiling: DEFAULT_TILING, baseJustify: 'center', baseSkin: DEFAULT_SKIN,
-        baseLineupAlign: shipped(LINEUP_ALIGN, 'lineupAlign', 'justify'),
-        baseLineupPlus: shipped(LINEUP_PLUS, 'lineupPlus', 'left'),
-        baseLineupUnit: shipped(LINEUP_UNIT, 'lineupUnit', 'whole'),
-        baseLineupFlow: shipped(LINEUP_FLOW, 'lineupFlow', 'wrap'),
-        basePicHover: 'none',
-        baseSkinAnim: 'both',
-        basePicPlace: shipped(PIC_PLACE, 'picPlace', 'board'),
-        basePicSkin: shipped(PIC_SKINS, 'picSkin', 'none'),
-        basePicSkinAnim: 'both',
-        baseProfileArr: shipped(PROFILE_ARR, 'profileArr', 'name'),
-        baseProfileAlign: shipped(PROFILE_ALIGN, 'profileAlign', 'left'),
-        baseProfileNameAlign: shipped(PROFILE_NAME_ALIGN, 'profileNameAlign', 'center'),
-        baseTicker: shipped(TICKERS, 'ticker', 'on'),
-        baseSurround: shipped(SURROUNDS, 'surround', 'flat'),
-        baseSurroundMotion: shipped(SURROUND_MOTION, 'surroundMotion', 'still'),
-        baseWmAlign: shipped(WM_ALIGN, 'wmAlign', 'center'),
-        baseGlyphFill: shipped(GUT_FILLS, 'glyphFill', 'flat'),
-        baseGlyphMotion: shipped(GUT_MOTION, 'glyphMotion', 'down'),
-        baseTickerMotion: shipped(TICKER_MOTION, 'tickerMotion', 'left'),
-        baseTickerField: shipped(TICKER_FIELD, 'tickerField', 'flat'),
-        baseInfoGround: shipped(INFO_GROUND, 'infoGround', 'flat'),
-        baseInfoPalette: shipped(INFO_PALETTE, 'infoPalette', 'page'),
-        baseInfoText: shipped(INFO_TEXTURES, 'infoText', 'same'),
-        baseInfoContour: shipped(INFO_CONTOUR, 'infoContour', 'none'),
-        baseInfoCase: shipped(INFO_CASE, 'infoCase', 'upper'),
-        baseInfoNameText: shipped(INFO_NAME_TEXTURES, 'infoNameText', 'same'),
-        baseProfileHover: shipped(PIC_HOVER, 'profileHover', 'none')
-      }));
-    } catch (e) {}
-  }
+  function saveLook() {}
 
   function applyLook() {
     if (MG.fonts[look.font]) {
@@ -15142,240 +14580,7 @@
     redrawPanels();
   }
 
-  var ZONES = [
-    { id: 'zone-page', label: 'whole page — drag to move, pull an edge to scale',
-      rect: function () { return { x: 0, y: 0, w: viewW(), h: viewH() }; },
-      move: function (dx, dy) {
-        layout.pageDx = (layout.pageDx || 0) + dx;
-        layout.pageDy = (layout.pageDy || 0) + dy;
-      },
-      /* Resizing the page can only mean scaling it: what is inside is composed
-         in a box of a fixed shape, and pulling one edge of that box without the
-         others would not reframe the page but stretch its drawing. It had no
-         handles at all, which is why the whole page could be moved and never
-         resized. */
-      begin: function () { this.k0 = stageK || 1; this.scale0 = pageScale(); },
-      value: function () { return viewW(); },
-      valueY: function () { return viewH(); },
-      /* `d` reaches here already divided by the stage scale — and this very
-         drag is changing that scale. Multiplied back out and divided by the one
-         the drag started at, it is the distance the hand has actually
-         travelled; without that the page and its own drag chased each other. */
-      scaleBy: function (v0, d) {
-        var hand = d * (stageK || 1) / (this.k0 || 1);
-        var span = Math.max(1, v0);
-        setPageScale((this.scale0 || 1) * (span + hand) / span);
-      },
-      size: function (v0, d) { this.scaleBy(v0, d); },
-      sizeY: function (v0, d) { this.scaleBy(v0, d); },
-      /* `setPageScale` has already fitted and applied; this is only what the
-         drag would otherwise have done after it. */
-      apply: function () { clampBlock(); } },
-    { id: 'zone-wm', label: 'mind game',
-      rect: function () { var b = wordmarkInk(); return b && { x: b.left, y: b.top, w: b.w, h: b.h }; },
-      /* Vertical only: sideways it is held on the frame's centre line. */
-      move: function (dx, dy) { layout.wmDy += dy; },
-      /* The column the type is solved against — which is what `wmW` overrides,
-         and not the span it ends up occupying. Those differ by the scale and the
-         frame's own margin allowance, so basing a drag on the span jumped the
-         wordmark by that difference on its first pixel. The expression is the
-         one sizeWordmark itself uses when nothing has been set. */
-      value: function () {
-        if (layout.wmW) return layout.wmW;
-        var r = getComputedStyle(document.documentElement);
-        var rem = parseFloat(r.fontSize) || 16;
-        var col = parseFloat(r.getPropertyValue('--col')) || REF_REM * rem;
-        var room = viewW() - 2 * rem;
-        return Math.min(col * WM_SCALE, room);
-      },
-      size: function (v0, d) { layout.wmW = Math.max(120, v0 + d); } },
-    { id: 'zone-board', label: 'picture frame',
-      rect: function () {
-        var cur = list(); if (!cur) return null;
-        var r = R(cur);
-        return r.width ? { x: r.left, y: r.top, w: r.width, h: r.height } : null;
-      },
-      move: function (dx, dy) { layout.boardDx += dx; layout.boardDy += dy; },
-      value: function () {
-        if (layout.boardW) return layout.boardW;
-        var cur = list();
-        return cur ? R(cur).width : 0;
-      },
-      size: function (v0, d) { layout.boardW = Math.max(120, v0 + d); },
-      valueY: function () {
-        if (layout.boardH) return layout.boardH;
-        var cur = list();
-        return cur ? R(cur).height : 0;
-      },
-      sizeY: function (v0, d) { layout.boardH = Math.max(80, v0 + d); } },
-    { id: 'zone-frame', label: 'whole block — click to select, drag to move',
-      rect: function () {
-        var cs = getComputedStyle(document.documentElement);
-        function v(n) { return parseFloat(cs.getPropertyValue(n)) || 0; }
-        var w = v('--wmbox-w');
-        return w ? { x: v('--wmbox-x'), y: v('--wmbox-y'), w: w, h: v('--wmbox-h') } : null;
-      },
-      /* Selected, the frame drags the block; unselected it offers only its
-         margin. The frame is not placed — it is derived from what is inside it —
-         so moving it can only ever mean moving all of them together. */
-      move: null,
-      /* Widening the frame is widening its margin — there is nothing else it
-         could mean, since where its edges fall is worked out from what is
-         inside it. Half the change, because it grows on both sides at once. */
-      value: function () {
-        if (layout.framePad) return layout.framePad;
-        var b = wordmarkInk();
-        return b ? b.pad : 20;
-      },
-      begin: function (sizing) {
-        if (!sizing) return;
-        var b = wordmarkInk();
-        this.frameStart = {
-          w: layout.frameFixW || (b && b.boxW) || 0,
-          h: layout.frameFixH || (b && b.boxH) || 0,
-          x: layout.frameFixW ? layout.frameFixX : ((b && b.boxX) || 0) - (layout.allDx || 0),
-          y: layout.frameFixH ? layout.frameFixY : ((b && b.boxY) || 0) - (layout.allDy || 0)
-        };
-      },
-      /* The frame grows on both sides, so a width of `d` is `d/2` of margin. */
-      size: function (v0, d) {
-        layout.framePad = Math.max(4, v0 + d / 2);
-        /* A fixed frame stays fixed while it is resized. Previously every
-           mousemove cleared all four pins and queued a later re-measure; those
-           asynchronous measurements captured different intermediate layouts
-           and made the frame jump or explode. */
-        if (!layout.framesFree && this.frameStart && this.frameStart.w) {
-          layout.frameFixW = Math.max(200, this.frameStart.w + d);
-          layout.frameFixH = this.frameStart.h;
-          layout.frameFixX = this.frameStart.x - d / 2;
-          layout.frameFixY = this.frameStart.y;
-        }
-      },
-      /* Downward only: the frame's head is where the wordmark is, and pulling
-         its foot is the one direction that means anything. */
-      valueY: function () { return layout.frameH || 0; },
-      sizeY: function (v0, d) {
-        layout.frameH = Math.max(0, v0 + d);
-        if (!layout.framesFree && this.frameStart && this.frameStart.h) {
-          layout.frameFixW = this.frameStart.w;
-          layout.frameFixH = Math.max(200, this.frameStart.h + d);
-          layout.frameFixX = this.frameStart.x;
-          layout.frameFixY = this.frameStart.y;
-        }
-      } },
-    /* ---- the artist's page. Each zone reads and writes the same value the
-       params panel shows, so the two cannot disagree. The pixels a drag
-       produces are converted into whatever unit the value is actually in —
-       a share of the panel for the picture's width, a ratio for its shape, a
-       multiplier for the type. */
-    { id: 'zone-ppic', label: 'artist picture',
-      rect: function () { return profileRect('#profile-board'); },
-      move: null,
-      value: function () { return genValue('profile', 'picture', 100); },
-      size: function (v0, d) {
-        var w = profileWidth();
-        profSet('picture', clampNum(15, 100, v0 + d * 100 / w));
-      },
-      valueY: function () { return genValue('profile', 'shape', 0.5526); },
-      sizeY: function (v0, d) {
-        var b = document.getElementById('profile-board');
-        var w = (b && R(b).width) || profileWidth();
-        profSet('shape', clampNum(0.12, 3, v0 + d / w));
-      },
-      apply: applyProfileEdit },
-    { id: 'zone-pname', label: 'name',
-      rect: function () { return profileRect('#profile-name'); },
-      move: null, value: null, size: null,
-      valueY: function () { return genValue('profile', 'name', 1); },
-      sizeY: function (v0, d) { profSet('name', clampNum(0.3, 5, v0 + d / 40)); },
-      apply: applyProfileEdit },
-    { id: 'zone-pwords', label: 'words',
-      rect: function () { return profileRect('.profile-bio'); },
-      move: null, value: null, size: null,
-      valueY: function () { return genValue('profile', 'words', 1); },
-      /* Off the block's own height rather than a constant: the words are as
-         many lines as they are, and a fixed divisor made a long page crawl and
-         a short one jump. */
-      sizeY: function (v0, d) {
-        var el = document.querySelector('.profile-bio');
-        var h = (el && R(el).height) || 120;
-        profSet('words', clampNum(0.4, 4, v0 * (1 + d / h)));
-      },
-      apply: applyProfileEdit },
-    { id: 'zone-pplayer', label: 'player',
-      rect: function () { return profileRect('#profile-player'); },
-      move: null, value: null, size: null,
-      valueY: function () { return genValue('profile', 'player', 120); },
-      sizeY: function (v0, d) { profSet('player', clampNum(60, 700, v0 + d)); },
-      apply: applyProfileEdit },
-    /* The picture itself, inside the board. The board's zone moves the column —
-       picture and concert together — and there was nothing that moved the
-       picture alone. */
-    { id: 'zone-pic', label: 'picture',
-      rect: function () {
-        var el = document.querySelector('.concerts:not([hidden]) .poster > .pic');
-        if (!el) return null;
-        var r = R(el);
-        return r.width ? { x: r.left, y: r.top, w: r.width, h: r.height } : null;
-      },
-      move: function (dx, dy) {
-        layout.picDx = (layout.picDx || 0) + dx;
-        layout.picDy = (layout.picDy || 0) + dy;
-      },
-      value: function () {
-        var el = document.querySelector('.concerts:not([hidden]) .poster > .pic');
-        return el ? R(el).width : 0;
-      },
-      /* What is stored is the difference from the board's own figure, not a
-         width — so the picture keeps following the board when the board is
-         re-fitted, and Reset puts it back where the board would have it. The
-         board's figure is what it is drawn at now, less the difference already
-         stored, which stays true after every pass. */
-      size: function (v0, d) {
-        var el = document.querySelector('.concerts:not([hidden]) .poster > .pic');
-        var cur = el ? R(el).width : v0;
-        layout.picDw = (v0 + d) - (cur - (layout.picDw || 0));
-      },
-      valueY: function () {
-        var el = document.querySelector('.concerts:not([hidden]) .poster > .pic');
-        return el ? R(el).height : 0;
-      },
-      sizeY: function (v0, d) {
-        var el = document.querySelector('.concerts:not([hidden]) .poster > .pic');
-        var cur = el ? R(el).height : v0;
-        layout.picDh = (v0 + d) - (cur - (layout.picDh || 0));
-      } },
-    { id: 'zone-info', label: 'concert',
-      rect: function () {
-        var cur = list(); if (!cur) return null;
-        var li = cur.querySelector('li:not(.poster-row)'); if (!li) return null;
-        var r = R(li);
-        return r.width ? { x: r.left, y: r.top, w: r.width, h: r.height } : null;
-      },
-      move: function (dx, dy) { layout.infoDx += dx; layout.infoDy += dy; },
-      /* Across, its column; down, the size of its type. Both only mean anything
-         once it is off the anchor, which is where its place comes from. */
-      value: function () {
-        return layout.infoW || layout.infoFixW ||
-          ((function () { var c = list(); var li = c && c.querySelector('li:not(.poster-row)');
-                          return li ? R(li).width : 300; })());
-      },
-      size: function (v0, d) { layout.infoW = Math.max(60, v0 + d); },
-      /* This box is edge-anchored, not centred. Its left handle moves the left
-         edge and spends the inverse amount on width, leaving the right edge
-         exactly where it was. The right handle only changes width. */
-      leftValue: function () { return layout.infoDx || 0; },
-      sizeLeft: function (v0, d, left0) {
-        var width = Math.max(60, v0 - d);
-        var used = v0 - width;
-        layout.infoW = width;
-        layout.infoDx = left0 + used;
-      },
-      valueY: function () { return layout.infoScale || 1; },
-      sizeY: function (v0, d) {
-        layout.infoScale = Math.max(0.2, Math.min(6, v0 + d / 180));
-      } }
-  ];
+  var ZONES = [];
 
   /* A wall, not a rule. The block may be dragged anywhere except off the top,
      the foot or the left of the window — the right is left open, since that is
@@ -15449,18 +14654,7 @@
     placeZones();
   }
 
-  function placeZones() {
-    if (!document.documentElement.classList.contains('editing')) return;
-    for (var i = 0; i < ZONES.length; i++) {
-      var z = ZONES[i], el = document.getElementById(z.id);
-      if (!el) continue;
-      var r = z.rect();
-      if (!r) { el.style.display = 'none'; continue; }
-      el.style.display = '';
-      el.style.left = r.x + 'px';   el.style.top = r.y + 'px';
-      el.style.width = r.w + 'px';  el.style.height = r.h + 'px';
-    }
-  }
+  function placeZones() {}
 
   /* Selecting the whole block. The frame's zone is the handle for it — click it
      to take everything, click again to let the elements go their own way — and
@@ -15495,84 +14689,7 @@
     if (pageSelected) placeZones();
   }
 
-  function bindZone(z) {
-    var el = document.getElementById(z.id);
-    if (!el) return;
-    el.removeAttribute('hidden');
-    el.querySelector('b').textContent = z.label;
-    if (!z.size) el.classList.add('no-size');
-
-
-    function drag(ev, sizing, sign, axis) {
-      ev.preventDefault();
-      ev.stopPropagation();
-      var x0 = ev.clientX, y0 = ev.clientY;
-      var startX = x0, startY = y0, moved = false;
-      /* Taken from what the block is *set* to, not from what its zone measures.
-         The zone shows the painted box; the layout holds the column the type is
-         solved against, and they are not the same number — so a drag that
-         assigned the measured width jumped the block to a different size on the
-         first pixel of movement instead of growing from where it stood. */
-      var v0 = (axis === 'y')
-        ? (z.valueY ? z.valueY() : 0)
-        : (z.value ? z.value() : 0);
-      var left0 = sizing && axis !== 'y' && sign < 0 && z.leftValue
-        ? z.leftValue() : 0;
-      if (z.begin) z.begin(sizing, axis, sign);
-      el.classList.add('dragging');
-      function move(e) {
-        /* The pointer moves in the window's pixels and the blocks live in the
-           stage's, so a drag on a scaled page has to be divided back down or the
-           block runs away from the hand. */
-        var dx = (e.clientX - x0) / stageK, dy = (e.clientY - y0) / stageK;
-        if (Math.abs(e.clientX - startX) > 2 || Math.abs(e.clientY - startY) > 2) moved = true;
-        /* the running origin is kept in window pixels, where the events are */
-        /* Across, centred, so it grows both ways — and the left handle grows the
-           other way round, which is what makes the two mirror one another. Down,
-           one way only, since a foot has only one direction to go. */
-        if (sizing && axis === 'y') { if (z.sizeY) z.sizeY(v0, dy); }
-        else if (sizing && sign < 0 && z.sizeLeft) { z.sizeLeft(v0, dx, left0); }
-        else if (sizing && z.sizeLeft) { z.size(v0, dx); }
-        else if (sizing) { z.size(v0, dx * 2 * (sign || 1)); }
-        else if (allSelected) {
-          /* everything at once, whichever zone was taken hold of — and the
-             artist's page the other way round, so the two part from the middle
-             of the page by the same distance. */
-          layout.allDx += dx; layout.allDy += dy;
-          layout.listenDx = (layout.listenDx || 0) - dx;
-          x0 = e.clientX; y0 = e.clientY;
-        } else if (z.move) {
-          z.move(dx, dy); x0 = e.clientX; y0 = e.clientY;
-        } else { return; }
-        /* Only for a size: with the whole block taken, dragging one of these
-           moves everything, and that is the layout's business, not the page's. */
-        if (z.apply && sizing) { z.apply(); return; }
-        applyLayout();
-        clampBlock();
-      }
-      function up() {
-        el.classList.remove('dragging');
-        removeEventListener('mousemove', move);
-        removeEventListener('mouseup', up);
-        if (z.end) z.end(sizing, axis, sign);
-        /* A click, not a drag, on the frame: that is the selection toggle. */
-        if (!moved && !sizing && z.id === 'zone-frame') setAllSelected(!allSelected);
-      }
-      addEventListener('mousemove', move);
-      addEventListener('mouseup', up);
-    }
-    el.addEventListener('mousedown', function (e) { drag(e, false); });
-    var h = el.querySelector('i');
-    if (h && z.size) h.addEventListener('mousedown', function (e) { drag(e, true, 1); });
-    var h2 = el.querySelector('u');
-    if (h2 && z.size) h2.addEventListener('mousedown', function (e) { drag(e, true, -1); });
-    /* Two of them, at a quarter and three quarters of the width: one alone kept
-       landing under the edit bar or the params panel, which took the click. */
-    var hs = el.querySelectorAll('s');
-    for (var q = 0; q < hs.length; q++) {
-      if (z.sizeY) hs[q].addEventListener('mousedown', function (e) { drag(e, true, 1, 'y'); });
-    }
-  }
+  function bindZone() {}
   for (var zi = 0; zi < ZONES.length; zi++) bindZone(ZONES[zi]);
 
   function setEditing(on) {
@@ -15622,14 +14739,7 @@
   /* Before anything else: with no word set there is nothing to unlock, and the
      corner is simply the corner. */
   if (!(window.MG && MG.lock)) document.documentElement.classList.add('unlocked');
-  function lockUnlock(on) {
-    document.documentElement.classList.toggle('unlocked', !!on);
-    if (on) {
-      try { sessionStorage.setItem('mindgame.unlocked', '1'); } catch (e) {}
-      var f = document.getElementById('lock-form');
-      if (f) f.hidden = true;
-    }
-  }
+  function lockUnlock() {}
   (function () {
     var lock = document.getElementById('lock');
     var form = document.getElementById('lock-form');
@@ -16271,16 +15381,7 @@
     saveLook();
   }
 
-  function colourPick(id, key, fallback) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    el.value = look[key] || fallback;
-    el.addEventListener('input', function () {
-      look[key] = el.value;
-      if (key === 'hoverInk' || key === 'textInk') { applyTextTexture(); saveLook(); }
-      else refreshCell();
-    });
-  }
+  function colourPick() {}
   colourPick('pick-textink', 'textInk', autoTextInk());
   colourPick('pick-hoverink', 'hoverInk', MG.hoverGreen || '#3b8b09');
   colourPick('pick-cellink', 'cellInk', CELL_INK0);
@@ -16313,32 +15414,7 @@
     return out + '</dl>';
   }
 
-  function wordmarkShapeRows() {
-    var rows = [
-      ['tracking', 'écart entre les lettres (em)', -0.3, 0.8, 0.01],
-      ['wordGap', 'écart entre MIND et GAME (em)', 0, 3, 0.01],
-      ['width', 'largeur des lettres', 0.35, 2.5, 0.01],
-      ['height', 'hauteur des lettres', 0.35, 2.5, 0.01],
-      ['skewX', 'inclinaison horizontale (°)', -60, 60, 0.5],
-      ['skewY', 'inclinaison verticale (°)', -45, 45, 0.5],
-      ['rotate', 'rotation générale (°)', -45, 45, 0.5],
-      ['perspectiveX', 'perspective verticale (°)', -75, 75, 1],
-      ['perspectiveY', 'perspective horizontale (°)', -75, 75, 1],
-      ['distortion', 'déformation organique (px)', 0, 80, 1],
-      ['frequencyX', 'grain horizontal', 0.002, 0.15, 0.002],
-      ['frequencyY', 'grain vertical', 0.002, 0.15, 0.002],
-      ['seed', 'variante de la déformation', 1, 99, 1]
-    ];
-    var out = '<div class="wordmark-shape-editor"><p>Ces réglages transforment seulement MIND GAME. ' +
-      'La taille générale reste indépendante.</p><dl>';
-    for (var i = 0; i < rows.length; i++) {
-      var row = rows[i];
-      out += '<dt>' + row[1] + '</dt><dd><input type="number" class="wm-shape-control" ' +
-        'data-wm-shape="' + row[0] + '" min="' + row[2] + '" max="' + row[3] +
-        '" step="' + row[4] + '" value="' + wordmarkShapeValue(row[0]) + '"></dd>';
-    }
-    return out + '</dl><button type="button" class="wm-shape-reset">Réinitialiser la forme du titre</button></div>';
-  }
+  function wordmarkShapeRows() {}
 
   function wordmarkPositionPanel() {
     var offset = clampNum(-900, 900, genValue('wmpos', 'offsetX', 0));
@@ -16357,109 +15433,14 @@
       '</div></div>';
   }
 
-  function organicDistortionPanel() {
-    var target = organicTarget(organicEditorTarget);
-    var rows = [
-      ['distortion', 'déformation organique (px)', 0, 120, 1],
-      ['frequencyX', 'grain horizontal', 0.002, 0.15, 0.002],
-      ['frequencyY', 'grain vertical', 0.002, 0.15, 0.002],
-      ['seed', 'variante de la déformation', 1, 99, 1]
-    ];
-    var out = '<div class="organic-editor"><p>Chaque cible garde ses propres réglages. ' +
-      'Une force à 0 désactive seulement cette cible; plusieurs effets actifs se superposent.</p>' +
-      '<dl><dt>élément à déformer</dt><dd><select class="organic-target">';
-    for (var i = 0; i < ORGANIC_TARGETS.length; i++) {
-      var item = ORGANIC_TARGETS[i];
-      out += '<option value="' + item.id + '"' + (item.id === target.id ? ' selected' : '') +
-        '>' + item.label + '</option>';
-    }
-    out += '</select></dd>';
-    for (var r = 0; r < rows.length; r++) {
-      var row = rows[r];
-      out += '<dt>' + row[1] + '</dt><dd><input type="number" class="organic-control" ' +
-        'data-organic-key="' + row[0] + '" min="' + row[2] + '" max="' + row[3] +
-        '" step="' + row[4] + '" value="' + organicValue(target.id, row[0]) + '"></dd>';
-    }
-    return out + '</dl><button type="button" class="organic-reset">Réinitialiser cette cible</button></div>';
-  }
+  function organicDistortionPanel() {}
 
-  function pagePositionPanel() {
-    return '<div class="page-position-editor">' +
-      '<p>Déplace et met à l’échelle toute la page derrière les cadres du ' +
-      'navigateur. Les cadres restent fixes. L’échelle se tire aussi par le ' +
-      'bord de la zone « whole page » dans Edit layout.</p>' +
-      '<dl><dt>horizontal (px)</dt><dd><input type="number" class="page-position" ' +
-      'data-layout-key="pageDx" min="-800" max="800" step="1" value="' +
-      Math.round(layout.pageDx || 0) + '"></dd>' +
-      '<dt>vertical (px)</dt><dd><input type="number" class="page-position" ' +
-      'data-layout-key="pageDy" min="-450" max="450" step="1" value="' +
-      Math.round(layout.pageDy || 0) + '"></dd>' +
-      '<dt>échelle de toute la page (%)</dt><dd><input type="number" ' +
-      'class="page-scale" min="25" max="300" step="1" value="' +
-      Math.round(pageScale() * 100) + '"></dd></dl>' +
-      '<div class="page-position-actions">' +
-      '<button type="button" data-page-nudge="x:-10" aria-label="Déplacer toute la page à gauche">←</button>' +
-      '<button type="button" data-page-nudge="y:-10" aria-label="Déplacer toute la page vers le haut">↑</button>' +
-      '<button type="button" data-page-nudge="y:10" aria-label="Déplacer toute la page vers le bas">↓</button>' +
-      '<button type="button" data-page-nudge="x:10" aria-label="Déplacer toute la page à droite">→</button>' +
-      '<button type="button" class="page-position-reset" data-page-position-reset>' +
-      'Recentrer le contenu</button></div></div>';
-  }
+  function pagePositionPanel() {}
 
   /* The same choices as the bar, offered here as well. Rendered as a select that
      drives the bar's own — one wiring, so a control cannot mean two things. */
   /* A surface's edge: how round its corners are, and what border it wears. */
-  function edgeRows(which, label) {
-    var e = edgeOf(which);
-    var out = '<dl><dt>' + label + ' corners</dt><dd><input type="number" class="edge" ' +
-              'step="2" min="0" data-edge="' + which + '" data-key="r" value="' + e.r + '"></dd>' +
-              '<dt>border width</dt><dd><input type="number" class="edge" step="1" min="0" ' +
-              'data-edge="' + which + '" data-key="w" value="' + e.w + '"></dd></dl>';
-    out += '<select class="edge-style" data-edge="' + which + '">';
-    for (var i = 0; i < BORDERS.length; i++) {
-      out += '<option value="' + BORDERS[i][0] + '"' +
-             (BORDERS[i][0] === e.s ? ' selected' : '') + '>' + BORDERS[i][1] + '</option>';
-    }
-    out += '</select>';
-    /* What a band needs and a line does not: which cell or which character,
-       how big one of them is, and the ground it sits on. Shown only for the
-       two band kinds — a line has no use for any of it. */
-    if (bandStyle(e.s)) {
-      if (e.s === 'cell') {
-        var cells = Object.keys((window.MG && MG.patterns) || {});
-        out += '<select class="edge-cell" data-edge="' + which + '">';
-        for (var c = 0; c < cells.length; c++) {
-          out += '<option value="' + cells[c] + '"' +
-                 (cells[c] === e.cell ? ' selected' : '') + '>' + cells[c] + '</option>';
-        }
-        out += '</select>';
-      } else {
-        out += '<select class="edge-glyph" data-edge="' + which + '">';
-        for (var g = 1; g < GLYPHS.length; g++) {
-          out += '<option value="' + GLYPHS[g] + '"' +
-                 (GLYPHS[g] === e.g ? ' selected' : '') + '>' + GLYPHS[g] + '</option>';
-        }
-        out += '</select>';
-      }
-      out += '<dl><dt>band step</dt><dd><input type="number" class="edge" step="1" min="2" ' +
-             'max="96" data-edge="' + which + '" data-key="u" value="' + e.u + '"></dd></dl>';
-      out += '<div class="swatches"><label class="swatch" title="band ground">' +
-             '<input type="color" class="edge-colour2" data-edge="' + which +
-             '" value="' + e.c2 + '">' +
-             '<input type="text" class="hex" value="' + e.c2 +
-             '" spellcheck="false" autocomplete="off" aria-label="band ground">' +
-             '</label></div>';
-    }
-    /* The border's colour gets the same pair as every other: a well and a value.
-       It had only the well, which is fine for choosing and no use for matching. */
-    out += '<div class="swatches"><label class="swatch" title="border colour">' +
-           '<input type="color" class="edge-colour" data-edge="' + which +
-           '" value="' + e.c + '">' +
-           '<input type="text" class="hex" value="' + e.c +
-           '" spellcheck="false" autocomplete="off" aria-label="border colour">' +
-           '</label></div>';
-    return out;
-  }
+  function edgeRows() {}
 
   /* Whatever the chosen treatment actually has: its magnitude under its own
      name, and its period where it moves. Nothing at all for the two that are a
@@ -16556,230 +15537,13 @@
      control here says nothing until it is touched, and what says nothing
      follows the poster's text — which is exactly what the line did before it
      had any controls at all. */
-  function posterTagPanel() {
-    var cellNames = Object.keys(((window.MG && MG.patterns) || {}));
-    var fills = [['same', 'remplissage \u2014 celui de l\u2019affiche'],
-                 ['none', 'remplissage \u2014 couleur unie']];
-    var contourCells = [['none', 'cellule \u2014 aucune (couleur unie)']];
-    for (var i = 0; i < cellNames.length; i++) {
-      fills.push([cellNames[i], 'remplissage \u2014 ' + cellNames[i]]);
-      contourCells.push([cellNames[i], 'cellule \u2014 ' + cellNames[i]]);
-    }
-    var out = '<dl>' +
-      lineupSelectRow('place', 'tagPlace', TAG_PLACE, look.tagPlace || 'head') +
-      lineupSelectRow('alignement', 'tagAlign', TAG_ALIGN, look.tagAlign || 'same') +
-      typeMeasureRow('taille', 'tag size', textParam('tag size', 1), 0.1, 8, 0.05) +
-      typeMeasureRow('interlettrage (em \u2014 0 : celui de l\u2019affiche)', 'tag tracking',
-                     textParam('tag tracking', 0), 0, 2, 0.01) +
-      typeMeasureRow('\u00e9cart avec les noms (em)', 'tag gap',
-                     textParam('tag gap', textParam('lineupInfoGap', 0.35)), 0, 12, 0.05) +
-      '<dt>remplissage</dt><dd><select class="cell-control" data-key="tagText">' +
-      vfOptions(fills, look.tagText || 'same') + '</select></dd></dl>';
-    out += swatchRow([['tagInk', look.tagInk || textInk(), 'encre de la ligne']]);
-    out += '<dl>' +
-      typeMeasureRow('contour \u2014 \u00e9paisseur', 'tag outline',
-                     textParam('tag outline', 0), 0, 40, 0.1) +
-      lineupSelectRow('contour \u2014 emplacement', 'tagStrokePlace', OUTLINE_PLACE,
-                      look.tagStrokePlace || 'mid') +
-      '<dt>contour \u2014 cellule</dt><dd><select class="cell-control" data-key="tagCell">' +
-      vfOptions(contourCells, contourCellName('tagCell') || 'none') + '</select></dd>';
-    if (contourCellName('tagCell')) {
-      out += typeMeasureRow('contour \u2014 taille de la cellule', 'tag cell size',
-                            textParam('tag cell size', 8), 2, 128, 1) +
-        '<dt>contour \u2014 fond de la cellule</dt><dd>' +
-        '<select class="cell-control" data-key="tagCellGround">' +
-        vfOptions(CELL_GROUND, look.tagCellGround || 'none') + '</select></dd>';
-    }
-    out += '</dl>';
-    out += swatchRow([['tagStrokeCol', look.tagStrokeCol || tagInk(), 'contour de la ligne']]);
-    if (contourCellName('tagCell') && look.tagCellGround === 'flat') {
-      out += swatchRow([['tagCellGroundCol',
-                         look.tagCellGroundCol || look.tagStrokeCol || tagInk(),
-                         'fond du contour de la ligne']]);
-    }
-    return out;
-  }
+  function posterTagPanel() {}
 
-  function viewportFramesPanel() {
-    var frames = viewportFrames();
-    viewportFrameIndex = Math.max(0, Math.min(viewportFrameIndex, Math.max(0, frames.length - 1)));
-    var out = '<div class="viewport-frame-editor"><div class="vf-editor-head">' +
-      '<select class="vf-layer-select" aria-label="Cadre sélectionné">';
-    if (!frames.length) out += '<option>Aucun cadre</option>';
-    for (var i = 0; i < frames.length; i++) {
-      out += '<option value="' + i + '"' + (i === viewportFrameIndex ? ' selected' : '') + '>' +
-             esc(frames[i].name || ('Cadre ' + (i + 1))) + '</option>';
-    }
-    out += '</select><button type="button" data-vf-action="add">Ajouter</button>' +
-      '<button type="button" data-vf-action="duplicate"' + (!frames.length ? ' disabled' : '') +
-      '>Dupliquer</button><button type="button" data-vf-action="up" title="Avancer le calque"' +
-      (!frames.length ? ' disabled' : '') + '>↑</button>' +
-      '<button type="button" data-vf-action="down" title="Reculer le calque"' +
-      (!frames.length ? ' disabled' : '') + '>↓</button>' +
-      '<button type="button" data-vf-action="remove"' + (!frames.length ? ' disabled' : '') +
-      '>Supprimer</button></div>' +
-      '<label class="vf-magnet-check"><input type="checkbox" class="vf-magnet-control"' +
-      (look.viewportFramesMagnet ? ' checked' : '') +
-      '> Aimantation automatique — les cadres se touchent et les cadres intérieurs suivent.</label>';
-    if (!frames.length) {
-      return out + '<p class="vf-editor-empty">Ajoutez un cadre. Il partira exactement des bords du navigateur, sans redimensionner la page.</p></div>';
-    }
-    var f = frames[viewportFrameIndex];
-    var textureList = Object.keys((window.MG && MG.patterns) || {}).map(function (name) {
-      return [name, name];
-    });
-    var glyphList = GLYPHS.map(function (glyph) { return [glyph, glyph === 'none' ? '— aucun —' : glyph]; });
-    var insetRow =
-      vfNumberRow('retrait commun — applique aux 4 côtés', 'inset', f.inset, 0, 800, 1) +
-      vfNumberRow('retrait — haut', 'insetTop', f.insetTop, 0, 800, 1) +
-      vfNumberRow('retrait — droite', 'insetRight', f.insetRight, 0, 800, 1) +
-      vfNumberRow('retrait — bas', 'insetBottom', f.insetBottom, 0, 800, 1) +
-      vfNumberRow('retrait — gauche', 'insetLeft', f.insetLeft, 0, 800, 1);
-    if (look.viewportFramesMagnet && viewportFrameIndex > 0) {
-      insetRow = insetRow.replace(/class="vf-control"/g,
-        'class="vf-control" disabled title="Calculé automatiquement par l’aimantation"');
-    }
-    out += '<div class="vf-editor-fields">' +
-      '<label class="vf-check"><input type="checkbox" class="vf-control" data-key="enabled"' +
-      (f.enabled ? ' checked' : '') + '> cadre visible</label>' +
-      (look.viewportFramesMagnet
-        ? '<p class="vf-magnet-note">Ordre extérieur → intérieur. Le retrait des cadres après le premier est automatique.</p>'
-        : '') +
-      '<dl><dt>nom</dt><dd><input type="text" class="vf-control" data-key="name" value="' +
-      esc(f.name) + '" spellcheck="false"></dd>' +
-      insetRow +
-      vfNumberRow('épaisseur commune — applique aux 4 côtés', 'thickness', f.thickness, 1, 160, 1) +
-      vfNumberRow('épaisseur — haut', 'thicknessTop', f.thicknessTop, 1, 160, 1) +
-      vfNumberRow('épaisseur — droite', 'thicknessRight', f.thicknessRight, 1, 160, 1) +
-      vfNumberRow('épaisseur — bas', 'thicknessBottom', f.thicknessBottom, 1, 160, 1) +
-      vfNumberRow('épaisseur — gauche', 'thicknessLeft', f.thicknessLeft, 1, 160, 1) +
-      vfNumberRow('arrondi du cadre sélectionné', 'radius', f.radius, 0, 200, 1) +
-      vfNumberRow('opacité du cadre', 'opacity', f.opacity, 0, 1, .05) +
-      vfSelectRow('fond', 'fill', VF_FILLS, f.fill) +
-      vfSelectRow('texture Macintosh', 'texture', textureList, f.texture) +
-      vfNumberRow('taille de la texture', 'textureSize', f.textureSize, 2, 128, 1) +
-      '</dl><p class="vf-field-label">Couleurs du cadre</p>' +
-      vfColourRow('ground', f.ground, 'fond du cadre') + vfColourRow('ink', f.ink, 'motif du cadre') +
-      '<dl>' + vfSelectRow('animation du cadre', 'frameMotion', VF_FRAME_MOTIONS, f.frameMotion) +
-      vfNumberRow('durée du cadre (s)', 'frameSeconds', f.frameSeconds, .2, 120, .1) +
-      vfSelectRow('changement de couleurs', 'colourMotion', VF_COLOUR_MOTIONS, f.colourMotion) +
-      vfNumberRow('durée des couleurs (s)', 'colourSeconds', f.colourSeconds, .2, 120, .1) +
-      '</dl><p class="vf-field-label">Glyphe indépendant</p><dl>' +
-      vfSelectRow('glyphe', 'glyph', glyphList, f.glyph) +
-      vfNumberRow('taille du glyphe', 'glyphSize', f.glyphSize, 1, 200, 1) +
-      vfNumberRow('espacement du glyphe', 'glyphGap', f.glyphGap, 0, 100, 1) +
-      vfNumberRow('opacité du glyphe', 'glyphOpacity', f.glyphOpacity, 0, 1, .05) +
-      vfSelectRow('animation du glyphe', 'glyphMotion', VF_GLYPH_MOTIONS, f.glyphMotion) +
-      vfNumberRow('durée du glyphe (s)', 'glyphSeconds', f.glyphSeconds, .2, 120, .1) +
-      '</dl>' + vfColourRow('glyphColor', f.glyphColor, 'couleur du glyphe') +
-      '</div></div>';
-    return out;
-  }
+  function viewportFramesPanel() {}
 
-  function bindViewportFramePanel(body, redraw) {
-    var magnet = body.querySelector('.vf-magnet-control');
-    if (magnet) magnet.addEventListener('change', function () {
-      look.viewportFramesMagnet = this.checked;
-      viewportFrames(); renderViewportFrames(); saveLook(); redraw();
-    });
-    var chooser = body.querySelector('.vf-layer-select');
-    if (chooser) chooser.addEventListener('change', function () {
-      viewportFrameIndex = Number(this.value) || 0; redraw();
-    });
-    var actions = body.querySelectorAll('[data-vf-action]');
-    for (var a = 0; a < actions.length; a++) actions[a].addEventListener('click', function () {
-      var frames = viewportFrames(), action = this.getAttribute('data-vf-action');
-      if (action === 'add') {
-        if (frames.length >= 8) return;
-        frames.push(defaultViewportFrame(frames.length, frames[frames.length - 1]));
-        viewportFrameIndex = frames.length - 1;
-      } else if (!frames.length) return;
-      else if (action === 'duplicate') {
-        if (frames.length >= 8) return;
-        var duplicate = normaliseViewportFrame(frames[viewportFrameIndex], frames.length);
-        duplicate.name = (frames[viewportFrameIndex].name || 'Cadre') + ' copie';
-        duplicate.inset = Math.min(800, duplicate.inset + Math.max(
-          duplicate.thicknessTop, duplicate.thicknessRight,
-          duplicate.thicknessBottom, duplicate.thicknessLeft) + 2);
-        duplicate.insetTop = Math.min(800, duplicate.insetTop + duplicate.thicknessTop + 2);
-        duplicate.insetRight = Math.min(800, duplicate.insetRight + duplicate.thicknessRight + 2);
-        duplicate.insetBottom = Math.min(800, duplicate.insetBottom + duplicate.thicknessBottom + 2);
-        duplicate.insetLeft = Math.min(800, duplicate.insetLeft + duplicate.thicknessLeft + 2);
-        frames.splice(viewportFrameIndex + 1, 0, duplicate); viewportFrameIndex++;
-      } else if (action === 'remove') {
-        frames.splice(viewportFrameIndex, 1);
-        viewportFrameIndex = Math.min(viewportFrameIndex, Math.max(0, frames.length - 1));
-      } else if (action === 'up' && viewportFrameIndex < frames.length - 1) {
-        var up = frames[viewportFrameIndex]; frames[viewportFrameIndex] = frames[viewportFrameIndex + 1];
-        frames[viewportFrameIndex + 1] = up; viewportFrameIndex++;
-      } else if (action === 'down' && viewportFrameIndex > 0) {
-        var down = frames[viewportFrameIndex]; frames[viewportFrameIndex] = frames[viewportFrameIndex - 1];
-        frames[viewportFrameIndex - 1] = down; viewportFrameIndex--;
-      }
-      renderViewportFrames(); saveLook(); redraw();
-    });
-    var controls = body.querySelectorAll('.vf-control');
-    for (var i = 0; i < controls.length; i++) {
-      var eventName = controls[i].type === 'text' ? 'change' : 'input';
-      controls[i].addEventListener(eventName, function () {
-        var frames = viewportFrames(), frame = frames[viewportFrameIndex];
-        if (!frame) return;
-        var key = this.getAttribute('data-key'), value;
-        if (this.type === 'checkbox') value = this.checked;
-        else if (this.type === 'number') value = Number(this.value);
-        else value = this.value;
-        frame[key] = value;
-        if (key === 'thickness') {
-          frame.thicknessTop = value; frame.thicknessRight = value;
-          frame.thicknessBottom = value; frame.thicknessLeft = value;
-        }
-        if (key === 'inset') {
-          frame.insetTop = value; frame.insetRight = value;
-          frame.insetBottom = value; frame.insetLeft = value;
-        }
-        frames[viewportFrameIndex] = normaliseViewportFrame(frame, viewportFrameIndex);
-        if (this.type === 'color') {
-          var twin = this.parentNode && this.parentNode.querySelector('.vf-hex');
-          if (twin) twin.value = this.value;
-        }
-        renderViewportFrames(); saveLook();
-        if (key === 'name') redraw();
-      });
-    }
-    var hexes = body.querySelectorAll('.vf-hex');
-    for (var h = 0; h < hexes.length; h++) hexes[h].addEventListener('change', function () {
-      var value = String(this.value || '').trim().replace(/^#?/, '#').toLowerCase();
-      var short = value.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/);
-      if (short) value = '#' + short[1] + short[1] + short[2] + short[2] + short[3] + short[3];
-      var well = this.parentNode && this.parentNode.querySelector('input[type="color"]');
-      if (!/^#[0-9a-f]{6}$/.test(value)) { if (well) this.value = well.value; return; }
-      this.value = value; if (well) { well.value = value; well.dispatchEvent(new Event('input')); }
-    });
-  }
+  function bindViewportFramePanel() {}
 
-  function fieldPair(surface) {
-    /* Keyed off the surface, like lutFor is. It read the frame's pair for every
-       surface that was not the page, so a field in the picture frame showed the
-       frame's colours in its swatches and setting them appeared to do nothing —
-       they were writing `boardLo`, which nothing on screen was showing. */
-    var key = SURFACE_KEY[surface] || 'frame';
-    var lo = look[key + 'Lo'], hi = look[key + 'Hi'];
-    var name = surface === 'bg' ? look.bg : (surface === 'board' ? look.board : look.frame);
-    var lut = lutFor(name, surface);
-    /* The ramp's own ends, when none has been chosen — so the swatches open
-       showing what is actually on screen rather than an arbitrary black. A ramp
-       is 256 entries of three bytes, flat, not an array of triples. */
-    function end(i) {
-      if (!lut) return '#000000';
-      var o = i * 3;
-      var v = ((lut[o] << 16) | (lut[o + 1] << 8) | lut[o + 2]) >>> 0;
-      return '#' + ('000000' + v.toString(16)).slice(-6);
-    }
-    return swatchRow([
-      [key + 'Lo', lo || end(0), 'darkest'],
-      [key + 'Hi', hi || end(255), 'lightest']
-    ]);
-  }
+  function fieldPair() {}
 
   /* The visual editor has hundreds of live controls. They are still generated
      in the order their rendering code needs, but the panel should describe the
@@ -16831,175 +15595,9 @@
     drawParams();
   }
 
-  function organizeParams(body) {
-    var headGroup = {}, groups = {}, i, j;
-    for (i = 0; i < PARAMS_DEFINITIONS.length; i++) {
-      for (j = 0; j < PARAMS_DEFINITIONS[i].heads.length; j++) {
-        headGroup[PARAMS_DEFINITIONS[i].heads[j]] = PARAMS_DEFINITIONS[i].id;
-      }
-    }
+  function organizeParams() {}
 
-    var applyAll = body.querySelector('#params-all');
-    var resetAll = body.querySelector('#params-reset');
-    if (applyAll) applyAll.remove();
-    if (resetAll) resetAll.remove();
-    var source = Array.prototype.slice.call(body.childNodes);
-    body.textContent = '';
-
-    var tools = document.createElement('div');
-    tools.className = 'params-tools';
-    var searchRow = document.createElement('div');
-    searchRow.className = 'params-search-row';
-    var search = document.createElement('input');
-    search.type = 'search'; search.className = 'params-search';
-    search.placeholder = 'Rechercher un paramètre…';
-    search.setAttribute('aria-label', 'Rechercher un paramètre');
-    search.value = paramsFilter;
-    searchRow.appendChild(search); tools.appendChild(searchRow);
-    var browser = document.createElement('div'); browser.className = 'params-browser';
-    var previous = document.createElement('button'); previous.type = 'button';
-    previous.textContent = '←'; previous.title = 'Catégorie précédente';
-    previous.setAttribute('aria-label', 'Catégorie précédente');
-    var browserTitle = document.createElement('div'); browserTitle.className = 'params-browser-title';
-    var browserName = document.createElement('span');
-    var browserPosition = document.createElement('span'); browserPosition.className = 'params-browser-position';
-    browserTitle.append(browserName, browserPosition);
-    var next = document.createElement('button'); next.type = 'button';
-    next.textContent = '→'; next.title = 'Catégorie suivante';
-    next.setAttribute('aria-label', 'Catégorie suivante');
-    var detach = document.createElement('button'); detach.type = 'button'; detach.textContent = '↗';
-    detach.title = 'Sortir cette catégorie dans une seconde fenêtre';
-    detach.setAttribute('aria-label', 'Sortir cette catégorie');
-    browser.append(previous, browserTitle, next, detach); tools.appendChild(browser); body.appendChild(tools);
-    var rack = document.createElement('div');
-    rack.className = 'params-rack'; rack.setAttribute('aria-label', 'Navigateur de paramètres');
-    body.appendChild(rack);
-
-    for (i = 0; i < PARAMS_DEFINITIONS.length; i++) {
-      var def = PARAMS_DEFINITIONS[i];
-      var details = document.createElement('details');
-      details.className = 'param-group'; details.dataset.group = def.id;
-      details.open = true;
-      var summary = document.createElement('summary');
-      var title = document.createElement('span');
-      title.className = 'param-group-title'; title.textContent = def.label;
-      var count = document.createElement('span');
-      count.className = 'params-count';
-      var groupBody = document.createElement('div');
-      groupBody.className = 'param-group-body';
-      summary.append(title, count); details.append(summary, groupBody); rack.appendChild(details);
-      groups[def.id] = { details: details, body: groupBody, count: count, sections: [] };
-    }
-
-    var current = null;
-    for (i = 0; i < source.length; i++) {
-      var node = source[i];
-      if (node.nodeType === 1 && node.tagName === 'H5') {
-        var heading = node.textContent.trim().toLowerCase();
-        var groupKey = headGroup[heading] || 'ornaments';
-        current = document.createElement('section');
-        current.className = 'params-subsection';
-        current.dataset.heading = heading;
-        groups[groupKey].sections.push(current);
-        groups[groupKey].body.appendChild(current);
-      }
-      if (current) current.appendChild(node);
-    }
-
-    var actions = document.createElement('div');
-    actions.className = 'params-actions';
-    if (applyAll) actions.appendChild(applyAll);
-    if (resetAll) actions.appendChild(resetAll);
-    tools.appendChild(actions);
-    var empty = document.createElement('p');
-    empty.className = 'params-empty'; empty.textContent = 'Aucun paramètre trouvé.';
-    empty.setAttribute('aria-hidden', 'true'); body.insertBefore(empty, rack);
-
-    function filterParams() {
-      var q = paramsFilter.trim().toLowerCase();
-      var total = 0, available = [];
-      for (var di = 0; di < PARAMS_DEFINITIONS.length; di++) {
-        var key = PARAMS_DEFINITIONS[di].id;
-        var group = groups[key], visible = 0;
-        for (var n = 0; n < group.sections.length; n++) {
-          var section = group.sections[n];
-          var show = key === paramsDetachedCategory || !q ||
-                     section.textContent.toLowerCase().indexOf(q) !== -1;
-          section.hidden = !show;
-          if (show) visible++;
-        }
-        group.count.textContent = String(visible);
-        group.details.hidden = true;
-        if (key !== paramsDetachedCategory && visible) {
-          available.push(key); total += visible;
-        }
-      }
-      var wanted = PARAMS_DEFINITIONS[paramsCategoryIndex] && PARAMS_DEFINITIONS[paramsCategoryIndex].id;
-      var at = available.indexOf(wanted);
-      if (at < 0 && available.length) {
-        at = 0; wanted = available[0];
-        for (var wi = 0; wi < PARAMS_DEFINITIONS.length; wi++) {
-          if (PARAMS_DEFINITIONS[wi].id === wanted) paramsCategoryIndex = wi;
-        }
-      }
-      if (wanted && groups[wanted] && available.length) groups[wanted].details.hidden = false;
-      var activeDef = paramsDefinition(wanted);
-      browserName.textContent = activeDef ? activeDef.label : 'Aucun résultat';
-      browserPosition.textContent = available.length ? ((at + 1) + '/' + available.length) : '0/0';
-      previous.disabled = next.disabled = detach.disabled = !available.length;
-      empty.setAttribute('aria-hidden', total ? 'true' : 'false');
-      actions.hidden = !!q;
-      try { localStorage.setItem('mindgame.params.category.v1', String(paramsCategoryIndex)); }
-      catch (e) {}
-      return available;
-    }
-
-    search.addEventListener('input', function () {
-      paramsFilter = search.value;
-      filterParams();
-    });
-    function moveCategory(direction) {
-      var available = filterParams();
-      if (!available.length) return;
-      var currentKey = PARAMS_DEFINITIONS[paramsCategoryIndex].id;
-      var at = available.indexOf(currentKey);
-      at = (at + direction + available.length) % available.length;
-      for (var mi = 0; mi < PARAMS_DEFINITIONS.length; mi++) {
-        if (PARAMS_DEFINITIONS[mi].id === available[at]) paramsCategoryIndex = mi;
-      }
-      filterParams();
-    }
-    previous.addEventListener('click', function () { moveCategory(-1); });
-    next.addEventListener('click', function () { moveCategory(1); });
-    detach.addEventListener('click', function () {
-      var def = PARAMS_DEFINITIONS[paramsCategoryIndex];
-      if (!def) return;
-      paramsDetachedCategory = def.id;
-      try { localStorage.setItem('mindgame.params.detached.v1', def.id); } catch (e) {}
-      paramsCategoryIndex = (paramsCategoryIndex + 1) % PARAMS_DEFINITIONS.length;
-      drawParams();
-    });
-    filterParams();
-  }
-
-  function mountDetachedParams(body) {
-    var popout = document.getElementById('params-popout');
-    var popoutBody = document.getElementById('params-popout-body');
-    var title = document.getElementById('params-popout-title');
-    if (!popout || !popoutBody || !title) return null;
-    popoutBody.textContent = '';
-    var group = paramsDetachedCategory
-      ? body.querySelector('.param-group[data-group="' + paramsDetachedCategory + '"]') : null;
-    var def = paramsDefinition(paramsDetachedCategory);
-    if (!group || !def) {
-      document.documentElement.classList.remove('params-popout-open');
-      return null;
-    }
-    group.hidden = false; group.open = true; title.textContent = def.label;
-    popoutBody.appendChild(group);
-    document.documentElement.classList.add('params-popout-open');
-    return popoutBody;
-  }
+  function mountDetachedParams() {}
 
   /* ---- lists that show you the answer -----------------------------------
      A native <select> keeps its open list to itself: while it is down, the
@@ -17019,1144 +15617,14 @@
     var sels = root.querySelectorAll('select');
     for (var i = 0; i < sels.length; i++) upgradeOne(sels[i]);
   }
-  function upgradeOne(sel) {
-    if (sel.__mgUp || !sel.options || sel.options.length < 2) return;
-    sel.__mgUp = 1;
-    sel.classList.add('mg-native');
+  function upgradeOne() {}
 
-    var box = document.createElement('span');
-    box.className = 'mg-pick';
-    var face = document.createElement('button');
-    face.type = 'button';
-    face.className = 'mg-pick-face';
-    face.textContent = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : '';
-    box.appendChild(face);
-    sel.parentNode.insertBefore(box, sel);
-    box.appendChild(sel);
-
-    var list = null, opened = null;
-
-    function commitTo(value) {
-      if (sel.value === value) return;
-      sel.value = value;
-      sel.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-    function close(restore) {
-      if (!list) return;
-      previewing = false;
-      if (restore != null) commitTo(restore);
-      list.remove(); list = null;
-      face.textContent = sel.options[sel.selectedIndex]
-        ? sel.options[sel.selectedIndex].textContent : '';
-      document.removeEventListener('mousedown', outside, true);
-      document.removeEventListener('keydown', onKey, true);
-      /* One rebuild, now that the list is out of the way. */
-      if (pendingParams) { pendingParams = false; drawParams(); }
-    }
-    function outside(e) { if (list && !box.contains(e.target)) close(opened); }
-    function onKey(e) {
-      if (e.key === 'Escape') { e.preventDefault(); close(opened); }
-    }
-
-    face.addEventListener('click', function () {
-      if (list) { close(opened); return; }
-      opened = sel.value;
-      previewing = true;
-      list = document.createElement('div');
-      list.className = 'mg-pick-list';
-      for (var o = 0; o < sel.options.length; o++) {
-        (function (opt) {
-          var row = document.createElement('button');
-          row.type = 'button';
-          row.className = 'mg-pick-opt' + (opt.value === sel.value ? ' on' : '');
-          row.textContent = opt.textContent;
-          /* The preview. Applying it is the point — the poster is the only
-             honest description of what these names mean. */
-          row.addEventListener('mouseenter', function () { commitTo(opt.value); });
-          row.addEventListener('click', function () {
-            commitTo(opt.value);
-            opened = null;              // chosen: nothing to put back
-            close(null);
-          });
-          list.appendChild(row);
-        })(sel.options[o]);
-      }
-      box.appendChild(list);
-      /* Leaving the list without choosing is not choosing: what was showing
-         before it opened goes back. */
-      list.addEventListener('mouseleave', function () {
-        if (list && opened != null) commitTo(opened);
-      });
-      document.addEventListener('mousedown', outside, true);
-      document.addEventListener('keydown', onKey, true);
-    });
-  }
-
-  function drawParams() {
-    var body = document.getElementById('params-body');
-    if (!body || (!document.documentElement.classList.contains('params-open') &&
-                  !document.documentElement.classList.contains('params-popout-open'))) return;
-    var html = '';
-
-    html += '<h5>background</h5>' + pickRow('pick-bg');
-    html += fieldPair('bg');
-    html += paramsRows(bgStop && bgStop.params && bgStop.params(), look.bg);
-
-    html += '<h5>position de tout le contenu</h5>' + pagePositionPanel();
-
-    html += '<h5>cadres du navigateur</h5>' + viewportFramesPanel();
-
-    html += '<h5>main frame</h5>' + pickRow('pick-frame');
-    if (look.frame === 'texture') {
-      /* Swatches here as well as in the bar: every other frame's colours are
-         editable from this panel, and a Macintosh frame is no less a frame for
-         being a cell rather than a field. */
-      html += swatchRow([['cellInk', cellInk(), 'the marks'],
-                         ['cellGround', cellGround(), 'the ground']]);
-      html += pickRow('pick-tex');
-    } else if (look.frame === 'none') {
-      html += paramsRows(null);
-    } else {
-      html += fieldPair('frame');
-      html += paramsRows(frameStop && frameStop.params && frameStop.params(), look.frame);
-    }
-    html += '<h5>ligne de l\u2019affiche</h5>' + posterTagPanel();
-
-    html += edgeRows('frame', 'frame');
-
-    html += '<h5>déformation organique</h5>' + organicDistortionPanel();
-
-    html += '<h5>mind game</h5>' + pickRow('pick-wm') + pickRow('pick-wmalign') +
-            pickRow('pick-motion');
-    html += paramsRows({ seconds: genValue('motion', 'seconds', 9),
-                         travel: genValue('motion', 'travel', 0.16) }, 'motion');
-    /* The keys are the ones genValue reads. Labelled prettily they went into a
-       bucket nothing looked in, and setting them did nothing at all. */
-    html += paramsRows({ size: genValue('wm', 'size', 1) }, 'wm');
-    html += '<h5>position du titre</h5>' + wordmarkPositionPanel();
-    html += '<h5>forme du titre</h5>' + wordmarkShapeRows();
-    var bs = wordmarkInk();
-    html += '<h5>spacing</h5>';
-    var bw = document.querySelector('.concerts:not([hidden]) .poster');
-    html += paramsRows({ head: genValue('space', 'head', bs ? Math.round(bs.pad) : 20),
-                         clear: genValue('space', 'clear', bs ? Math.round(bs.pad) : 20),
-                         rule: genValue('space', 'rule',
-                           Math.round((bw ? R(bw).width : 640) * RULE_THICK)) },
-                       'space');
-    html += '<h5>contour</h5>' + pickRow('pick-wmcontourmode');
-    html += paramsRows({ width: genValue('contour', 'width', 0),
-                         seconds: genValue('contour', 'seconds', 7) }, 'contour');
-    html += swatchRow([['contourLo', look.contourLo || '#3a1d6b', 'contour, dark'],
-                       ['contourHi', look.contourHi || '#b98cf0', 'contour, light']]);
-    if (look.wm === 'cell') {
-      html += '<select class="mirror" data-for="pick-wmcell">' + wmCellOptions() + '</select>';
-      html += swatchRow([['wmCellInk', look.wmCellInk || cellInk(), 'the marks'],
-                         ['wmCellGround', look.wmCellGround || cellGround(), 'the ground']]);
-      html += paramsRows({ scale: genValue('wmcell', 'scale', 2) }, 'wmcell');
-    }
-    html += '<h5>picture frame</h5>' + pickRow('pick-board');
-    if (GENERATORS[look.board]) html += fieldPair('board');
-    if (look.board === 'life') {
-      var cols = lifeColors();
-      html += swatchRow([['boardGround', boardGround(), 'the ground'],
-                         ['life0', cols[0], 'layer 1'], ['life1', cols[1], 'layer 2'],
-                         ['life2', cols[2], 'layer 3'], ['life3', cols[3], 'layer 4']]);
-    } else if (look.board === 'flat') {
-      html += swatchRow([['boardGround', boardGround(), 'the ground']]);
-    }
-    html += paramsRows(posterStop && posterStop.params ? posterStop.params() : null,
-                       look.board === 'life' ? 'life'
-                         : (GENERATORS[look.board] ? look.board : null));
-    html += edgeRows('board', 'frame');
-
-    html += '<h5>type</h5>' + pickRow('pick-font') + pickRow('pick-bodyfont');
-    html += '<h5>concert</h5>' + pickRow('pick-text') + pickRow('pick-hover');
-    html += '<dl class="lineup-layout-controls">' +
-      lineupSelectRow('alignement', 'lineupAlign', LINEUP_ALIGN, look.lineupAlign) +
-      lineupSelectRow('position du +', 'lineupPlus', LINEUP_PLUS, look.lineupPlus) +
-      lineupSelectRow('liaison du +', 'lineupUnit', LINEUP_UNIT, look.lineupUnit) +
-      lineupSelectRow('direction', 'lineupFlow', LINEUP_FLOW, look.lineupFlow) + '</dl>';
-    html += '<dl class="lineup-type-sizes">' +
-      typeSizeRow('taille — noms et liens artistes', 'artists', textParam('artists', 1)) +
-      typeSizeRow('taille — date', 'date', textParam('date', 1)) +
-      typeSizeRow('taille — lieu / adresse', 'place', textParam('place', 1)) +
-      typeSizeRow('taille — heure / prix / infos', 'details', textParam('details', 1)) + '</dl>';
-    html += '<dl class="lineup-type-gaps">' +
-      typeGapRow('écart entre artistes (em)', 'artistGap', textParam('artistGap', 0.25)) +
-      typeGapRow('écart date → adresse (em)', 'datePlaceGap', textParam('datePlaceGap', 0)) +
-      typeGapRow('écart adresse → heure (em)', 'placeTimeGap', textParam('placeTimeGap', 0)) +
-      typeGapRow('écart heure → prix (em)', 'timePriceGap', textParam('timePriceGap', 0)) + '</dl>';
-    var pictureLineupGap = genValue('text', 'pictureLineupGap', null);
-    if (pictureLineupGap == null) pictureLineupGap = textParam('gutter', BOARD_GUTTER) * 100;
-    html += '<dl class="lineup-vertical-gaps">' +
-      typeMeasureRow('vertical — image → line-up (% largeur)', 'pictureLineupGap',
-                     Math.round(pictureLineupGap * 100) / 100, 0, 50, 0.1) +
-      typeMeasureRow('vertical — interligne artistes', 'artistLeading',
-                     textParam('artistLeading', 1.35), 0.5, 5, 0.05) +
-      typeMeasureRow('vertical — line-up → informations (em)', 'lineupInfoGap',
-                     textParam('lineupInfoGap', 0.35), 0, 12, 0.05) +
-      typeMeasureRow('vertical — interligne informations', 'metaLeading',
-                     textParam('metaLeading', textParam('leading', 1.5)), 0.5, 5, 0.05) + '</dl>';
-    html += swatchRow([['textInk', textInk(), 'the lines'],
-                       ['hoverInk', look.hoverInk || MG.hoverGreen || '#3b8b09', 'the open one'],
-                       ['hoverAltInk',
-                        look.hoverAltInk || look.hoverInk || MG.hoverGreen || '#3b8b09',
-                        'hovered']]);
-    html += paramsRows({ size: textParam('size', 1),
-                         tracking: textParam('tracking', 0.06),
-                         leading: textParam('leading', 1.5),
-                         inset: textParam('inset', BOARD_INSET),
-                         'names outline': textParam('names outline', 0),
-                         'info outline': textParam('info outline', 0) }, 'text');
-    html += swatchRow([['namesStrokeCol', look.namesStrokeCol || textInk(), 'names outline'],
-                       ['metaStrokeCol', look.metaStrokeCol || textInk(), 'info outline']]);
-    /* `lineup-control` is the panel's plain enumeration control — it writes the
-       named value into the look and refits. Nothing about it is particular to
-       the line-up but its class name. */
-    html += '<dl>' +
-      lineupSelectRow('contour des noms \u2014 emplacement', 'namesStrokePlace',
-                      OUTLINE_PLACE, look.namesStrokePlace) +
-      lineupSelectRow('contour des infos \u2014 emplacement', 'metaStrokePlace',
-                      OUTLINE_PLACE, look.metaStrokePlace) + '</dl>';
-    /* The names' contour may be a cell instead of a plain colour. Its own
-       controls appear only once one is chosen — the size and the ground mean
-       nothing under a flat colour. The contour's colour is the cell's ink:
-       one contour, one colour, wherever it is drawn from. */
-    var cellList = [['none', 'cellule \u2014 aucune (couleur unie)']];
-    var cellNames = Object.keys(((window.MG && MG.patterns) || {}));
-    for (var cn = 0; cn < cellNames.length; cn++) {
-      cellList.push([cellNames[cn], 'cellule \u2014 ' + cellNames[cn]]);
-    }
-    html += '<dl><dt>contour des noms \u2014 cellule</dt><dd>' +
-      '<select class="cell-control" data-key="namesCell">' +
-      vfOptions(cellList, contourCellName('namesCell') || 'none') + '</select></dd>';
-    if (contourCellName('namesCell')) {
-      html += typeMeasureRow('contour des noms \u2014 taille de la cellule',
-                             'names cell size', textParam('names cell size', 8), 2, 128, 1) +
-        '<dt>contour des noms \u2014 fond de la cellule</dt><dd>' +
-        '<select class="cell-control" data-key="namesCellGround">' +
-        vfOptions(CELL_GROUND, look.namesCellGround || 'none') + '</select></dd>';
-    }
-    html += '</dl>';
-    if (contourCellName('namesCell') && look.namesCellGround === 'flat') {
-      html += swatchRow([['namesCellGroundCol',
-                          look.namesCellGroundCol || look.namesStrokeCol || textInk(),
-                          'fond du contour des noms']]);
-    }
-
-    /* The gutter, chosen by looking at it: every glyph drawn at the size it will
-       be, and the page showing what each would look like as the pointer passes
-       over it. A list of names would be a list of names. */
-    /* The wall the poster is pinned to. */
-    html += '<h5>surround</h5>' + pickRow('pick-surround');
-    if (look.surround === 'cell') html += pickRow('pick-surroundcell');
-    html += pickRow('pick-surroundmotion');
-    if (look.surround === 'picture') {
-      html += '<dl><dt>picture</dt><dd><input type="text" id="surround-img" ' +
-              'value="' + esc(look.surroundImage || '') + '" ' +
-              'placeholder="images/…" spellcheck="false"></dd></dl>';
-    }
-    html += swatchRow([
-      ['surroundCol', /^#[0-9a-f]{6}$/i.test(look.surroundCol || '')
-        ? look.surroundCol : voidCol(), 'the surround'],
-      ['surroundInk', /^#[0-9a-f]{6}$/i.test(look.surroundInk || '')
-        ? look.surroundInk : cellInk(), 'its marks']]);
-    html += paramsRows({ scale: genValue('surround', 'scale', 8),
-                         picture: genValue('surround', 'picture', 0),
-                         step: genValue('surround', 'step', 32),
-                         seconds: genValue('surround', 'seconds', 30),
-                         fade: genValue('surround', 'fade', 1) }, 'surround');
-
-    /* The row of dates under the page. */
-    /* The lane over the bands. */
-    html += '<h5>the lane above</h5>' + pickRow('pick-crest');
-    if ((look.crestGlyph || 'none') !== 'none') {
-      html += swatchRow([
-        ['crestGround', /^#[0-9a-f]{6}$/i.test(look.crestGround || '')
-          ? look.crestGround : voidCol0(), 'its ground'],
-        ['crestInk', /^#[0-9a-f]{6}$/i.test(look.crestInk || '')
-          ? look.crestInk : textInk(), 'its glyphs']]);
-      html += pickRow('pick-crestmotion');
-      html += pickRow('pick-crestback');
-      if ((look.crestBack || 'flat') === 'cell') {
-        html += pickRow('pick-crestbackcell');
-        html += swatchRow([
-          ['crestGround', /^#[0-9a-f]{6}$/i.test(look.crestGround || '')
-            ? look.crestGround : voidCol0(), "the cell's ground"],
-          ['crestBackInk', /^#[0-9a-f]{6}$/i.test(look.crestBackInk || '')
-            ? look.crestBackInk : textInk(), "the cell's marks"]]);
-        html += paramsRows({ 'lane cell': genValue('crest', 'lane cell', 8) }, 'crest');
-      }
-      html += '<h5>the lane glyphs</h5>' + pickRow('pick-crestbody')
-            + pickRow('pick-crestedge');
-      if ((look.crestEdge || 'none') !== 'none') {
-        html += pickRow('pick-crestedgekind');
-        html += swatchRow([['crestEdgeInk',
-          /^#[0-9a-f]{6}$/i.test(look.crestEdgeInk || '')
-            ? look.crestEdgeInk
-            : (/^#[0-9a-f]{6}$/i.test(look.crestInk || '') ? look.crestInk : textInk()),
-          'the contour']]);
-        var ck2 = look.crestEdgeKind || 'solid';
-        var crows = {};
-        if (ck2 === 'solid' || ck2 === 'double') crows.contour = genValue('crest', 'contour', 1.5);
-        if (ck2 === 'double') crows.ring = genValue('crest', 'ring', 2);
-        if (ck2 === 'soft') crows.glow = genValue('crest', 'glow', 4);
-        if (ck2 === 'cast') {
-          crows['cast across'] = genValue('crest', 'cast across', 3);
-          crows['cast down'] = genValue('crest', 'cast down', 3);
-        }
-        html += paramsRows(crows, 'crest');
-      }
-      html += paramsRows({ height: genValue('crest', 'height', 24),
-                           size: genValue('crest', 'size', 14),
-                           spacing: genValue('crest', 'spacing', 0.3),
-                           seconds: genValue('crest', 'seconds', 12),
-                           fade: genValue('crest', 'fade', 0.2) }, 'crest');
-    }
-
-    /* The line over everything, in the strip that mirrors the dates. */
-    html += '<h5>the line on top</h5>' +
-      '<dl><dt>words</dt><dd><input type="text" id="top-text" value="' +
-      esc(look.topText == null ? '' : look.topText) +
-      '" placeholder="left empty, the strip stands down" spellcheck="false"></dd></dl>';
-    if (String(look.topText || '').trim()) {
-      html += pickRow('pick-topback');
-      if ((look.topBack || 'same') === 'flat') {
-        html += swatchRow([['topGround',
-          /^#[0-9a-f]{6}$/i.test(look.topGround || '')
-            ? look.topGround : voidCol0(), 'the strip']]);
-      } else if ((look.topBack || 'same') === 'cell') {
-        html += pickRow('pick-topbackcell');
-        html += swatchRow([
-          ['topGround', /^#[0-9a-f]{6}$/i.test(look.topGround || '')
-            ? look.topGround : voidCol0(), "the strip's ground"],
-          ['topBackInk', /^#[0-9a-f]{6}$/i.test(look.topBackInk || '')
-            ? look.topBackInk : textInk(), "the strip's marks"]]);
-        html += paramsRows({ 'strip cell': genValue('top', 'strip cell', 8) }, 'top');
-      }
-      html += pickRow('pick-topspread') + pickRow('pick-topfont');
-      html += swatchRow([['topInk',
-        /^#[0-9a-f]{6}$/i.test(look.topInk || '')
-          ? look.topInk
-          : (/^#[0-9a-f]{6}$/i.test(look.datesInk || '') ? look.datesInk : textInk()),
-        'its words']]);
-      html += pickRow('pick-topcell');
-      if ((look.topCell || 'none') !== 'none') {
-        html += swatchRow([
-          ['topCellGround', /^#[0-9a-f]{6}$/i.test(look.topCellGround || '')
-            ? look.topCellGround : voidCol0(), "the cell's ground"],
-          ['topCellInk', /^#[0-9a-f]{6}$/i.test(look.topCellInk || '')
-            ? look.topCellInk
-            : (/^#[0-9a-f]{6}$/i.test(look.topInk || '') ? look.topInk : textInk()),
-           "the cell's marks"]]);
-      }
-      var trows = { size: genValue('top', 'size', 0.6875),
-                    tracking: genValue('top', 'tracking', 0.09),
-                    height: genValue('top', 'height', 0) };
-      if ((look.topCell || 'none') !== 'none') trows.cell = genValue('top', 'cell', 8);
-      if ((look.topSpread || 'words') === 'centre') trows.gap = genValue('top', 'gap', 0.6);
-      html += paramsRows(trows, 'top');
-    }
-
-    html += '<h5>dates</h5>' + pickRow('pick-datesback') + pickRow('pick-datesfont');
-    if ((look.datesBack || 'flat') === 'cell') {
-      html += pickRow('pick-datesbackcell');
-      /* Both of the cell's colours, side by side: a cell is marks on a ground,
-         and picking one without the other is picking half of it. The ground is
-         the same value the strip wears when it is a flat colour — the cell is
-         drawn over it, not instead of it. */
-      html += swatchRow([
-        ['datesGround', /^#[0-9a-f]{6}$/i.test(look.datesGround || '')
-          ? look.datesGround : voidCol0(), "the cell's ground"],
-        ['datesBackInk', /^#[0-9a-f]{6}$/i.test(look.datesBackInk || '')
-          ? look.datesBackInk : textInk(), "the cell's marks"]]);
-      html += paramsRows({ 'strip cell': genValue('dates', 'strip cell', 8) }, 'dates');
-    }
-    html += pickRow('pick-datestext') + pickRow('pick-datescase');
-    html += pickRow('pick-dateschip');
-    if (look.datesChipFill === 'cell') html += pickRow('pick-dateschipcell');
-    html += pickRow('pick-datesshape');
-    html += swatchRow([
-      ['datesGround', /^#[0-9a-f]{6}$/i.test(look.datesGround || '')
-        ? look.datesGround : voidCol0(), 'the strip'],
-      ['datesChip', /^#[0-9a-f]{6}$/i.test(look.datesChip || '')
-        ? look.datesChip : voidCol0(), 'behind each date'],
-      ['datesInk', /^#[0-9a-f]{6}$/i.test(look.datesInk || '')
-        ? look.datesInk : textInk(), 'the dates'],
-      ['datesEdge', /^#[0-9a-f]{6}$/i.test(look.datesEdge || '')
-        ? look.datesEdge : textInk(), 'their border'],
-      ['datesChipInk', /^#[0-9a-f]{6}$/i.test(look.datesChipInk || '')
-        ? look.datesChipInk : textInk(), "the cell's marks"],
-      ]);
-    /* The date whose page is up — its own three, kept where they can be found
-       rather than buried among the row's resting colours. */
-    html += '<h5>the date on screen</h5>' + swatchRow([
-      ['datesNowBg', /^#[0-9a-f]{6}$/i.test(look.datesNowBg || '')
-        ? look.datesNowBg : textInk(), 'its ground'],
-      ['datesNowInk', /^#[0-9a-f]{6}$/i.test(look.datesNowInk || '')
-        ? look.datesNowInk : voidCol0(), 'its date'],
-      ['datesNowEdge', /^#[0-9a-f]{6}$/i.test(look.datesNowEdge || '')
-        ? look.datesNowEdge
-        : (/^#[0-9a-f]{6}$/i.test(look.datesNowBg || '') ? look.datesNowBg : textInk()),
-       'its frame']]);
-
-    /* Hovering a date, kept apart from the row's resting colours: the two were
-       one run of swatches and it was never clear which pair was which. */
-    html += '<h5>hovering — a date</h5>' + pickRow('pick-dateshover');
-    if ((look.datesHover || 'colour') !== 'none') {
-      html += swatchRow([
-        ['datesHotBg', /^#[0-9a-f]{6}$/i.test(look.datesHotBg || '')
-          ? look.datesHotBg : textInk(), 'its ground'],
-        ['datesHotInk', /^#[0-9a-f]{6}$/i.test(look.datesHotInk || '')
-          ? look.datesHotInk : voidCol0(), 'its date']]);
-      html += pickRow('pick-datesease');
-      html += paramsRows({ 'hover seconds': genValue('dates', 'hover seconds', 0.18),
-                           'hover amount': genValue('dates', 'hover amount',
-                             look.datesHover === 'grow' ? 1.18
-                             : (look.datesHover === 'lift' ? 0.18
-                             : (look.datesHover === 'blink' ? 0.25 : 4))) }, 'dates');
-    }
-
-    /* The next concert's own three, on a line of their own so they can be found. */
-    html += '<h5>the next concert</h5>' + pickRow('pick-homeshape') + swatchRow([
-      ['datesHomeBg', /^#[0-9a-f]{6}$/i.test(look.datesHomeBg || '')
-        ? look.datesHomeBg : voidCol0(), 'its ground'],
-      ['datesHomeInk', /^#[0-9a-f]{6}$/i.test(look.datesHomeInk || '')
-        ? look.datesHomeInk : textInk(), 'its word'],
-      ['datesHomeEdge', /^#[0-9a-f]{6}$/i.test(look.datesHomeEdge || '')
-        ? look.datesHomeEdge : textInk(), 'its frame']]);
-    if ((look.datesChipFill || 'flat') === 'cell') {
-      html += swatchRow([['datesNextCellInk',
-        /^#[0-9a-f]{6}$/i.test(look.datesNextCellInk || '')
-          ? look.datesNextCellInk : textInk(), "its cell's marks"]]);
-    }
-    html += pickRow('pick-nexttext');
-    html += swatchRow([['datesNextTextInk',
-      /^#[0-9a-f]{6}$/i.test(look.datesNextTextInk || '')
-        ? look.datesNextTextInk : textInk(), 'its letters']]);
-    html += '<h5>hovering — the next concert</h5>' + pickRow('pick-nexthover');
-    if ((look.datesNextHover || 'colour') !== 'none') {
-      html += swatchRow([
-        ['datesNextHotBg', /^#[0-9a-f]{6}$/i.test(look.datesNextHotBg || '')
-          ? look.datesNextHotBg : textInk(), 'its ground'],
-        ['datesNextHotInk', /^#[0-9a-f]{6}$/i.test(look.datesNextHotInk || '')
-          ? look.datesNextHotInk : voidCol0(), 'its date']]);
-    }
-    html += paramsRows({ size: genValue('dates', 'size', 0.6875),
-                         tracking: genValue('dates', 'tracking', 0.09),
-                         gap: genValue('dates', 'gap', 0.3),
-                         padding: genValue('dates', 'padding', 0.25),
-                         past: genValue('dates', 'past', 0.45) }, 'dates');
-
-    html += '<h5>gutter</h5><div class="glyphs">';
-    for (var gi = 0; gi < GLYPHS.length; gi++) {
-      var gv = GLYPHS[gi];
-      html += '<button type="button" class="glyph" data-glyph="' + esc(gv) + '"' +
-              (gv === (look.glyph || 'none') ? ' aria-current="true"' : '') + '>' +
-              (gv === 'none' ? '—' : esc(gv)) + '</button>';
-    }
-    html += '</div>';
-    /* Always shown, chosen glyph or not: hidden until one is picked, the section
-       read as a page of glyphs and no settings at all. */
-    html += pickRow('pick-glyphfill');
-    if (look.glyphFill === 'cell') {
-      html += pickRow('pick-glyphcell');
-      html += swatchRow([
-        ['glyphCellGround', /^#[0-9a-f]{6}$/i.test(look.glyphCellGround || '')
-          ? look.glyphCellGround : voidCol0(), "the cell's ground"],
-        ['glyphCellInk', /^#[0-9a-f]{6}$/i.test(look.glyphCellInk || '')
-          ? look.glyphCellInk
-          : (/^#[0-9a-f]{6}$/i.test(look.glyphCol || '') ? look.glyphCol : textInk()),
-         "the cell's marks"]]);
-      html += paramsRows({ cell: genValue('gutter', 'cell', 8) }, 'gutter');
-    }
-    html += pickRow('pick-glyphmotion');
-    html += swatchRow([['glyphCol',
-      /^#[0-9a-f]{6}$/i.test(look.glyphCol || '') ? look.glyphCol : textInk(), 'the glyph']]);
-    /* The contour, kept apart from the body: they are two drawings of the same
-       glyph and each has its own colour. */
-    html += '<h5>the glyph\'s contour</h5>' + pickRow('pick-glyphedge');
-    if ((look.glyphEdge || 'none') !== 'none') {
-      html += pickRow('pick-glyphedgekind');
-      html += swatchRow([['glyphEdgeInk',
-        /^#[0-9a-f]{6}$/i.test(look.glyphEdgeInk || '')
-          ? look.glyphEdgeInk
-          : (/^#[0-9a-f]{6}$/i.test(look.glyphCol || '') ? look.glyphCol : textInk()),
-        'the contour']]);
-      var ek = look.glyphEdgeKind || 'solid';
-      var erows = {};
-      if (ek === 'solid' || ek === 'double') erows.contour = genValue('gutter', 'contour', 1.5);
-      if (ek === 'double') erows.ring = genValue('gutter', 'ring', 2);
-      if (ek === 'soft') erows.glow = genValue('gutter', 'glow', 4);
-      if (ek === 'cast') {
-        erows['cast across'] = genValue('gutter', 'cast across', 3);
-        erows['cast down'] = genValue('gutter', 'cast down', 3);
-      }
-      html += paramsRows(erows, 'gutter');
-    }
-    html += paramsRows({ size: genValue('gutter', 'size', 18),
-                         step: genValue('gutter', 'step', 1.6),
-                         seconds: genValue('gutter', 'seconds', 12),
-                         turn: genValue('gutter', 'turn', 1),
-                         cell: genValue('gutter', 'cell', 8),
-                         fade: genValue('gutter', 'fade', 1) }, 'gutter');
-
-    html += '<h5>block</h5>' + pickRow('pick-justify');
-    html += pickRow('pick-ticker');
-    if (look.ticker !== 'off') {
-      html += pickRow('pick-tickermotion') + pickRow('pick-tickerfield');
-      html += swatchRow([['tickerGround', tickerGroundCol(), 'the band'],
-                         ['tickerInk', tickerInkCol(), 'its letters']]);
-      html += paramsRows({ height: genValue('ticker', 'height', 22),
-                           size: genValue('ticker', 'size', 0.6),
-                           seconds: genValue('ticker', 'seconds', 26) }, 'ticker');
-      html += edgeRows('ticker', 'ticker');
-    }
-    html += '<h5>arrows</h5>';
-    html += paramsRows({ size: genValue('nav', 'size', 4.5),
-                         arrow: genValue('nav', 'arrow', 1.25),
-                         weight: genValue('nav', 'weight', 2),
-                         'from the edge': genValue('nav', 'edge', 1.5),
-                         'at height %': genValue('nav', 'height', 50),
-                         dim: genValue('nav', 'dim', 0.28) }, 'nav');
-    html += swatchRow([['navInk', look.navInk || '#ffffff', 'arrow colour']]);
-
-    html += '<h5>tiling</h5>' + pickRow('pick-tiling');
-    if ((look.tiling || 'none') !== 'none') {
-      var bi = wordmarkInk();
-      html += '<dl><dt>gap</dt><dd><input type="number" class="gen" id="tile-gap" step="2" value="' +
-              Math.round(look.tileGap == null ? (bi ? bi.pad : 20) : look.tileGap) +
-              '"></dd></dl>';
-    }
-
-    html += '<h5>picture</h5>' + pickRow('pick-scale') + pickRow('pick-pichover');
-    html += hoverRows(look.picHover, 'pichover');
-    /* Its colours: the same duotone the artist's picture wears, with a pair of
-       its own. */
-    /* Only where there is an imported picture to place: the stand-in has always
-       had the picture's own box and nothing to choose about it. */
-    /* Not offered yet. The two placements are wired and the mode itself is
-       harmless — `board`, the default, is the route that has always worked —
-       but on `surface` the picture element is created, sized and styled and
-       never painted: `renderPicture` reaches it and no bitmap arrives. The
-       canvas is not tainted and the source loads, so the fault is between the
-       scaler and publishPic. Offering a switch that empties the poster is worse
-       than not offering it, so it waits until that is found. */
-    if (ownPicture()) html += pickRow('pick-picplace');
-    html += pickRow('pick-pictex');
-    if ((look.picTex || 'none') !== 'none') {
-      html += pickRow('pick-pictexblend');
-      html += swatchRow([
-        ['picTexInk', /^#[0-9a-f]{6}$/i.test(look.picTexInk || '')
-          ? look.picTexInk : cellInk(), 'texture marks'],
-        ['picTexGround', /^#[0-9a-f]{6}$/i.test(look.picTexGround || '')
-          ? look.picTexGround : cellGround(), 'texture ground']]);
-      html += '<dl><dt>texture cell</dt><dd><input type="number" class="pictex" ' +
-              'step="1" min="2" max="64" value="' +
-              Math.max(2, Number(look.picTexScale) || 8) + '"></dd></dl>';
-    }
-    html += pickRow('pick-picskin');
-    if (look.picSkin === 'pulse') html += pickRow('pick-picskinanim');
-    if (look.picSkin === 'duo' || look.picSkin === 'pulse') {
-      var pe = picSkinEnds();
-      html += '<p class="vf-magnet-note">Concert picture colours — independent from the main frame.</p>';
-      html += swatchRow([['picSkinInk', pe[1], 'picture lights'],
-                         ['picSkinGround', pe[0], 'picture darks']]);
-    }
-    /* Its own corners and border, offered only where it has any. Filling the
-       frame, the picture wears the frame — so these controls governed an outline
-       that should not exist, and the panel said so by continuing to offer it.
-       The PICTURE FRAME section above is what governs it there. */
-    if (!ownPictureUsable() || picOnSurface()) html += edgeRows('pic', 'picture');
-    else html += '<p class="vf-magnet-note">Its frame is the picture frame above.</p>';
-    /* Which picture, not only how it is dressed. This is the panel the picture
-       is composed in, and having to leave it for the editor to say *which*
-       picture is being composed is a detour through another window. */
-    html += (function () {
-      var key = pageKey(page), row = null, list = editorConcerts();
-      for (var ci = 0; ci < list.length; ci++) {
-        if (String(list[ci].date) === key) row = list[ci];
-      }
-      var now = row ? String(row.image || '').trim() : '';
-      /* Named but unusable. A path copied from the Finder — /Users/…/Downloads
-         — is a place on the disk, not an address this page can fetch, so the
-         picture silently never arrives and every setting looks broken. Said
-         plainly, with the one action that fixes it standing next to it. */
-      var broken = now && ownFailed[srcFor(now)];
-      var note = broken
-        ? 'this file cannot be read from a web page — choose it again to copy it into the site'
-        : (now || 'no picture of its own — the stand-in is shown');
-      return '<div class="pic-file' + (broken ? ' broken' : '') + '">' +
-             '<button type="button" class="pic-upload">Choose file…</button>' +
-             (now ? '<button type="button" class="pic-clear" title="Back to the stand-in picture">clear</button>' : '') +
-             '<span class="pic-file-now" title="' + esc(now) + '">' + esc(note) +
-             '</span></div>';
-    })();
-    html += '<dl><dt>quand l\u2019affiche n\u2019a pas d\u2019image</dt><dd>' +
-      '<select class="cell-control" data-key="picMissing">' +
-      vfOptions(PIC_MISSING, look.picMissing || 'none') + '</select></dd></dl>';
-    html += paramsRows({ source: capture ? capture.naturalWidth + ' x ' + capture.naturalHeight : '—',
-                         shown: Math.round(parseFloat(getComputedStyle(document.documentElement)
-                           .getPropertyValue('--pic-w')) || 0) + ' px wide' });
-
-    html += '<button type="button" id="params-all">Apply to every page</button> ' +
-            '<button type="button" id="params-reset">Reset colours + params</button>';
-    /* Held open while a list is being browsed: hovering an option applies it so
-       it can be seen, and applying it is exactly what would tear the panel down
-       and take the open list with it. */
-    if (previewing) { pendingParams = true; return; }
-    /* Rebuilt only when it would come out different. The panel's contents do
-       depend on the choice — picking a Macintosh frame brings out swatches that
-       a field frame has no use for — so it has to be *able* to rebuild; it does
-       not have to do it every time somebody touches a control. */
-    if (body.__mgHtml === html) return;
-    body.__mgHtml = html;
-    /* …and never at the cost of where the reader was. The rebuild threw the
-       scroll away with the markup, so a setting halfway down the panel put you
-       back at the top every single time you changed it. */
-    var keepTop = body.scrollTop;
-    /* The panel does not scroll: the open category inside it does. Looking only
-       at the panel and its direct children found nothing that had scrolled, so
-       every rebuild still landed the reader back at the top — which is the
-       complaint this was meant to answer. Recorded per group, in order, since
-       the groups are what survive a rebuild. */
-    function groups(el) {
-      return [].slice.call(el.querySelectorAll('.param-group-body'));
-    }
-    var keepGroups = groups(body).map(function (g) { return g.scrollTop; });
-    var act = document.activeElement;
-    var actId = (act && act.id && body.contains(act)) ? act.id : null;
-    var actStart = (actId && act.selectionStart != null) ? act.selectionStart : null;
-
-    body.innerHTML = html;
-    organizeParams(body);
-    var detachedBody = mountDetachedParams(body);
-    bindPanel(body, drawParams);
-    if (detachedBody) bindPanel(detachedBody, drawParams);
-    upgradeSelects(body);
-    if (detachedBody) upgradeSelects(detachedBody);
-
-    body.scrollTop = keepTop;
-    var back = groups(body);
-    for (var gi = 0; gi < back.length && gi < keepGroups.length; gi++) {
-      if (keepGroups[gi]) back[gi].scrollTop = keepGroups[gi];
-    }
-    if (actId) {
-      var again = document.getElementById(actId);
-      if (again && again.focus) {
-        again.focus();
-        if (actStart != null && again.setSelectionRange) {
-          try { again.setSelectionRange(actStart, actStart); } catch (e) {}
-        }
-      }
-    }
-  }
+  function drawParams() {}
 
   /* One binder for both panels. The info window has a panel of its own showing a
      subset of these same controls, and a second copy of this wiring is exactly
      how two panels come to mean two different things. */
-  function bindPanel(body, redraw) {
-    bindViewportFramePanel(body, redraw);
-    function setWordmarkPosition(value, align) {
-      look.gen = look.gen || {}; look.gen.wmpos = look.gen.wmpos || {};
-      look.gen.wmpos.offsetX = clampNum(-900, 900, Number(value) || 0);
-      if (align) look.wmAlign = align;
-      var picker = document.getElementById('pick-wmalign');
-      if (picker) picker.value = look.wmAlign;
-      fit(); saveLook();
-      var mirrors = document.querySelectorAll('input.wm-position-x');
-      for (var wm = 0; wm < mirrors.length; wm++) {
-        mirrors[wm].value = Math.round(genValue('wmpos', 'offsetX', 0));
-      }
-    }
-    var wmPositionInputs = body.querySelectorAll('input.wm-position-x');
-    for (var wpi = 0; wpi < wmPositionInputs.length; wpi++) {
-      wmPositionInputs[wpi].addEventListener('input', function () {
-        setWordmarkPosition(this.value);
-      });
-    }
-    var wmAlignButtons = body.querySelectorAll('[data-wm-align]');
-    for (var wab = 0; wab < wmAlignButtons.length; wab++) {
-      wmAlignButtons[wab].addEventListener('click', function () {
-        setWordmarkPosition(0, this.getAttribute('data-wm-align'));
-      });
-    }
-    var wmNudges = body.querySelectorAll('[data-wm-nudge]');
-    for (var wmn = 0; wmn < wmNudges.length; wmn++) {
-      wmNudges[wmn].addEventListener('click', function () {
-        setWordmarkPosition(genValue('wmpos', 'offsetX', 0) + Number(this.getAttribute('data-wm-nudge')));
-      });
-    }
-    var wmPositionReset = body.querySelector('[data-wm-position-reset]');
-    if (wmPositionReset) wmPositionReset.addEventListener('click', function () {
-      setWordmarkPosition(0, 'center');
-    });
-
-    var organicTargetPicker = body.querySelector('select.organic-target');
-    if (organicTargetPicker) organicTargetPicker.addEventListener('change', function () {
-      organicEditorTarget = this.value;
-      try { localStorage.setItem('mindgame.organic.target.v1', organicEditorTarget); } catch (e) {}
-      redraw();
-    });
-    var organicControls = body.querySelectorAll('input.organic-control');
-    for (var oc = 0; oc < organicControls.length; oc++) {
-      organicControls[oc].addEventListener('input', function () {
-        var key = this.getAttribute('data-organic-key'), limits = ORGANIC_LIMITS[key];
-        var value = Number(this.value);
-        if (!limits || !isFinite(value)) return;
-        value = clampNum(limits[0], limits[1], value);
-        var group = organicGroup(organicEditorTarget);
-        look.gen = look.gen || {}; look.gen[group] = look.gen[group] || {};
-        look.gen[group][key] = value;
-        applyOrganicDistortion(); saveLook();
-      });
-      organicControls[oc].addEventListener('change', function () {
-        this.value = organicValue(organicEditorTarget, this.getAttribute('data-organic-key'));
-      });
-    }
-    var organicReset = body.querySelector('.organic-reset');
-    if (organicReset) organicReset.addEventListener('click', function () {
-      var group = organicGroup(organicEditorTarget);
-      if (look.gen && look.gen[group]) {
-        for (var key in ORGANIC_DEFAULTS) delete look.gen[group][key];
-      }
-      applyOrganicDistortion(); saveLook(); redraw();
-    });
-
-    function refreshWordmarkShape() {
-      applyWordmarkShape();
-      saveLook();
-    }
-    var wmShapeControls = body.querySelectorAll('input.wm-shape-control');
-    for (var ws = 0; ws < wmShapeControls.length; ws++) {
-      wmShapeControls[ws].addEventListener('input', function () {
-        var key = this.getAttribute('data-wm-shape');
-        var value = Number(this.value), limits = WM_SHAPE_LIMITS[key];
-        if (!isFinite(value) || !limits) return;
-        value = clampNum(limits[0], limits[1], value);
-        look.gen = look.gen || {}; look.gen.wm = look.gen.wm || {};
-        look.gen.wm[key] = value;
-        refreshWordmarkShape();
-      });
-      wmShapeControls[ws].addEventListener('change', function () {
-        var key = this.getAttribute('data-wm-shape');
-        this.value = wordmarkShapeValue(key);
-      });
-    }
-    var wmShapeReset = body.querySelector('.wm-shape-reset');
-    if (wmShapeReset) wmShapeReset.addEventListener('click', function () {
-      if (look.gen && look.gen.wm) {
-        for (var key in WM_SHAPE_DEFAULTS) delete look.gen.wm[key];
-      }
-      refreshWordmarkShape();
-      redraw();
-    });
-    var artistNameSizes = body.querySelectorAll('input.profile-name-override');
-    for (var ans = 0; ans < artistNameSizes.length; ans++) {
-      artistNameSizes[ans].addEventListener('change', function () {
-        var key = this.getAttribute('data-artist-key'), entries = profileNameEntries();
-        var entry = null;
-        for (var e = 0; e < entries.length; e++) {
-          if (entries[e].key === key) { entry = entries[e]; break; }
-        }
-        if (!entry) return;
-        var raw = String(this.value || '').trim(), scale = Number(raw);
-        var stored = setStoredProfileNameScale(entry,
-          !raw || !isFinite(scale) || scale <= 0 ? null : scale);
-        this.value = stored == null ? '' : stored;
-        if (currentProfileArtist && artistKey(currentProfileArtist.name) === entry.key) {
-          currentProfileArtist = entry.artist || currentProfileArtist;
-        }
-        saveEdits(); applyProfile(); saveLook(); placeZones();
-      });
-    }
-    /* Its own handler rather than the plain one above: choosing a cell adds
-       rows to the panel — a size, a ground — and they only exist if the panel
-       is drawn again. */
-    var cellControls = body.querySelectorAll('select.cell-control');
-    for (var cc = 0; cc < cellControls.length; cc++) {
-      cellControls[cc].addEventListener('change', function () {
-        look[this.getAttribute('data-key')] = this.value;
-        saveLook(); fit(); drawPosters(); redraw();
-      });
-    }
-    var lineupControls = body.querySelectorAll('select.lineup-control');
-    for (var lc = 0; lc < lineupControls.length; lc++) {
-      lineupControls[lc].addEventListener('change', function () {
-        look[this.getAttribute('data-key')] = this.value;
-        applyLineupLayout();
-        saveLook();
-        fit();
-        drawPosters();
-      });
-    }
-    function setPagePosition(key, value) {
-      var limit = key === 'pageDx' ? 800 : 450;
-      layout[key] = Math.max(-limit, Math.min(limit, Number(value) || 0));
-      applyLayout();
-      var mirrors = document.querySelectorAll('.page-position[data-layout-key="' + key + '"]');
-      for (var p = 0; p < mirrors.length; p++) mirrors[p].value = Math.round(layout[key]);
-    }
-    var pageScales = body.querySelectorAll('input.page-scale');
-    for (var ps = 0; ps < pageScales.length; ps++) {
-      pageScales[ps].addEventListener('input', function () {
-        var n = Number(this.value);
-        if (!isFinite(n) || n <= 0) return;
-        setPageScale(n / 100);
-      });
-    }
-    var pagePositions = body.querySelectorAll('input.page-position');
-    for (var pp = 0; pp < pagePositions.length; pp++) {
-      pagePositions[pp].addEventListener('input', function () {
-        setPagePosition(this.getAttribute('data-layout-key'), this.value);
-      });
-    }
-    var nudges = body.querySelectorAll('[data-page-nudge]');
-    for (var pn = 0; pn < nudges.length; pn++) nudges[pn].addEventListener('click', function () {
-      var parts = this.getAttribute('data-page-nudge').split(':');
-      var key = parts[0] === 'x' ? 'pageDx' : 'pageDy';
-      setPagePosition(key, (layout[key] || 0) + Number(parts[1] || 0));
-    });
-    var pageReset = body.querySelector('[data-page-position-reset]');
-    if (pageReset) pageReset.addEventListener('click', function () {
-      setPagePosition('pageDx', 0); setPagePosition('pageDy', 0);
-    });
-    var ins = body.querySelectorAll('input[type="color"]:not(.vf-control)');
-    for (var i = 0; i < ins.length; i++) {
-      ins[i].addEventListener('input', function () {
-        var k = this.getAttribute('data-key');
-        var twin = this.parentNode && this.parentNode.querySelector('input.hex');
-        if (twin) twin.value = this.value;
-        if (k.indexOf('life') === 0) {
-          look.life = look.life || [];
-          look.life[Number(k.slice(4))] = this.value;
-          drawPosters();
-        } else if (k === 'navInk') {
-          look.navInk = this.value; applyChrome(); saveLook();
-        } else if (k === 'contourLo' || k === 'contourHi') {
-          look[k] = this.value; setWordmark(look.wm); saveLook();
-        } else if (k === 'wmCellInk' || k === 'wmCellGround') {
-          look[k] = this.value; setWordmark(look.wm); saveLook();
-        } else if (k === 'skinInk' || k === 'skinGround') {
-          look[k] = this.value; startSkin(); saveLook();
-        } else if (k === 'picScreen' || k === 'pfScreen') {
-          look[k] = this.value;
-          applyPicHover(); applyProfileHover();
-        } else if (k === 'picSkinInk' || k === 'picSkinGround') {
-          look[k] = this.value; startPicSkin(); saveLook();
-        } else if (k === 'picTexInk' || k === 'picTexGround') {
-          /* The texture's colours are not applied to the layer — they are baked
-             into the pattern's own address, which `picTexUrl` recolours, and
-             that address is only recomputed when the picture is drawn again.
-             Falling through to the generic case below, these two changed the
-             value and nothing else: the colour arrived only when the texture
-             was re-picked, which redraws for its own reasons. */
-          look[k] = this.value; redrawPicture(); saveLook();
-        } else if (k === 'namesStrokeCol' || k === 'metaStrokeCol' ||
-                   k === 'namesCellGroundCol' || k === 'tagInk' ||
-                   k === 'tagStrokeCol' || k === 'tagCellGroundCol') {
-          /* The two contours are written by `fitBoard`, and the cell's ink is
-             baked into the cell's own address there. Falling through to the
-             generic case, these rebuilt the frame — which has nothing to do
-             with them — and the colour only arrived at the next fit. */
-          look[k] = this.value;
-          fit();
-        } else if (k === 'boardGround') {
-          look.boardGround = this.value;
-          drawPosters();
-        } else if (k === 'textInk' || k === 'hoverInk' || k === 'hoverAltInk') {
-          look[k] = this.value;
-          applyTextTexture();
-          startSkin();          /* the framed page is made of these colours too */
-          syncPickers();
-        } else if (k === 'surroundCol' || k === 'surroundInk') {
-          look[k] = this.value;
-          applySurround();
-        } else if (k === 'crestInk' || k === 'crestGround' ||
-                   k === 'crestBackInk' || k === 'crestEdgeInk') {
-          look[k] = this.value;
-          buildCrest();
-        } else if (k === 'datesInk' || k === 'datesGround' ||
-                   k === 'datesChip' || k === 'datesEdge' ||
-                   k === 'datesNowBg' || k === 'datesNowInk' || k === 'datesNowEdge' ||
-                   k === 'datesBackInk' || k === 'topInk' ||
-                   k === 'topCellInk' || k === 'topCellGround' ||
-                   k === 'topGround' || k === 'topBackInk' ||
-                   k === 'datesHotBg' || k === 'datesHotInk' || k === 'datesChipInk' ||
-                   k === 'datesHomeBg' || k === 'datesHomeInk' || k === 'datesHomeEdge' ||
-                   k === 'datesNextHotBg' || k === 'datesNextHotInk' ||
-                   k === 'datesNextCellInk' || k === 'datesNextTextInk') {
-          look[k] = this.value;
-          buildDates();
-        } else if (k === 'glyphCol' || k === 'glyphEdgeInk' ||
-                   k === 'glyphCellInk' || k === 'glyphCellGround') {
-          look[k] = this.value;
-          buildGutter();
-        } else if (k === 'infoLinkCol' || k === 'infoLinkHot') {
-          look[k] = this.value;
-          applyInfoType();
-        } else if (k === 'infoNameCol' || k === 'infoWordsCol' ||
-                   k === 'infoNameGround' || k === 'infoWordsGround') {
-          look[k] = this.value;
-          applyInfoType();
-        } else if (k === 'infoStroke') {
-          look.infoStroke = this.value;
-          applyInfoType();
-        } else if (k === 'infoInk' || k === 'infoCol') {
-          look[k] = this.value;
-          look.infoPalette = 'own';        /* picking one is choosing it */
-          applyWindow();
-          syncPickers();
-        } else if (k === 'tickerInk' || k === 'tickerGround') {
-          look[k] = this.value;
-          buildTickers();
-        } else if (k === 'cellInk' || k === 'cellGround') {
-          look[k] = this.value;
-          refreshCell();
-          applyWindow();       /* a texture frame's pair is the cell's */
-          syncPickers();
-        } else {
-          look[k] = this.value;
-          if (k.indexOf('bg') === 0) setBackground(look.bg);
-          else if (k.indexOf('board') === 0) drawPosters();
-          else { setFrame(look.frame); applyWindow(); }
-        }
-        saveLook();
-      });
-    }
-    /* The glyph grid: a click chooses, and the pointer merely passing over one
-       shows it on the page without choosing it — the strip is rebuilt from a
-       preview that is dropped again on the way out, so nothing is saved by
-       looking. */
-    var glyphBtns = body.querySelectorAll('.glyphs .glyph');
-    for (var g1 = 0; g1 < glyphBtns.length; g1++) {
-      glyphBtns[g1].addEventListener('mouseenter', function () {
-        glyphPreview = this.getAttribute('data-glyph');
-        buildGutter();
-      });
-      glyphBtns[g1].addEventListener('mouseleave', function () {
-        glyphPreview = null;
-        buildGutter();
-      });
-      glyphBtns[g1].addEventListener('click', function () {
-        look.glyph = this.getAttribute('data-glyph');
-        glyphPreview = null;
-        buildGutter();
-        saveLook();
-        redraw();
-      });
-    }
-
-    /* Typed exactly. Normalised here and handed to the well, whose own listener
-       is the single place a colour is acted on. */
-    var hexes = body.querySelectorAll('input.hex:not(.vf-hex)');
-    for (var h1 = 0; h1 < hexes.length; h1++) {
-      hexes[h1].addEventListener('change', function () {
-        var v = String(this.value || '').trim().replace(/^#?/, '#').toLowerCase();
-        if (!/^#[0-9a-f]{6}$/.test(v)) {
-          /* three digits is a colour too, and a common way to type one */
-          var m = v.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/);
-          if (m) v = '#' + m[1] + m[1] + m[2] + m[2] + m[3] + m[3];
-        }
-        var well = this.parentNode && this.parentNode.querySelector('input[type="color"]');
-        if (!/^#[0-9a-f]{6}$/.test(v)) { if (well) this.value = well.value; return; }
-        this.value = v;
-        if (!well) return;
-        well.value = v;
-        well.dispatchEvent(new Event('input', { bubbles: true }));
-      });
-    }
-
-    function edgeSet(which, key, value) {
-      look.edge = look.edge || {};
-      look.edge[which] = look.edge[which] || {};
-      look.edge[which][key] = value;
-      applyEdges();
-      saveLook();
-    }
-    var eNums = body.querySelectorAll('input.edge');
-    for (var e1 = 0; e1 < eNums.length; e1++) {
-      eNums[e1].addEventListener('change', function () {
-        var v = parseFloat(this.value);
-        edgeSet(this.getAttribute('data-edge'), this.getAttribute('data-key'),
-                isFinite(v) ? Math.max(0, v) : 0);
-      });
-    }
-    var eSel = body.querySelectorAll('select.edge-style');
-    for (var e2 = 0; e2 < eSel.length; e2++) {
-      eSel[e2].addEventListener('change', function () {
-        edgeSet(this.getAttribute('data-edge'), 's', this.value);
-        /* The two band kinds bring controls of their own, and the line kinds
-           take them away again — so the rows are rebuilt when the kind
-           changes, and only then. */
-        if (typeof drawParams === 'function') drawParams();
-      });
-    }
-    var eCell = body.querySelectorAll('select.edge-cell');
-    for (var e4 = 0; e4 < eCell.length; e4++) {
-      eCell[e4].addEventListener('change', function () {
-        edgeSet(this.getAttribute('data-edge'), 'cell', this.value);
-      });
-    }
-    var eGly = body.querySelectorAll('select.edge-glyph');
-    for (var e5 = 0; e5 < eGly.length; e5++) {
-      eGly[e5].addEventListener('change', function () {
-        edgeSet(this.getAttribute('data-edge'), 'g', this.value);
-      });
-    }
-    var eCol2 = body.querySelectorAll('input.edge-colour2');
-    for (var e6 = 0; e6 < eCol2.length; e6++) {
-      eCol2[e6].addEventListener('input', function () {
-        edgeSet(this.getAttribute('data-edge'), 'c2', this.value);
-      });
-    }
-    var eCol = body.querySelectorAll('input.edge-colour');
-    for (var e3 = 0; e3 < eCol.length; e3++) {
-      eCol[e3].addEventListener('input', function () {
-        edgeSet(this.getAttribute('data-edge'), 'c', this.value);
-      });
-    }
-    var tl = body.querySelector('#top-text');
-    if (tl) tl.addEventListener('input', function () {
-      look.topText = this.value;
-      buildTopLine(); saveLook();
-    });
-    var si = body.querySelector('#surround-img');
-    if (si) si.addEventListener('change', function () {
-      look.surroundImage = this.value.trim();
-      applySurround(); saveLook();
-    });
-    var tg = body.querySelector('#tile-gap');
-    if (tg) tg.addEventListener('change', function () {
-      var n = parseFloat(this.value);
-      look.tileGap = isFinite(n) ? Math.max(0, n) : null;
-      saveLook(); layTiles();
-    });
-    var nums = body.querySelectorAll('input.gen:not(#tile-gap)');
-    for (var j = 0; j < nums.length; j++) {
-      nums[j].addEventListener('change', function () {
-        var g = this.getAttribute('data-gen'), k = this.getAttribute('data-key');
-        var val = parseFloat(this.value);
-        look.gen = look.gen || {};
-        look.gen[g] = look.gen[g] || {};
-        if (isFinite(val)) look.gen[g][k] = val; else delete look.gen[g][k];
-        saveLook();
-        /* Rebuilt, not nudged: a constant is read when the generator is made. */
-        if (g === look.bg) setBackground(look.bg);
-        if (g === look.frame) setFrame(look.frame);
-        if (g === 'text') { applyLineupLayout(); fit(); drawPosters(); }
-        if (g === 'nav') applyChrome();
-        if (g === 'listen') buildListen();
-        if (g === 'profile') applyProfile();
-        if (g === 'info') applyInfoType();
-        if (g === 'pfhover') applyProfileHover();
-        if (g === 'pichover') applyPicHover();
-        if (g === 'ticker') buildTickers();
-        if (g === 'gutter') buildGutter();
-        if (g === 'dates') buildDates();
-        if (g === 'top') buildTopLine();
-        if (g === 'crest') buildCrest();
-        if (g === 'surround') applySurround();
-        if (g === 'space') fit();
-        if (g === 'motion') { fit(); startMotion(); }
-        if (g === 'wmcell' || g === 'contour') setWordmark(look.wm);
-        if (g === 'wm') { fit(); startMotion(); }
-        if (g === 'life' || g === look.board) drawPosters();
-      });
-    }
-    var mirrors = body.querySelectorAll('select.mirror');
-    for (var m = 0; m < mirrors.length; m++) {
-      mirrors[m].addEventListener('change', function () {
-        var src = document.getElementById(this.getAttribute('data-for'));
-        if (!src) return;
-        src.value = this.value;
-        src.dispatchEvent(new Event('change'));
-        redraw();
-      });
-    }
-    /* The same upload the editor offers, reached from the panel the picture is
-       dressed in. Classes rather than ids: a category can be torn off into a
-       window of its own, and two panels carrying the same id is two controls
-       that are supposed to be one. */
-    var picUp = body.querySelector('.pic-upload');
-    if (picUp) picUp.addEventListener('click', function () {
-      var key = pageKey(page), list = editorConcerts(), row = null;
-      for (var ci = 0; ci < list.length; ci++) {
-        if (String(list[ci].date) === key) row = list[ci];
-      }
-      if (!row) { this.textContent = 'no bill on this page'; return; }
-      pickImageInto(this, row);
-    });
-    var picClear = body.querySelector('.pic-clear');
-    if (picClear) picClear.addEventListener('click', function () {
-      var key = pageKey(page), list = editorConcerts(), row = null;
-      for (var ci = 0; ci < list.length; ci++) {
-        if (String(list[ci].date) === key) row = list[ci];
-      }
-      if (!row) return;
-      /* Cleared, not deleted from the disk: the file stays in images/ and this
-         bill simply stops naming it, which is what the stand-in is for. */
-      row.image = '';
-      saveEdits();
-      picKey = null;
-      drawPosters();
-      renderPicture();
-      redraw();
-    });
-
-    var pt = body.querySelector('input.pictex');
-    if (pt) pt.addEventListener('input', function () {
-      look.picTexScale = Math.max(2, Math.min(64, Number(this.value) || 8));
-      saveLook();
-      redrawPicture();
-    });
-
-    var all = body.querySelector('#params-all');
-    if (all) all.addEventListener('click', function () {
-      /* The one way the template is changed on purpose: what is on screen
-         becomes what every date starts from, and the dates that were only
-         stating small differences give them up. A frozen date is the exception
-         — being beyond the template's reach is the whole of what freezing
-         means, so this does not touch it. */
-      baseLook = takeLook();
-      baseLayout = takeLayout();
-      var kept = 0;
-      for (var dk in dateDress) {
-        var de = dateDress[dk];
-        if (!de) continue;
-        if (de.frozen) { kept++; continue; }
-        /* Its dressing, and only its dressing. Whether the date is published
-           and where its frozen pictures were copied are facts about the date,
-           not what it is wearing — wiping the whole entry quietly un-published
-           a bill and lost the copies taken when it was frozen. */
-        delete de.look;
-        delete de.layout;
-        if (!saysSomething(de)) delete dateDress[dk];
-      }
-      saveLook();
-      /* …and written to the file. Left in this browser alone it did not
-         survive a reload: the next start read the old template back out of
-         theme.json and every date that had just given up its own values
-         inherited the old one again — which looked exactly like the frames
-         and the colours refusing to follow. */
-      var btn2 = this;
-      persistTheme(btn2, kept
-        ? 'applied to every page — ' + kept + ' frozen date' + (kept > 1 ? 's' : '')
-            + ' left alone, release it to include it'
-        : 'applied to every page');
-      if (typeof templateLabel === 'function') templateLabel();
-    });
-    var rst = body.querySelector('#params-reset');
-    if (rst) rst.addEventListener('click', function () {
-      look.life = null; look.bgLo = look.bgHi = look.frameLo = look.frameHi = null;
-      look.textInk = null; look.cellInk = null; look.cellGround = null;
-      look.boardLo = look.boardHi = null;
-      look.boardGround = null; look.gen = null; look.edge = null; applyEdges();
-      saveLook();
-      setBackground(look.bg); setFrame(look.frame); drawPosters();
-      applyTextTexture(); syncPickers(); redraw();
-    });
-  }
+  function bindPanel() {}
 
   /* Everything the info window is made of, in one place: the window itself, the
      artist's page inside it, and the picture on that page. Drawn by the same
@@ -18164,245 +15632,13 @@
      both cannot mean two things. */
   var infosFilter = '';
   var infosGroupState = { window: true, profile: false, picture: false };
-  function organizeInfos(body) {
-    var definitions = [
-      { id: 'window', label: 'Fenêtre', heads: ['the window'] },
-      { id: 'profile', label: 'Page artiste', heads: ['the artist page'] },
-      { id: 'picture', label: 'Image artiste', heads: ['its picture'] }
-    ];
-    var map = {}, groups = {}, i, j;
-    for (i = 0; i < definitions.length; i++) {
-      for (j = 0; j < definitions[i].heads.length; j++) map[definitions[i].heads[j]] = definitions[i].id;
-    }
-    var source = Array.prototype.slice.call(body.childNodes);
-    body.textContent = '';
-    var tools = document.createElement('div'); tools.className = 'params-tools';
-    var row = document.createElement('div'); row.className = 'params-search-row';
-    var search = document.createElement('input');
-    search.type = 'search'; search.className = 'params-search'; search.value = infosFilter;
-    search.placeholder = 'Rechercher dans Infos…'; search.setAttribute('aria-label', 'Rechercher dans Infos');
-    var expand = document.createElement('button'); expand.type = 'button'; expand.className = 'params-expand';
-    var nav = document.createElement('div'); nav.className = 'params-nav';
-    nav.setAttribute('aria-label', 'Catégories Infos');
-    row.append(search, expand); tools.append(row, nav); body.appendChild(tools);
+  function organizeInfos() {}
 
-    for (i = 0; i < definitions.length; i++) {
-      var def = definitions[i], details = document.createElement('details');
-      details.className = 'param-group'; details.dataset.group = def.id;
-      details.open = !!infosGroupState[def.id];
-      var summary = document.createElement('summary');
-      var title = document.createElement('span'); title.className = 'param-group-title'; title.textContent = def.label;
-      var count = document.createElement('span'); count.className = 'params-count';
-      var groupBody = document.createElement('div'); groupBody.className = 'param-group-body';
-      summary.append(title, count); details.append(summary, groupBody); body.appendChild(details);
-      groups[def.id] = { details: details, body: groupBody, count: count, sections: [] };
-      details.addEventListener('toggle', (function (key, node) {
-        return function () { if (!infosFilter) infosGroupState[key] = node.open; };
-      })(def.id, details));
-      var jump = document.createElement('button'); jump.type = 'button'; jump.textContent = def.label;
-      jump.addEventListener('click', (function (key, node) {
-        return function () {
-          for (var other in groups) {
-            infosGroupState[other] = other === key;
-            groups[other].details.open = other === key;
-          }
-          node.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        };
-      })(def.id, details));
-      nav.appendChild(jump); groups[def.id].jump = jump;
-    }
-    var current = null;
-    for (i = 0; i < source.length; i++) {
-      var node = source[i];
-      if (node.nodeType === 1 && node.tagName === 'H5') {
-        var heading = node.textContent.trim().toLowerCase();
-        var key = map[heading] || 'profile';
-        current = document.createElement('section'); current.className = 'params-subsection';
-        groups[key].sections.push(current); groups[key].body.appendChild(current);
-      }
-      if (current) current.appendChild(node);
-    }
-    var empty = document.createElement('p'); empty.className = 'params-empty';
-    empty.textContent = 'Aucun paramètre trouvé.'; empty.setAttribute('aria-hidden', 'true');
-    body.appendChild(empty);
-
-    function updateExpand() {
-      var closed = false;
-      for (var key in groups) if (!groups[key].details.hidden && !groups[key].details.open) closed = true;
-      expand.textContent = closed ? 'Tout ouvrir' : 'Tout fermer';
-    }
-    function filter() {
-      var q = infosFilter.trim().toLowerCase(), total = 0;
-      for (var key in groups) {
-        var group = groups[key], visible = 0;
-        for (var n = 0; n < group.sections.length; n++) {
-          var section = group.sections[n];
-          var show = !q || section.textContent.toLowerCase().indexOf(q) !== -1;
-          section.hidden = !show; if (show) visible++;
-        }
-        group.details.hidden = !visible;
-        group.jump.hidden = !visible;
-        group.count.textContent = String(visible);
-        if (q && visible) group.details.open = true;
-        else if (!q) group.details.open = !!infosGroupState[key];
-        total += visible;
-      }
-      empty.setAttribute('aria-hidden', total ? 'true' : 'false'); updateExpand();
-    }
-    search.addEventListener('input', function () { infosFilter = search.value; filter(); });
-    expand.addEventListener('click', function () {
-      var open = expand.textContent === 'Tout ouvrir';
-      for (var key in groups) {
-        if (groups[key].details.hidden) continue;
-        infosGroupState[key] = open; groups[key].details.open = open;
-      }
-      updateExpand();
-    });
-    filter();
-  }
-
-  function drawInfos() {
-    var body = document.getElementById('infos-body');
-    if (!body || !document.documentElement.classList.contains('infos-open')) return;
-    var html = '';
-
-    html += '<h5>the window</h5>' + pickRow('pick-listen');
-    if (look.listen === false) {
-      html += '<p style="opacity:.55;margin:.5rem 0 0">The window is off — ' +
-              'everything below waits for it.</p>';
-      body.innerHTML = html;
-      organizeInfos(body);
-      bindPanel(body, drawInfos);
-      return;
-    }
-    var bl = wordmarkInk();
-    html += paramsRows({ gap: genValue('listen', 'gap', bl ? Math.round(bl.pad) : 20) },
-                       'listen');
-    /* Its own edge if it is given one; left alone it keeps wearing the frame's,
-       which is what makes the pair read as twins. */
-    html += edgeRows('listen', 'window');
-    /* What it is made of, and the two colours it is made in. */
-    html += pickRow('pick-infoground') + pickRow('pick-infopalette');
-    /* The addresses that sit in its header. */
-    html += swatchRow([
-      ['infoLinkCol', /^#[0-9a-f]{6}$/i.test(look.infoLinkCol || '')
-        ? look.infoLinkCol : infoInkCol(), 'its links'],
-      ['infoLinkHot', /^#[0-9a-f]{6}$/i.test(look.infoLinkHot || '')
-        ? look.infoLinkHot : infoInkCol(), 'a link under the pointer']]);
-    /* Only when it has colours of its own to show: taking the frame's or the
-       page's, a swatch here would offer to edit a value nothing reads. */
-    if ((look.infoPalette || 'page') === 'own') {
-      html += swatchRow([['infoCol', infoGroundCol(), 'the window'],
-                         ['infoInk', infoInkCol(), 'its text']]);
-    }
-
-    html += '<h5>the artist page</h5>' + pickRow('pick-profilearr');
-    html += pickRow('pick-profilenamealign') + pickRow('pick-profilealign');
-    /* Two apiece: the letters' own colour, and what lies behind them inside the
-       letters — a cell has marks and holes, and this is the holes. */
-    html += swatchRow([['infoNameCol',
-                        /^#[0-9a-f]{6}$/i.test(look.infoNameCol || '')
-                          ? look.infoNameCol : infoInkCol(), 'the name'],
-                       ['infoNameGround',
-                        /^#[0-9a-f]{6}$/i.test(look.infoNameGround || '')
-                          ? look.infoNameGround : infoGroundCol(), 'behind the name'],
-                       ['infoWordsCol',
-                        /^#[0-9a-f]{6}$/i.test(look.infoWordsCol || '')
-                          ? look.infoWordsCol : infoInkCol(), 'the words'],
-                       ['infoWordsGround',
-                        /^#[0-9a-f]{6}$/i.test(look.infoWordsGround || '')
-                          ? look.infoWordsGround : infoGroundCol(), 'behind the words']]);
-    html += pickRow('pick-infofont') + pickRow('pick-infobody');
-    html += pickRow('pick-infotext') + pickRow('pick-infonametext') + pickRow('pick-infocase');
-    html += paramsRows({ tracking: genValue('info', 'tracking', 0.12),
-                         wordTracking: genValue('info', 'wordTracking', 0.04),
-                         leading: genValue('info', 'leading', 1.65),
-                         fade: genValue('info', 'fade', 0.85) }, 'info');
-    html += pickRow('pick-infocontour');
-    if ((look.infoContour || 'none') !== 'none') {
-      html += swatchRow([['infoStroke',
-        /^#[0-9a-f]{6}$/i.test(look.infoStroke || '') ? look.infoStroke : infoGroundCol(),
-        'the outline']]);
-      var rows = { outline: genValue('info', 'outline', 1) };
-      if (look.infoContour === 'travel') rows.seconds = genValue('info', 'seconds', 7);
-      html += paramsRows(rows, 'info');
-    }
-    html += paramsRows({ margin: genValue('profile', 'margin', 18),
-                         gap: genValue('profile', 'gap', 9),
-                         name: genValue('profile', 'name', 1),
-                         words: genValue('profile', 'words', 1),
-                         picture: genValue('profile', 'picture', 100),
-                         shape: genValue('profile', 'shape', 0.5526),
-                         ground: genValue('profile', 'ground', 0.14),
-                         player: genValue('profile', 'player', 120) }, 'profile');
-
-    var rosterForNames = profileNameEntries();
-    html += '<p class="vf-field-label">Taille du nom — par artiste</p>' +
-            '<p style="opacity:.55;margin:.35rem 0">Laissez vide pour utiliser la taille globale ci-dessus.</p>' +
-            '<dl class="profile-name-overrides">';
-    for (var pn = 0; pn < rosterForNames.length; pn++) {
-      var ownScale = storedProfileNameScale(rosterForNames[pn].name, rosterForNames[pn].artist);
-      html += '<dt>' + esc(rosterForNames[pn].name || ('Artiste ' + (pn + 1))) + '</dt><dd>' +
-              '<input type="number" class="profile-name-override" data-artist-key="' +
-              esc(rosterForNames[pn].key) + '" ' +
-              'min="0.2" max="6" step="0.05" placeholder="global" value="' +
-              (ownScale == null ? '' : ownScale) + '"></dd>';
-    }
-    html += '</dl>';
-
-    html += '<h5>its picture</h5>' + pickRow('pick-skin');
-    if (look.skin === 'pulse') html += pickRow('pick-skinanim');
-    if (look.skin === 'duo' || look.skin === 'pulse') {
-      var se = skinEnds();
-      html += swatchRow([['skinInk', se[1], 'its lights'],
-                         ['skinGround', se[0], 'its darks']]);
-    }
-    /* Its own hover treatment, separate from the concert picture's; the
-       resampling is the page's one setting for both. */
-    html += pickRow('pick-profilehover');
-    html += hoverRows(look.profileHover, 'pfhover');
-    html += pickRow('pick-scale');
-    /* Its own frame: unset it wears the page picture's, so the two only differ
-       when someone means them to. */
-    html += edgeRows('profilepic', 'artist picture');
-
-    html += '<p style="opacity:.45;margin:.9rem 0 0">Open a name to see the page ' +
-            'these describe. `Edit layout` puts handles on its parts.</p>';
-    body.innerHTML = html;
-    organizeInfos(body);
-    bindPanel(body, drawInfos);
-  }
+  function drawInfos() {}
 
   /* Whichever panels are open are the ones redrawn — they share values, so a
      change made in one has to show in the other. */
-  function redrawPanels() { drawParams(); drawInfos(); }
-
-  /* Eleven handlers in the panels end on `redraw()`, and there was no such
-     function anywhere: every one of them threw a ReferenceError on that line.
-
-     The frame chooser is the visible casualty. Picking "Cadre 3" set the index
-     and then died before the fields were rebuilt, so the panel went on showing
-     the first frame's numbers under the third frame's name — and every edit
-     went to the first frame while the name said otherwise. Which is exactly
-     what "I cannot change the size of this frame" looks like from outside.
-
-     What all eleven want is the panels drawn again from what the look now
-     says; each has already done its own work on the page before calling. */
-  function redraw() { redrawPanels(); }
-
-  /* A panel that rebuilds itself under the hand using it is a panel that cannot
-     be used. The pointer over it and the focus inside it were being watched
-     already; the colour well is the case they miss — the system's colour window
-     is not this page, so while it is open the pointer is elsewhere and this
-     document has no focus at all, and the panel was quietly replacing the very
-     input the window was attached to every two seconds. */
-  function panelBusy(id) {
-    var panel = document.getElementById(id);
-    if (!panel) return true;
-    if (!document.hasFocus()) return true;
-    if (panel.matches(':focus-within') || panel.matches(':hover')) return true;
-    return false;
-  }
+  function redrawPanels() {}
 
   var paramsTimer = null;
   function setParams(on) {
@@ -18662,47 +15898,7 @@
     applyingPage = false;
   }
 
-  function syncPickers() {
-    var map = { 'pick-font': 'font', 'pick-bodyfont': 'bodyFont', 'pick-frame': 'frame',
-                'pick-board': 'board', 'pick-wm': 'wm', 'pick-tex': 'tex',
-                'pick-text': 'text', 'pick-bg': 'bg',
-                'pick-cellink': 'cellInk', 'pick-cellground': 'cellGround',
-                'pick-scale': 'scale', 'pick-motion': 'motion', 'pick-hover': 'hover',
-                'pick-tiling': 'tiling', 'pick-justify': 'justify',
-                'pick-pichover': 'picHover',
-                'pick-listen': 'listen', 'pick-skin': 'skin',
-                'pick-picplace': 'picPlace',
-                'pick-picskin': 'picSkin', 'pick-picskinanim': 'picSkinAnim',
-                'pick-skinanim': 'skinAnim',
-                'pick-profilearr': 'profileArr', 'pick-profilealign': 'profileAlign',
-                'pick-profilenamealign': 'profileNameAlign',
-                'pick-surround': 'surround', 'pick-surroundcell': 'surroundCell',
-                'pick-surroundmotion': 'surroundMotion',
-                'pick-wmalign': 'wmAlign', 'pick-wmcontourmode': 'wmContourMode',
-                'pick-datesfont': 'datesFont',
-                'pick-datesback': 'datesBack', 'pick-datestext': 'datesText',
-                'pick-datescase': 'datesCase', 'pick-dateshover': 'datesHover',
-                'pick-dateschip': 'datesChipFill', 'pick-dateschipcell': 'datesChipCell',
-                'pick-datesease': 'datesEase', 'pick-datesshape': 'datesShape',
-                'pick-homeshape': 'datesHomeShape', 'pick-nexthover': 'datesNextHover',
-                'pick-crest': 'crestGlyph', 'pick-crestmotion': 'crestMotion',
-                'pick-nexttext': 'datesNextText',
-                'pick-glyphfill': 'glyphFill', 'pick-glyphmotion': 'glyphMotion',
-                'pick-glyphcell': 'glyphCell',
-                'pick-ticker': 'ticker', 'pick-tickermotion': 'tickerMotion',
-                'pick-tickerfield': 'tickerField',
-                'pick-infoground': 'infoGround', 'pick-infopalette': 'infoPalette',
-                'pick-profilehover': 'profileHover',
-                'pick-infotext': 'infoText', 'pick-infocontour': 'infoContour',
-                'pick-infocase': 'infoCase', 'pick-infonametext': 'infoNameText',
-                'pick-infofont': 'infoFont', 'pick-infobody': 'infoBodyFont',
-                'pick-wmcell': 'wmCell',
-                'pick-hoverink': 'hoverInk', 'pick-textink': 'textInk' };
-    for (var id in map) {
-      var el = document.getElementById(id);
-      if (el && look[map[id]] != null) el.value = look[map[id]];
-    }
-  }
+  function syncPickers() {}
 
   applyEdges();
   applyPicHover();
