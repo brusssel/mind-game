@@ -2818,9 +2818,13 @@
        is under, like everything else in a column. */
     html.phone .phone-acts .phone-profile::before,
     html.phone body::before { background-attachment: scroll !important; }
-    /* And a card repaints alone: what changes inside one cannot oblige the
-       column above and below it to be drawn again. */
-    html.phone .phone-acts .phone-profile { contain: paint; }
+    /* Une fiche se repeignait seule — `contain: paint` — pour qu'un changement
+       chez elle n'oblige pas la colonne entière à être redessinée. Retiré : ce
+       confinement COUPE aussi tout ce qui dépasse de la boîte, et le nom d'un
+       artiste, peint par un filtre qui déborde ses lettres, en faisait les
+       frais sur certains appareils. Le gain était de toute façon marginal
+       depuis que le défilement ne remesure plus rien (mesuré : 12 poussées en
+       1,5 s, aucune tâche longue, avec ou sans). */
     /* The addresses belong under the name. The column orders its parts by
        number — the name is 1, the picture 3 — and a nav without one came
        first; it takes the place just after the name, and follows it when an
