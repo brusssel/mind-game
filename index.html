@@ -16559,6 +16559,40 @@
     placeZones();
     settleSoon();
   });
+  /* ---- un relevé, à la demande ------------------------------------------
+     `?mg-diag=1` affiche en haut de la page ce que CET appareil a fait d'elle :
+     la police qu'il emploie vraiment, la hauteur du bill, celle de la place
+     qu'il lui donne, et si le titre déborde. Un défaut qui ne se voit que sur
+     un téléphone se répare à l'aveugle sans cela. Rien ne s'affiche sans le
+     paramètre. */
+  if (/(^|[?&])mg-diag=1/.test(location.search || '')) {
+    setTimeout(function () {
+      var li = document.querySelector('.concerts:not([hidden]) li:not(.poster-row)');
+      var h2 = li && li.querySelector('.concert-title');
+      var ul = document.querySelector('.concerts:not([hidden])');
+      var wr = document.querySelector('.concerts-wrap');
+      var cs = getComputedStyle(document.documentElement);
+      function n(x) { return Math.round(x || 0); }
+      var l = [
+        'écran ' + innerWidth + '×' + innerHeight + ' ×' + (window.devicePixelRatio || 1),
+        'Charter servie : ' + (document.fonts && document.fonts.check('16px Charter') ? 'OUI' : 'non') +
+          ' · Charis : ' + (document.fonts && document.fonts.check('16px "Charis SIL"') ? 'oui' : 'non'),
+        'police des mots : ' + (li ? getComputedStyle(li).fontFamily.split(',')[0] : '?'),
+        'bill ' + n(li && li.offsetHeight) + ' · liste ' + n(ul && ul.offsetHeight) +
+          ' · place ' + n(wr && wr.clientHeight) + ' (' + (wr ? getComputedStyle(wr).overflow : '?') + ')',
+        'titre boîte ' + n(h2 && h2.offsetHeight) + ' · contenu ' + n(h2 && h2.scrollHeight),
+        'échelle liste ' + cs.getPropertyValue('--list-scale').trim() +
+          ' · téléphone ' + cs.getPropertyValue('--phone-k').trim().slice(0, 5),
+        'affiche ' + n(document.getElementById('phone-poster') &&
+          document.getElementById('phone-poster').getBoundingClientRect().height) + ' px'
+      ];
+      var box = document.createElement('pre');
+      box.textContent = l.join('\n');
+      box.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;margin:0;' +
+        'background:#fff;color:#000;font:12px/1.35 Monaco,monospace;padding:6px 8px;white-space:pre-wrap';
+      document.body.appendChild(box);
+    }, 2500);
+  }
   function takePins() { takeFramePin(); takeInfoPin(); }
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function () { fit(); raf2(takePins); });
