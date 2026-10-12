@@ -9097,8 +9097,13 @@
     var billName = el.textContent;
     var profileName = profileNameForHue(el);
     /* On the phone there is no second window to open: the page is one column
-       and the name is a way down it. */
-    if (phoneOn && scrollToAct(profileName, billName, el.getAttribute('data-billed'))) return;
+       and the name is a way down it. The name is still marked as the one being
+       read, so the poster answers the touch in its colours exactly as the page
+       does — that is the whole of what « opening » means here. */
+    if (phoneOn && scrollToAct(profileName, billName, el.getAttribute('data-billed'))) {
+      markCurrent(billName);
+      return;
+    }
     openName(profileName || billName, a && a.getAttribute('href'), billName, !!profileName,
              el.getAttribute('data-billed') || billName,
              el.classList.contains('venue'));
