@@ -2962,15 +2962,15 @@
          en dessous et de « route ↗ » : le lieu, son adresse et le chemin pour
          s'y rendre sont une seule chose. */
       color: var(--info-link-col, inherit);
-      /* Justifié d'un bord à l'autre, comme la ligne d'infos de l'affiche :
-         `text-align-last` parce qu'une ligne unique est aussi la dernière, et
-         que sans lui rien ne s'écarte. */
-      text-align: justify; text-align-last: justify;
-      -moz-text-align-last: justify;
+      /* À gauche, comme l'adresse qui le suit : les deux commencent au même
+         bord. (Essayé justifié d'un bord à l'autre — écarté.) */
+      text-align: left; text-align-last: left;
+      -moz-text-align-last: left;
     }
     html.phone .phone-where {
       margin: 0; font-family: var(--info-body-font, var(--body-font));
       font-size: 0.95rem;
+      text-align: left;
       /* La couleur des mots du panneau est faite pour le fond clair du panneau :
          posée sur la colonne, elle était du noir sur du noir. L'adresse prend
          donc la couleur des liens — celle de « route ↗ », juste en dessous. */
