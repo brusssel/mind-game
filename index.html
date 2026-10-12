@@ -12,6 +12,12 @@
      masque des lettres creuses sont gravés une fois — et des mots entiers
      cessent d'être peints. Préchargées, elles sont là avant la première
      mesure. -->
+<!-- Un rideau qui ne se lève pas serait pire que l'assemblage qu'il cache. Si
+     le code meurt avant d'avoir fini, cette minuterie le lève seule au bout de
+     huit secondes. Elle est posée ici, avant tout le reste, pour être armée
+     quoi qu'il arrive ensuite — et non en CSS, les animations étant coupées sur
+     téléphone. -->
+<script>setTimeout(function(){document.documentElement.classList.add('mg-ready')},8000)</script>
 <link rel="preload" as="font" type="font/woff2" href="fonts/charter-400.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="fonts/charter-700.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="fonts/charter-400-italic.woff2" crossorigin>
