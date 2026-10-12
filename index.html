@@ -2560,7 +2560,15 @@
     /* The panel beside the poster is the thing this page replaces. */
     html.phone .listen { display: none !important; }
 
+    /* The page's own field behind the whole column — the slime mould the site
+       is dressed in, frozen like everything else here — rather than the flat
+       ground the column used to lie on. The tile is the one the field
+       publishes, so it is the same drawing at the same grain. */
     html.phone .phone-doc {
+      background-color: var(--void, #000);
+      background-image: var(--page-texture, none);
+      background-size: var(--page-tile, 8px) var(--page-tile, 8px);
+      background-repeat: repeat;
       display: flex; flex-direction: column;
       min-height: 100%;
       position: relative; z-index: 2;
@@ -2600,7 +2608,9 @@
       font-family: var(--gut-font, var(--wm-font, inherit));
       font-size: var(--gut-size, 18px);
       line-height: 1;
-      max-height: 4.5rem;
+      /* No ceiling: the glyph is kept at the size the gutter is set to, which
+         is the whole point of laying the gutter's own mark across instead of
+         inventing a second one. */
       color: var(--gut-col, var(--ink));
       opacity: var(--gut-fade, 1);
       pointer-events: none;
@@ -2612,6 +2622,12 @@
        travelling, which is the one thing that had to stop. */
     html.phone .wm-void-contour,
     html.phone .wm-box-edge { animation: none !important; }
+    /* The running bands are off the phone: they are a border for a window and
+       the phone has none, and fixed as they are they showed through the players
+       as the column scrolled over them. */
+    html.phone #ticker-top, html.phone #ticker-foot,
+    html.phone #crest, html.phone #crest-mid,
+    html.phone #rule-top, html.phone #rule-foot { display: none !important; }
     html.phone .phone-lane:empty { display: none; }
     html.phone .phone-lane i { font-style: normal; display: inline-block; }
 
@@ -5565,18 +5581,32 @@
   var WM_SHAPE_DEFAULTS = {
     tracking: 0, wordGap: 0.32, width: 1, height: 1,
     skewX: 0, skewY: 0, rotate: 0, perspectiveX: 0, perspectiveY: 0,
-    distortion: 0, frequencyX: 0.015, frequencyY: 0.045, seed: 7
+    distortion: 0, frequencyX: 0.015, frequencyY: 0.045, seed: 7,
+    /* The melt a phone gets, where the title is drawn at four tenths of its
+       size and a sculpture reads as a smudge. Minus one is « the same as the
+       page's », so a title nobody has thought about on a phone is the title
+       that was designed — and nought is a real answer, meaning no melt there. */
+    phoneDistortion: -1
   };
   var WM_SHAPE_LIMITS = {
     tracking: [-0.3, 0.8], wordGap: [0, 3], width: [0.35, 2.5], height: [0.35, 2.5],
     skewX: [-60, 60], skewY: [-45, 45], rotate: [-45, 45],
     perspectiveX: [-75, 75], perspectiveY: [-75, 75], distortion: [0, 80],
-    frequencyX: [0.002, 0.15], frequencyY: [0.002, 0.15], seed: [1, 99]
+    frequencyX: [0.002, 0.15], frequencyY: [0.002, 0.15], seed: [1, 99],
+    phoneDistortion: [-1, 80]
   };
   function wordmarkShapeValue(key) {
     var fallback = WM_SHAPE_DEFAULTS[key], limits = WM_SHAPE_LIMITS[key];
     var value = genValue('wm', key, fallback);
     return limits ? clampNum(limits[0], limits[1], value) : value;
+  }
+  /* How much the title is melted here. One number for the page and one for a
+     phone, the second standing aside until it is given a value. */
+  function wordmarkMelt() {
+    var base = wordmarkShapeValue('distortion');
+    if (!phoneOn) return base;
+    var phone = wordmarkShapeValue('phoneDistortion');
+    return phone >= 0 ? phone : base;
   }
   function wordmarkShapeTransform(x, y) {
     var titleScale = Math.max(0.01, genValue('wm', 'size', 1));
@@ -5682,7 +5712,7 @@
        aperture outside the panel. */
     stampVoidMaskGlyphs(gc, b);
 
-    var distortion = wordmarkShapeValue('distortion');
+    var distortion = wordmarkMelt();
     var titleScale = Math.max(0.01, genValue('wm', 'size', 1));
     var sx = Math.max(0.01, Math.abs(wordmarkShapeValue('width') * titleScale));
     var sy = Math.max(0.01, Math.abs(wordmarkShapeValue('height') * titleScale));
@@ -5720,20 +5750,12 @@
       var contour = document.querySelector('.wm-void-contour');
       if (contour) {
         var autonomous = look.wmContourMode === 'autonomous';
-        /* On the phone the whole mask is stretched down onto the poster's box,
-           and the contour goes down with it: an outline an eyelash wide at full
-           size falls under a pixel there and the title disappears — which is
-           what « je ne vois pas l'affiche avec MIND GAME » was. The ring is
-           given the width it needs to arrive at a visible one, and only when it
-           would otherwise fall below it: wherever the drawing has room, the
-           proportion of the site is kept untouched. */
-        var ringW = contourWidth;
-        if (phoneOn) {
-          var pk = parseFloat(getComputedStyle(document.documentElement)
-            .getPropertyValue('--phone-k')) || 1;
-          if (pk > 0.05 && pk < 1) ringW = Math.max(ringW, 1.2 / pk);
-        }
-        var radius = Math.max(0.01, ringW);
+        /* The same width as the site's, and nothing else: the poster on the
+           phone is the site's drawing scaled, not a drawing adjusted for a
+           small screen. A contour thickened to survive the reduction was tried
+           here and refused — it made a border the web version does not have.
+           What a phone cannot show at this size, a bigger title will. */
+        var radius = Math.max(0.01, contourWidth);
         var secondaryScale = effectiveScale * 0.55;
         var ringOps;
         if (autonomous) {
@@ -5851,7 +5873,7 @@
     var autonomousDilate = document.getElementById('wm-contour-autonomous-dilate');
     var autonomousColour = document.getElementById('wm-contour-autonomous-colour');
     var visibleTitleAlpha = document.getElementById('wm-visible-title-alpha');
-    var distortion = wordmarkShapeValue('distortion');
+    var distortion = wordmarkMelt();
     var contourWidth = Math.max(0, genValue('contour', 'width', 0));
     var autonomousContour = look.wmContourMode === 'autonomous' && contourWidth > 0;
     var voidContour = look.wm === 'void' && contourWidth > 0;
@@ -16138,6 +16160,7 @@
       ['perspectiveX', 'perspective verticale (°)', -75, 75, 1],
       ['perspectiveY', 'perspective horizontale (°)', -75, 75, 1],
       ['distortion', 'déformation organique (px)', 0, 80, 1],
+      ['phoneDistortion', 'déformation sur un téléphone (\u22121 : la même)', -1, 80, 1],
       ['frequencyX', 'grain horizontal', 0.002, 0.15, 0.002],
       ['frequencyY', 'grain vertical', 0.002, 0.15, 0.002],
       ['seed', 'variante de la déformation', 1, 99, 1]
@@ -18717,14 +18740,15 @@
        of a 900-pixel stage. Laid across a phone it is a rule between two
        things, not a column, so it is capped — large enough to read as the same
        mark, small enough not to be a third block of its own. */
-    var size = Math.min(34, Math.max(4, genValue('gutter', 'size', 18)));
+    /* The gutter's own settings, untouched: its size, its spacing, its colour.
+       They were capped and second-guessed here — a size held under 34, a colour
+       swapped for the page's ink when the two looked close — which made the
+       lane a different mark from the one chosen. It is the same glyph laid
+       across instead of down, and nothing else. */
+    var size = Math.max(4, genValue('gutter', 'size', 18));
     var step = Math.max(0.6, genValue('gutter', 'step', 1.6));
     lane.style.fontSize = size + 'px';
-    /* The gutter's colour is chosen against the strip of stage between the two
-       frames, which is not the ground this lane lies on: Daniel's is black, and
-       on the phone's black page it was a row of nothing. Kept when it can be
-       seen, and the page's ink when it cannot. */
-    lane.style.color = readableOn(look.glyphCol || '', pageGroundCol());
+    lane.style.color = /^#[0-9a-f]{6}$/i.test(look.glyphCol || '') ? look.glyphCol : '';
     var room = lane.clientWidth || document.documentElement.clientWidth || 360;
     var n = Math.max(3, Math.min(60, Math.floor(room / Math.max(6, size * step))));
     for (var i = 0; i < n; i++) {
