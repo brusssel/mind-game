@@ -40,9 +40,43 @@
      A font the site carries is the same font everywhere.
 
      Charis SIL is Charter's own descendant, drawn from it and freely
-     licensed (OFL), which is why it can be served from here when Charter
-     itself — Apple's build, « all rights reserved » — cannot. Latin and
-     latin-ext both, because the bill is full of Czech. */
+     licensed (OFL). Latin and latin-ext both, because the bill is full of
+     Czech.
+
+     ---- Charter elle-même, embarquée --------------------------------------
+     La composition de l'affiche est réglée sur les métriques de Charter : sur
+     une machine qui ne l'a pas — un iPhone, par exemple —, le bloc du bill
+     grandit de 10 % (619 unités de haut au lieu de 561) et vient buter contre
+     le bas de son cadre, mesuré. La police voyage donc avec la page, et elle
+     est servie à TOUT LE MONDE, y compris aux machines qui en ont une copie :
+     c'est ce qui rend la composition identique partout. Pas de `local()` dans
+     le `src` — ce serait rouvrir l'écart.
+
+     Ce sont les Charter que Bitstream a données au consortium X (et non la
+     version d'Apple), converties en WOFF2 par Matthew Butterick. La notice de
+     Bitstream est gardée dans `fonts/charter-licence.txt`, comme elle
+     l'exige : BITSTREAM CHARTER est une marque déposée de Bitstream Inc. */
+  @font-face {
+    font-family: 'Charter';
+    font-style: normal; font-weight: 400; font-display: swap;
+    src: url("fonts/charter-400.woff2") format('woff2');
+  }
+  @font-face {
+    font-family: 'Charter';
+    font-style: normal; font-weight: 700; font-display: swap;
+    src: url("fonts/charter-700.woff2") format('woff2');
+  }
+  @font-face {
+    font-family: 'Charter';
+    font-style: italic; font-weight: 400; font-display: swap;
+    src: url("fonts/charter-400-italic.woff2") format('woff2');
+  }
+  @font-face {
+    font-family: 'Charter';
+    font-style: italic; font-weight: 700; font-display: swap;
+    src: url("fonts/charter-700-italic.woff2") format('woff2');
+  }
+  /* Et la descendante, pour qui choisit « Charter (embarquée) » : */
   @font-face {
     font-family: 'Charis SIL';
     font-style: normal;
