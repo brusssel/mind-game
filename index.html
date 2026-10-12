@@ -2623,6 +2623,15 @@
       gap: 1.2rem;
       padding: 0.6rem 0.9rem 1.4rem;
       color: var(--info-ink, var(--ink));
+      /* The column is the panel's own drawing, brought down to the screen at
+         the scale the poster is brought down at. Laid out at the panel's width
+         and then scaled, a name and its words keep exactly the proportion to
+         their frame that they have on the site — which is what « the same
+         proportions » means and what no restated font size can give. `zoom`
+         rather than a transform on purpose: it is part of the layout, so the
+         column's height is the scaled height and the page scrolls to the right
+         place. */
+      zoom: var(--phone-k, 1);
     }
     html.phone .phone-acts:empty { display: none; }
     html.phone .phone-acts .crew-act:first-child { border-top: 0; padding-top: 0; }
@@ -11599,8 +11608,10 @@
      couleur plate qui est dessous — le voile — et le titre en creux n'avait
      rien à montrer à travers ses lettres. Chacun fait donc son ouverture, puis
      tient. Trente-six pas : assez pour que le motif soit celui qu'on reconnaît
-     du site, assez peu pour que le téléphone ne travaille qu'une seconde. */
-  var STILL_WARMUP = 36;
+     du site, assez peu pour que le téléphone ne travaille qu'un instant. Huit :
+     la page doit s'ouvrir, pas se dérouler, et un champ dit déjà ce qu'il est
+     au huitième pas. */
+  var STILL_WARMUP = 8;
 
   /* What the letters show: the same field in the page's own purples. */
   /* The letters' livery, set light: the shading multiplies it down toward the
