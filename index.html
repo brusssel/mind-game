@@ -2930,11 +2930,19 @@
     html.pa-picture.phone .phone-acts .profile-links { order: 4; }
 
     /* The place, last. */
+    /* Le lieu et son adresse sur une seule ligne — « LA CAMPINE - rue de la
+       campine 15, Molenbeek » — alignés à gauche, et rien d'autre : ni champ
+       d'adresse de départ, ni bouton d'itinéraire. Qui veut le chemin a
+       l'adresse sous les yeux et son téléphone sait quoi en faire. */
     html.phone .phone-map {
       flex: 0 0 auto; margin: 0;
-      display: flex; flex-direction: column; gap: 0.5rem;
+      display: flex; flex-direction: row; flex-wrap: nowrap;
+      align-items: baseline; justify-content: flex-start;
+      column-gap: 0.4rem; row-gap: 0;
       padding: 0 0.9rem 1.4rem;
     }
+    html.phone .phone-venue::after { content: ' -'; }
+    html.phone .phone-map .map-ask { display: none !important; }
     html.phone .phone-map[hidden] { display: none; }
     /* Aucune carte n'est plus encadrée ici — voir `phoneMap`. Le cadre reste
        dans le document, caché, et `display: block` ci-dessous l'emportait sur
@@ -2959,7 +2967,10 @@
       font-family: var(--info-wm-font, var(--wm-font, inherit));
       font-weight: 700; text-transform: var(--info-case, uppercase);
       letter-spacing: var(--info-track, 0.12em);
-      font-size: 1rem; margin: 0 0 0.1rem;
+      /* Les deux parties sont un peu plus petites que le reste : à leur taille
+         d'avant, « LA CAMPINE » et son adresse font quatre pixels de trop pour
+         la largeur d'un téléphone, et la seconde passait à la ligne. */
+      font-size: 0.9rem; margin: 0 0 0.1rem; white-space: nowrap;
       /* La couleur de ce qui s'adresse au lecteur — celle de l'adresse juste
          en dessous et de « route ↗ » : le lieu, son adresse et le chemin pour
          s'y rendre sont une seule chose. */
@@ -2971,7 +2982,7 @@
     }
     html.phone .phone-where {
       margin: 0; font-family: var(--info-body-font, var(--body-font));
-      font-size: 0.95rem;
+      font-size: 0.85rem; min-width: 0;
       text-align: left;
       /* La couleur des mots du panneau est faite pour le fond clair du panneau :
          posée sur la colonne, elle était du noir sur du noir. L'adresse prend
@@ -16463,10 +16474,10 @@
        somebody actually wants the way. */
     frame.removeAttribute('src');
     frame.hidden = true;
-    var to = document.getElementById('phone-map-to');
-    if (to) to.value = pt ? (pt.lat.toFixed(6) + ',' + pt.lon.toFixed(6)) : (place || '');
+    /* Plus de formulaire d'itinéraire : le lieu et son adresse se lisent, et
+       c'est tout ce que cette ligne a à faire. */
     var ask = document.getElementById('phone-map-ask');
-    if (ask) ask.hidden = !(pt || place);
+    if (ask) ask.hidden = true;
     fig.hidden = false;
   }
 
