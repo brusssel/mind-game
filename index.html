@@ -2958,6 +2958,15 @@
       font-weight: 700; text-transform: var(--info-case, uppercase);
       letter-spacing: var(--info-track, 0.12em);
       font-size: 1rem; margin: 0 0 0.1rem;
+      /* La couleur de ce qui s'adresse au lecteur — celle de l'adresse juste
+         en dessous et de « route ↗ » : le lieu, son adresse et le chemin pour
+         s'y rendre sont une seule chose. */
+      color: var(--info-link-col, inherit);
+      /* Justifié d'un bord à l'autre, comme la ligne d'infos de l'affiche :
+         `text-align-last` parce qu'une ligne unique est aussi la dernière, et
+         que sans lui rien ne s'écarte. */
+      text-align: justify; text-align-last: justify;
+      -moz-text-align-last: justify;
     }
     html.phone .phone-where {
       margin: 0; font-family: var(--info-body-font, var(--body-font));
