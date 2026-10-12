@@ -5720,7 +5720,20 @@
       var contour = document.querySelector('.wm-void-contour');
       if (contour) {
         var autonomous = look.wmContourMode === 'autonomous';
-        var radius = Math.max(0.01, contourWidth);
+        /* On the phone the whole mask is stretched down onto the poster's box,
+           and the contour goes down with it: an outline an eyelash wide at full
+           size falls under a pixel there and the title disappears — which is
+           what « je ne vois pas l'affiche avec MIND GAME » was. The ring is
+           given the width it needs to arrive at a visible one, and only when it
+           would otherwise fall below it: wherever the drawing has room, the
+           proportion of the site is kept untouched. */
+        var ringW = contourWidth;
+        if (phoneOn) {
+          var pk = parseFloat(getComputedStyle(document.documentElement)
+            .getPropertyValue('--phone-k')) || 1;
+          if (pk > 0.05 && pk < 1) ringW = Math.max(ringW, 1.2 / pk);
+        }
+        var radius = Math.max(0.01, ringW);
         var secondaryScale = effectiveScale * 0.55;
         var ringOps;
         if (autonomous) {
