@@ -2752,6 +2752,18 @@
     /* Entre deux artistes, le signe de la gouttière plutôt qu'un trait : le
        même que sous l'affiche, beaucoup plus petit. */
     html.phone .phone-acts .phone-sep { padding: 0.9rem 0; }
+    /* Les contours du site, repris tels quels : celui du cadre autour de
+       l'affiche, celui du panneau d'écoute autour de chaque fiche — c'est le
+       même objet que sur le site, lu dans une colonne au lieu d'une fenêtre. */
+    html.phone #phone-poster {
+      border: var(--frame-border, none);
+      border-radius: var(--frame-radius, 0);
+    }
+    html.phone .phone-acts .phone-profile {
+      border: var(--listen-border, none);
+      border-radius: var(--listen-radius, 0);
+      padding: 1.1rem;
+    }
     /* A name arrived at from the poster should land under the top of the
        screen, not flush against it. */
     html.phone .phone-acts .phone-profile { scroll-margin-top: 0.8rem; }
