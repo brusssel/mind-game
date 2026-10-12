@@ -76,6 +76,12 @@
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
   }
 
+  /* iOS grossit de lui-même le texte des longs blocs dans une colonne qui
+     défile — « text autosizing » —, ce qui change l'interligne apparente d'une
+     fiche sans toucher au reste : la page ne ressemble plus à elle-même sur un
+     téléphone, et nulle part ailleurs. Les tailles d'ici sont déjà celles du
+     site, mises à l'échelle ; elles se suffisent. */
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   html, body {
     height: 100%;
     overflow: hidden;          /* no page scrolling, ever */
@@ -2695,9 +2701,13 @@
     html.phone #ticker-top, html.phone #ticker-foot,
     html.phone #crest, html.phone #crest-mid,
     html.phone #rule-top, html.phone #rule-foot { display: none !important; }
-    /* The gutter stands between two frames; the column has neither, and the
-       mark was asked to go. */
-    html.phone .phone-lane { display: none !important; }
+    /* Le glyphe de la gouttière, couché, sépare l'affiche de la colonne des
+       fiches. Il traverse la page d'un bord à l'autre : aucune marge latérale,
+       et `space-between` répartit les signes sur toute la largeur. Sa hauteur
+       est bridée dans `phoneLane` — debout, la gouttière occupe une colonne de
+       900 px dans un dessin qui en fait 1600, et sa taille propre donnerait
+       ici un troisième bloc au lieu d'un filet. */
+    html.phone .phone-lane { padding: 0.55rem 0; }
     html.phone .phone-lane:empty { display: none; }
     html.phone .phone-lane i { font-style: normal; display: inline-block; }
 
@@ -2739,10 +2749,9 @@
       overflow: visible;
       padding: 0; min-height: 0;
     }
-    html.phone .phone-acts .phone-profile + .phone-profile {
-      border-top: 1px solid var(--info-stroke, currentColor);
-      padding-top: 1.2rem;
-    }
+    /* Entre deux artistes, le signe de la gouttière plutôt qu'un trait : le
+       même que sous l'affiche, beaucoup plus petit. */
+    html.phone .phone-acts .phone-sep { padding: 0.9rem 0; }
     /* A name arrived at from the poster should land under the top of the
        screen, not flush against it. */
     html.phone .phone-acts .phone-profile { scroll-margin-top: 0.8rem; }
@@ -2784,7 +2793,14 @@
       filter: var(--map-treatment, invert(1) grayscale(1) contrast(0.92) brightness(0.96));
     }
     html.phone .phone-map .map-ask input { font-size: 1rem; padding: 0.5rem 0.6rem; }
-    html.phone .phone-map .map-ask button { padding: 0.5rem 0.7rem; }
+    /* Même taille que le champ qu'il accompagne. Les deux prennent la taille des
+       mots du panneau — multipliée par `--profile-words`, qui vaut ici 3,1 —, et
+       seul le champ était ramené à la taille d'un téléphone : « ROUTE ↗ »
+       s'affichait à 36 px à côté d'une adresse à 16, et mangeait les deux tiers
+       de la ligne. */
+    html.phone .phone-map .map-ask button {
+      font-size: 1rem; padding: 0.5rem 0.7rem;
+    }
     html.phone .phone-venue {
       font-family: var(--info-wm-font, var(--wm-font, inherit));
       font-weight: 700; text-transform: var(--info-case, uppercase);
@@ -5653,6 +5669,14 @@
      are not restarted, and nothing on screen restarts for a resize. */
   var settling = 0;
   function settle() {
+    /* Une mesure demandée pour tout à l'heure n'a plus lieu d'être quand on
+       mesure maintenant : elle referait exactement le même travail. L'amorçage
+       en demandait une en passant, et elle tombait juste après lui — 716 ms sur
+       un téléphone, main tenue avant la première image de la page, pour un
+       résultat déjà obtenu. Seulement sur téléphone : sur un écran, ces passes
+       successives font converger quelques mesures au pixel près, et l'app de
+       Daniel est cet écran-là — on ne touche pas à ce qu'il voit en dessinant. */
+    if (settling && stillAlways) { cancelAnimationFrame(settling); settling = 0; }
     fitStage();
     fit();
     applyWindow();
@@ -8471,12 +8495,16 @@
      montrer : on ne voit pas une fiche se remplir sous le doigt.
 
      Les photographies sont les nôtres — trois ou quatre fichiers de ce site,
-     ramenés à 1 400 pixels —, la page peut les attendre. Un lecteur est une
-     page entière d'un autre serveur, dont le temps ne nous appartient pas :
-     il est demandé en même temps, et attendu lui aussi, mais pas au-delà de
-     trois secondes et demie. Passé ce délai la page s'ouvre, et le lecteur
-     finit d'arriver derrière — un rideau qui ne se lève plus parce que
-     Bandcamp est lent serait pire que le défaut qu'il corrige. */
+     ramenés à 1 400 pixels, arrivés en moins de 400 ms —, la page les attend.
+     Un lecteur est une page entière d'un autre serveur, dont le temps ne nous
+     appartient pas : il part en même temps que le reste, mais la page ne
+     l'attend PAS. Mesuré : les attendre repoussait l'ouverture de 0,9 s à
+     2,0 s, pour des lecteurs qui sont de toute façon prêts une seconde avant
+     qu'un doigt descende jusqu'à eux. Et une page qui reste noire parce que
+     Bandcamp est lent serait pire que le défaut qu'elle corrige.
+
+     Les photographies ont leur propre plafond : une seconde et demie. Au-delà,
+     la page s'ouvre sans elles plutôt que de rester fermée. */
   var bootColumnLoaded = false, columnWait = 0;
   function awaitColumn() {
     bootColumnLoaded = false;
@@ -8499,15 +8527,8 @@
       im.onload = im.onerror = one;
       im.src = u[1];
     }
-    var frames = document.querySelectorAll('#phone-acts .profile-player');
-    for (var j = 0; j < frames.length; j++) {
-      if (!frames[j].getAttribute('src')) continue;
-      left++;
-      frames[j].addEventListener('load', one);
-      frames[j].addEventListener('error', one);
-    }
     if (!left) { finish(); return; }
-    columnWait = setTimeout(finish, 3500);
+    columnWait = setTimeout(finish, 1500);
   }
   function showProfile(name, href, matchedArtist, forceDisplayName, billed, isVenue) {
     var p = document.getElementById('profile');
@@ -11428,7 +11449,15 @@
      comparable, et la mesure dit que ça ne coûte rien de visible : à huit
      comme à trente-six, le document devenait interactif en quatre secondes,
      parce que ce qui pèse est la page elle-même et non ce qui s'y calcule. */
-  var STILL_WARMUP = 60;
+  /* Combien de pas une image fixe fait avant d'être prise. Le champ part d'une
+     graine et développe son réseau ; soixante pas le mènent loin, mais chaque
+     pas coûte de 10 à 29 ms sur un téléphone et les deux champs de l'affiche en
+     font autant — près de deux secondes de calcul avant que la page ne tienne
+     en place. Vingt-quatre donnent un réseau de la même nature, et rendent au
+     lecteur la seconde et demie que les trente-six autres lui prenaient. (Ce
+     chiffre ne vaut que pour une page figée, c'est-à-dire un téléphone : sur un
+     écran les champs vivent et ne préchauffent pas.) */
+  var STILL_WARMUP = 24;
 
   /* What the letters show: the same field in the page's own purples. */
   /* The letters' livery, set light: the shading multiplies it down toward the
@@ -13168,15 +13197,25 @@
       return true;
     }
 
+    /* Le pas est calculé et peint sur le canevas à chaque fois ; il n'est ENCODÉ
+       que quand il doit se voir. L'encodage d'un canevas en PNG et sa remise à
+       la feuille de style est ce qui coûte : mesuré sur une ouverture, 152
+       encodages, 954 ms de calcul et 63 Mo de chaînes — pour deux images, la
+       dernière de chacune étant la seule qu'on regarde. Une page fixe publie
+       donc le premier pas, pour que quelque chose soit là tout de suite, puis
+       se tait jusqu'au dernier. La promesse était écrite ici depuis longtemps —
+       « Only the last step speaks » — mais rien ne la tenait. */
     function publish() {
       ctx.putImageData(img, 0, 0);
       if (opts.overlay) opts.overlay(ctx, gw, gh);
+      if (quiet && warm > 0) return;
       apply(canvas.toDataURL(), gw * opts.cell, gh * opts.cell);
     }
 
     function publishAlt(idx, lut) {
       if (!alt || !altImg) return;
       if (opts.altActive && !opts.altActive()) return;
+      if (quiet && warm > 0) return;
       paintIndices(idx, altImg.data, lut || opts.altLut);
       altCtx.putImageData(altImg, 0, 0);
       opts.altApply(alt.toDataURL());
@@ -16053,6 +16092,19 @@
                                      crew[j].billed, ''));
       }
     }
+    /* Un filet entre deux artistes — le même signe que sous l'affiche, à la
+       moitié de sa taille. Posés d'abord, remplis ensuite : un filet compte ses
+       signes contre sa largeur, et il n'en a pas tant qu'il n'est pas dans la
+       page. */
+    var cards = host.querySelectorAll('.phone-profile'), seps = [], c;
+    for (c = 1; c < cards.length; c++) {
+      var sep = document.createElement('div');
+      sep.className = 'phone-lane phone-sep';
+      sep.setAttribute('aria-hidden', 'true');
+      host.insertBefore(sep, cards[c]);
+      seps.push(sep);
+    }
+    for (c = 0; c < seps.length; c++) laneGlyphs(seps[c], 14);
     /* Les fiches viennent de naître : le traitement des photographies, qui se
        pose sur chaque `.profile-pic` existante, ne les a pas vues. Il est reposé
        ici. La colonne se montait autrefois au milieu de l'amorçage, avant la
@@ -16097,6 +16149,12 @@
   function phoneLane() {
     var lane = document.getElementById('phone-lane');
     if (!lane) return;
+    laneGlyphs(lane, Math.min(30, Math.max(4, genValue('gutter', 'size', 18))));
+  }
+  /* Le filet, quel qu'il soit : celui qui sépare l'affiche de la colonne, et
+     ceux qui séparent deux artistes. Même signe, même couleur, même pas — seule
+     la hauteur change, et c'est l'appelant qui la donne. */
+  function laneGlyphs(lane, size) {
     lane.textContent = '';
     if (!document.documentElement.classList.contains('guttering')) return;
     var g = (typeof currentGlyph === 'function') ? currentGlyph() : 'none';
@@ -16113,7 +16171,10 @@
        swapped for the page's ink when the two looked close — which made the
        lane a different mark from the one chosen. It is the same glyph laid
        across instead of down, and nothing else. */
-    var size = Math.max(4, genValue('gutter', 'size', 18));
+    /* Couché, le glyphe garde tout de la gouttière — le signe, la couleur, le
+       remplissage, le pas — sauf sa hauteur : debout, elle occupe une colonne
+       de 900 px dans un dessin qui en fait 1600, et la même valeur en travers
+       d'un téléphone ferait un bloc au lieu d'un filet. */
     var step = Math.max(0.6, genValue('gutter', 'step', 1.6));
     lane.style.fontSize = size + 'px';
     lane.style.color = /^#[0-9a-f]{6}$/i.test(look.glyphCol || '') ? look.glyphCol : '';
