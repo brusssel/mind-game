@@ -185,11 +185,11 @@
           "url": "https://soundcloud.com/rae00000"
         }
       ],
-      "nameScale": 4.1
+      "nameScale": 3
     },
     {
       "name": "Eve Julia Gonzalez & Myles Dillon",
-      "bio": "",
+      "bio": "EVE: Hungry for sad melodies and minor figures, I have no interest in hierarchy or positivity.\nThrough rhizomatic installations that mainly combine drawing, text and objects, I try to capture the moment a crisis takes shape. Through an aesthetic of lament and melancholic childhood, I address a crisis born of the clamour of existence, set somewhat against the world. Yet I compose in collaboration with the world, and it is within its carcass that my practice peels away from illustration to become an extension of drawing into space.\nIt is a cryptic trail through which I try to explore some of the meanders of identity, of the world and of our relation to others. I have also developed a performance and video practice, and this side of my work borders on spectacle: a spectacle that makes no secret of its artificiality. Performance acts as a binder that brings together gesture, people, words and music. I try to give material form to the pain that life can bring.\n\nMYLES: My musical language draws on heterogeneous aesthetics, from Baroque music to modern and contemporary composition, and from electroacoustic music to the electronic music of British rave culture, especially ambient, jungle and acid. These influences meet in a written, fixed-media music, where memory, abstraction and spectromorphological and polyphonic writing open listening spaces to perceptions and imaginaries in perpetual collapse.\nEach composition grows out of a process of collecting, listening and sound generation. Analog and modular synthesis, electronic instrument-making, experimental recording and personal or historical archives form bodies of material in which sounds become traces of intimate and collective memory.",
       "image": "images/capture-d-e-cran-2026-10-09-a-08-26-30-2026-10-09.png",
       "embed": "https://soundcloud.com/mylesdillon/stirringsstill?si=8b2dd5ab223c46caa9e439f113645395",
       "aka": [],
@@ -200,6 +200,38 @@
         }
       ],
       "nameScale": 2.3
+    },
+    {
+      "name": "Lucie Páchová",
+      "bio": "",
+      "image": "",
+      "embed": "",
+      "aka": [],
+      "links": []
+    },
+    {
+      "name": "Maryia Kamarova",
+      "bio": "",
+      "image": "",
+      "embed": "",
+      "aka": [],
+      "links": []
+    },
+    {
+      "name": "Eve Julia Gonzalez",
+      "bio": "",
+      "image": "",
+      "embed": "",
+      "aka": [],
+      "links": []
+    },
+    {
+      "name": "Myles Dillon",
+      "bio": "",
+      "image": "",
+      "embed": "",
+      "aka": [],
+      "links": []
     }
   ]
 }
