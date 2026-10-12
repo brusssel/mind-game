@@ -1687,14 +1687,20 @@
        its own content wraps before it shrinks, and the field was pushing the
        button onto a line of its own at panel width. */
     flex: 1 1 0; min-width: 3.5rem;
-    background: transparent; color: var(--info-words-col, inherit);
+    /* The colour of « route », not of the panel's prose: the field and the
+       button are one control in two parts, and the words' colour — chosen for
+       a notice read on a ground — left « coming from » and the address
+       unreadable beside it. */
+    background: transparent; color: var(--info-link-col, inherit);
     border: 1px solid var(--info-link-col, rgba(255, 255, 255, 0.35));
     font-family: var(--info-body-font, var(--body-font));
     font-size: calc(0.72rem * var(--profile-words, 1));
     letter-spacing: var(--info-word-track, 0.04em);
     padding: 0.25rem 0.4rem;
   }
-  .map-ask input::placeholder { color: inherit; opacity: 0.5; }
+  /* The prompt is the same colour as what will be typed over it, only fainter
+     — half of nothing was still nothing when the two colours differed. */
+  .map-ask input::placeholder { color: inherit; opacity: 0.65; }
   .map-ask button {
     flex: 0 0 auto; cursor: pointer; white-space: nowrap;
     background: transparent; color: var(--info-link-col, inherit);
@@ -2641,6 +2647,9 @@
     html.phone #ticker-top, html.phone #ticker-foot,
     html.phone #crest, html.phone #crest-mid,
     html.phone #rule-top, html.phone #rule-foot { display: none !important; }
+    /* The gutter stands between two frames; the column has neither, and the
+       mark was asked to go. */
+    html.phone .phone-lane { display: none !important; }
     html.phone .phone-lane:empty { display: none; }
     html.phone .phone-lane i { font-style: normal; display: inline-block; }
 
@@ -18844,12 +18853,32 @@
       }
       return [x, y];
     }
-    /* The poster is the card, not the picture in it. The bill's words are
-       dragged where they look right and regularly stand outside the picture's
-       own box — framing on the picture cut the line-up off at the left. The
-       boxed outline is exactly the card, so it is the frame when there is one;
-       without it the card is whatever the bill's parts add up to. */
-    var card = document.querySelector('.wm-box');
+    /* The bill's words, and nothing else. The card — its frame, its picture,
+       the title in its void — belongs to a page that stands still and is read
+       whole; the column opens on what the poster SAYS, at the size it says it,
+       and the rest of the bill follows underneath. The block is taken as it
+       stands: the line of the series, the names, the hour and the place, in
+       their own composition, with a breath around them so nothing sits against
+       the cut. */
+    var card = (pages[page] || document).querySelector('li:not(.poster-row)');
+    if (card) {
+      var o0 = offsetIn(card);
+      var pad = 12;
+      x = o0[0] - pad; y = o0[1] - pad;
+      w = card.offsetWidth + pad * 2; h = card.offsetHeight + pad * 2;
+      var room0 = host.clientWidth || document.documentElement.clientWidth;
+      var k0 = room0 / w;
+      var st0 = document.documentElement.style;
+      st0.setProperty('--phone-k', String(k0));
+      st0.setProperty('--phone-tx', (-x) + 'px');
+      st0.setProperty('--phone-ty', (-y) + 'px');
+      var want0 = Math.round(h * k0);
+      if (want0 !== phonePosterH) { phonePosterH = want0; host.style.height = want0 + 'px'; }
+      var lane0 = document.getElementById('phone-lane');
+      if (lane0 && lane0.clientWidth !== phoneLaneW) { phoneLaneW = lane0.clientWidth; phoneLane(); }
+      return;
+    }
+    card = document.querySelector('.wm-box');
     var x, y, w, h;
     if (card && card.offsetWidth && card.offsetHeight) {
       var o = offsetIn(card);
