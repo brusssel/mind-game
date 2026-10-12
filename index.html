@@ -4,9 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>「MIND GAME」</title>
-<!-- Aucune description : partagé dans une conversation, le lien en affichait
-     une en note sous le titre. Sans elle, il ne montre que le titre et
-     l'adresse. -->
+<!-- Ce qu'un lien partagé montre, et rien de plus. La balise `description` a
+     été retirée — elle mettait une phrase en note sous le titre — mais
+     l'enlever ne suffit pas : faute de description, les aperçus vont chercher
+     le premier texte de la page, et c'est la bande qui dit « 「MIND GAME」 IS A
+     CONCERT SERIES MELTED BY DOLORES SOUNDSYSTEM ». Un titre déclaré et une
+     description VIDE ferment la question : l'aperçu montre le titre et
+     l'adresse, point.
+
+     Les aperçus sont mis en cache par chaque application, souvent pour des
+     semaines et par adresse exacte : une adresse déjà partagée gardera son
+     ancienne note jusqu'à ce que leur cache tombe. Un paramètre ajouté à la fin
+     (…/mind-game/?1) la contourne. -->
+<meta property="og:title" content="「MIND GAME」">
+<meta property="og:description" content="">
+<meta property="og:url" content="https://brusssel.github.io/mind-game/">
+<meta property="og:type" content="website">
+<meta name="twitter:title" content="「MIND GAME」">
+<meta name="twitter:description" content="">
 <meta name="color-scheme" content="dark">
 <!-- Les lettres de l'affiche, demandées avant tout le reste. La composition est
      réglée sur leurs métriques : si elles arrivent après la première mise en
