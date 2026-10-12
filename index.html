@@ -5581,32 +5581,18 @@
   var WM_SHAPE_DEFAULTS = {
     tracking: 0, wordGap: 0.32, width: 1, height: 1,
     skewX: 0, skewY: 0, rotate: 0, perspectiveX: 0, perspectiveY: 0,
-    distortion: 0, frequencyX: 0.015, frequencyY: 0.045, seed: 7,
-    /* The melt a phone gets, where the title is drawn at four tenths of its
-       size and a sculpture reads as a smudge. Minus one is « the same as the
-       page's », so a title nobody has thought about on a phone is the title
-       that was designed — and nought is a real answer, meaning no melt there. */
-    phoneDistortion: -1
+    distortion: 0, frequencyX: 0.015, frequencyY: 0.045, seed: 7
   };
   var WM_SHAPE_LIMITS = {
     tracking: [-0.3, 0.8], wordGap: [0, 3], width: [0.35, 2.5], height: [0.35, 2.5],
     skewX: [-60, 60], skewY: [-45, 45], rotate: [-45, 45],
     perspectiveX: [-75, 75], perspectiveY: [-75, 75], distortion: [0, 80],
-    frequencyX: [0.002, 0.15], frequencyY: [0.002, 0.15], seed: [1, 99],
-    phoneDistortion: [-1, 80]
+    frequencyX: [0.002, 0.15], frequencyY: [0.002, 0.15], seed: [1, 99]
   };
   function wordmarkShapeValue(key) {
     var fallback = WM_SHAPE_DEFAULTS[key], limits = WM_SHAPE_LIMITS[key];
     var value = genValue('wm', key, fallback);
     return limits ? clampNum(limits[0], limits[1], value) : value;
-  }
-  /* How much the title is melted here. One number for the page and one for a
-     phone, the second standing aside until it is given a value. */
-  function wordmarkMelt() {
-    var base = wordmarkShapeValue('distortion');
-    if (!phoneOn) return base;
-    var phone = wordmarkShapeValue('phoneDistortion');
-    return phone >= 0 ? phone : base;
   }
   function wordmarkShapeTransform(x, y) {
     var titleScale = Math.max(0.01, genValue('wm', 'size', 1));
@@ -5712,7 +5698,7 @@
        aperture outside the panel. */
     stampVoidMaskGlyphs(gc, b);
 
-    var distortion = wordmarkMelt();
+    var distortion = wordmarkShapeValue('distortion');
     var titleScale = Math.max(0.01, genValue('wm', 'size', 1));
     var sx = Math.max(0.01, Math.abs(wordmarkShapeValue('width') * titleScale));
     var sy = Math.max(0.01, Math.abs(wordmarkShapeValue('height') * titleScale));
@@ -5873,7 +5859,7 @@
     var autonomousDilate = document.getElementById('wm-contour-autonomous-dilate');
     var autonomousColour = document.getElementById('wm-contour-autonomous-colour');
     var visibleTitleAlpha = document.getElementById('wm-visible-title-alpha');
-    var distortion = wordmarkMelt();
+    var distortion = wordmarkShapeValue('distortion');
     var contourWidth = Math.max(0, genValue('contour', 'width', 0));
     var autonomousContour = look.wmContourMode === 'autonomous' && contourWidth > 0;
     var voidContour = look.wm === 'void' && contourWidth > 0;
@@ -16170,7 +16156,6 @@
       ['perspectiveX', 'perspective verticale (°)', -75, 75, 1],
       ['perspectiveY', 'perspective horizontale (°)', -75, 75, 1],
       ['distortion', 'déformation organique (px)', 0, 80, 1],
-      ['phoneDistortion', 'déformation sur un téléphone (\u22121 : la même)', -1, 80, 1],
       ['frequencyX', 'grain horizontal', 0.002, 0.15, 0.002],
       ['frequencyY', 'grain vertical', 0.002, 0.15, 0.002],
       ['seed', 'variante de la déformation', 1, 99, 1]
