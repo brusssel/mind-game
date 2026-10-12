@@ -22,8 +22,9 @@
       "date": "2026-10-20",
       "time": "19:30",
       "fee": "8-10€",
+      "tag": "MIND GAME 001",
       "url": "",
-      "image": "images/clipart4433435-2-2026-10-09.png"
+      "image": ""
     },
     {
       "projects": [
@@ -47,6 +48,7 @@
       "date": "2026-11-28",
       "time": "20:30",
       "fee": "8-10 €",
+      "tag": "",
       "url": "",
       "image": ""
     }
