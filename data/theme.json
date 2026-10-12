@@ -563,7 +563,7 @@
         "surround": "cell",
         "surroundCell": "noise",
         "surroundCol": "#161313",
-        "surroundInk": "#151127",
+        "surroundInk": "#151320",
         "surroundMotion": "still",
         "surroundImage": "",
         "datesFont": "Monaco",
@@ -962,6 +962,7 @@
         "picDh": 60,
         "allDx": 263.5499936967775,
         "allDy": 156.90201967634542,
+        "listenDx": 17,
         "pageDx": 0,
         "pageDy": 6,
         "pageScale": 1.1,
@@ -976,8 +977,7 @@
         "infoFixH": 363.3437194824219,
         "infoW": 674.9209154113557,
         "infoScale": 0,
-        "infoAnchored": 0,
-        "listenDx": 17
+        "infoAnchored": 0
       },
       "frozen": true,
       "public": true,
