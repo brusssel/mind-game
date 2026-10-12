@@ -157,6 +157,19 @@
     visibility: hidden !important;
   }
   html:not(.mg-ready) body::before { opacity: 0 !important; }
+  /* Sur un téléphone, le rideau couvre TOUT. Le voile ne cachait que la scène,
+     ses cadres et les coins : la colonne, elle, restait visible, et l'affiche
+     n'étant pas encore habillée on voyait d'abord son damier nu, puis les noms
+     s'y poser, puis la texture arriver — l'assemblage à ciel ouvert. La page
+     reste donc à sa couleur de fond, et rien ne s'y montre avant que tout y
+     soit. */
+  html.phone:not(.mg-ready) .phone-doc {
+    visibility: hidden !important;
+    background-image: none !important;
+  }
+  html.phone:not(.mg-ready), html.phone:not(.mg-ready) body {
+    background: var(--void, #000) !important;
+  }
 
   /* What lies around the stage. The page is a poster now and this is the wall it
      is pinned to: its own colour, and its own field if it is given one — the same
