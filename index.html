@@ -1703,7 +1703,15 @@
   /* A texture chosen for the page is the page's, so the words take it as well
      as the name — clipped exactly the same way. Left at the page's own, the
      words stay flat, which is what body text at this size wants. */
-  html.words-textured .profile-bio {
+  /* Un paragraphe par bloc de texte (voir `setBio`), et l'espacement qu'une
+     ligne vide donnait. */
+  .profile-bio > p { margin: 0; }
+  .profile-bio > p + p { margin-top: calc(var(--info-leading, 1.65) * 1em); }
+  /* Le fond découpé à la forme des lettres est porté par chaque paragraphe, et
+     non par le bloc entier : c'est ce qui garde chaque masque loin de la borne
+     de surface de WebKit. Un texte posé autrement qu'en paragraphes garde sa
+     couleur et reste lisible, sans texture — une dégradation, pas un trou. */
+  html.words-textured .profile-bio > p {
     color: transparent;
     -webkit-background-clip: text; background-clip: text;
     background-image: var(--info-words-fill, var(--text-fill, none)),
@@ -1717,7 +1725,7 @@
      it. The name and the words are cut separately — a void makes a fine title
      and a poor paragraph. */
   html.nt-void .profile h3, html.nt-field .profile h3,
-  html.wt-void .profile-bio, html.wt-field .profile-bio {
+  html.wt-void .profile-bio > p, html.wt-field .profile-bio > p {
     color: transparent;
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -1725,10 +1733,10 @@
     background-repeat: repeat;
     background-attachment: fixed;
   }
-  html.nt-void .profile h3, html.wt-void .profile-bio {
+  html.nt-void .profile h3, html.wt-void .profile-bio > p {
     background-image: var(--page-texture, none);
   }
-  html.nt-field .profile h3, html.wt-field .profile-bio {
+  html.nt-field .profile h3, html.wt-field .profile-bio > p {
     background-image: var(--swarm-inside, var(--page-texture, none));
   }
   .profile-bio:empty { display: none; }
@@ -8372,7 +8380,7 @@
     if (a.bio) {
       var bio = document.createElement('div');
       bio.className = 'profile-bio';
-      bio.textContent = a.bio;
+      setBio(bio, a.bio);
       act.appendChild(bio);
     }
 
@@ -8493,6 +8501,26 @@
   /* One artist, dressed exactly as the INFOS panel dresses them — the same
      markup, the same classes. The panel is one of these; the phone is a column
      of them, which is what was asked for instead of a window per name. */
+  /* Le texte d'une fiche est posé en PARAGRAPHES, pas d'un bloc. Ce n'est pas
+     une question de style : un texte peint par son fond est peint à travers un
+     masque de la forme des lettres, et WebKit alloue ce masque dans une surface
+     dont la hauteur est bornée. Le texte d'un seul tenant atteignait cette
+     borne — 1 365 px de haut, soit 4 095 points sur un écran à trois points par
+     pixel, pour une limite à 4 096 — et la dernière ligne, qui tombait juste
+     au-delà, n'était plus peinte : coupée en deux dans sa hauteur.
+
+     Découpé en paragraphes, chacun porte son propre masque et aucun n'approche
+     la borne. L'espacement reste celui qu'une ligne vide donnait. */
+  function setBio(el, text) {
+    el.textContent = '';
+    var parts = String(text || '').split(/\n\s*\n/);
+    for (var i = 0; i < parts.length; i++) {
+      if (!parts[i]) continue;
+      var p = document.createElement('p');
+      p.textContent = parts[i];
+      el.appendChild(p);
+    }
+  }
   function profileCard(a, displayName, href) {
     a = a || {};
     var shownName = a.name || displayName || '';
@@ -8544,7 +8572,7 @@
 
     var bio = document.createElement('div');
     bio.className = 'profile-bio';
-    bio.textContent = a.bio || '';
+    setBio(bio, a.bio);
     art.appendChild(bio);
 
     /* Their record, playing here — the whole point of the column. */
@@ -8629,7 +8657,7 @@
     if (note) note.hidden = true;
 
     document.getElementById('profile-name').textContent = forceDisplayName ? name : (a.name || name);
-    document.getElementById('profile-bio').textContent = a.bio || '';
+    setBio(document.getElementById('profile-bio'), a.bio);
 
     var pic = document.getElementById('profile-pic');
     var board = document.getElementById('profile-board');
