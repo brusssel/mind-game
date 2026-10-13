@@ -2956,6 +2956,26 @@
       margin-top: 1.2rem;
       zoom: calc(1 / var(--phone-k, 1));
     }
+    /* LA POCHETTE EN GRAND. Bandcamp la donne carrée, en haut, et pose ses
+       commandes dessous sur une bande d'environ 122 px qui ne change pas avec
+       la largeur. La hauteur juste serait donc « largeur + 122 », qu'aucune
+       règle CSS ne sait écrire — un rapport s'en approche : exact aux 384 px
+       de l'écran de Daniel, il laisse une quinzaine de pixels de noir sous les
+       commandes sur un téléphone plus large. SoundCloud n'est pas touché :
+       sa vue à pochette remplit le cadre de l'image, et le retournement qui lui
+       donne son thème sombre la rendrait en négatif. */
+    html.phone .phone-acts .profile-player.bc {
+      height: auto; aspect-ratio: 348 / 470;
+    }
+    /* LES ADRESSES SOUS LE NOM à la taille où l'on peut les toucher. Même
+       raison que le lecteur : ce sont des cibles pour un doigt, pas du texte à
+       lire dans la composition. Réduites à l'échelle de la colonne elles
+       étaient peintes à 8,85 px, et leur cadre à 16,9 de haut. Le zoom de la
+       colonne leur est rendu : 16 px et 27,6. Vérifié à 384 px — la plus
+       longue rangée, trois adresses, tient encore sur une seule ligne. */
+    html.phone .phone-acts .profile-links {
+      font-size: calc(1em / var(--phone-k, 1));
+    }
     /* Les contours du site, repris tels quels : celui du cadre autour de
        l'affiche, celui du panneau d'écoute autour de chaque fiche — c'est le
        même objet que sur le site, lu dans une colonne au lieu d'une fenêtre. */
@@ -8449,20 +8469,26 @@
      nowhere in the album's address — so both are accepted, and so is the bare
      `album=…` token. SoundCloud's takes the page's address as it stands.
      Either way the player is asked for in the page's own two colours. */
-  function embedSrc(v) {
+  function embedSrc(v, pochette) {
     v = String(v || '').trim();
     if (!v) return '';
     var cs = getComputedStyle(document.documentElement);
     var ink = (cs.getPropertyValue('--ink') || '#ffffff').trim().replace('#', '');
     var voidc = (cs.getPropertyValue('--void') || '#000000').trim().replace('#', '');
+    /* `artwork=small` est ce qui réduit la pochette à une vignette : sans ce
+       mot, Bandcamp donne la pochette en grand au-dessus des commandes. Le
+       panneau du site garde la vignette, qui tient dans ses 120 px ; la colonne
+       du téléphone, qui a toute la largeur, demande la grande. */
+    var art = pochette ? '' : 'artwork=small/';
     if (/^(album|track)=\d+$/i.test(v)) {
       return 'https://bandcamp.com/EmbeddedPlayer/' + v.toLowerCase() +
-             '/size=large/artwork=small/tracklist=false/transparent=true/' +
+             '/size=large/' + art + 'tracklist=false/transparent=true/' +
              'bgcol=' + voidc + '/linkcol=' + ink + '/';
     }
     if (/bandcamp\.com\/EmbeddedPlayer/i.test(v)) {
       return v.replace(/bgcol=[0-9a-f]{3,8}/i, 'bgcol=' + voidc)
-              .replace(/linkcol=[0-9a-f]{3,8}/i, 'linkcol=' + ink);
+              .replace(/linkcol=[0-9a-f]{3,8}/i, 'linkcol=' + ink)
+              .replace(/artwork=small\//i, pochette ? '' : 'artwork=small/');
     }
     if (/soundcloud\.com/i.test(v)) {
       return 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(v) +
@@ -8736,10 +8762,11 @@
     art.appendChild(bio);
 
     /* Their record, playing here — the whole point of the column. */
-    var src = embedSrc(a.embed);
+    var src = embedSrc(a.embed, true);
     if (src) {
       var player = document.createElement('iframe');
-      player.className = 'profile-player' + (/soundcloud/i.test(src) ? ' sc' : '');
+      player.className = 'profile-player'
+        + (/soundcloud/i.test(src) ? ' sc' : /bandcamp/i.test(src) ? ' bc' : '');
       player.title = 'Music';
       player.setAttribute('allow', 'autoplay');
       player.setAttribute('loading', 'lazy');
