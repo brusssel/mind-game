@@ -16398,6 +16398,22 @@
     return null;
   }
 
+  /* LA HAUTEUR DU FILET, une seule pour tous — mais pas dans le même espace.
+     `.phone-lane` porte `zoom: var(--phone-k)`, et les filets entre artistes
+     portent cette classe DANS `.phone-acts`, qui porte le même zoom : ils le
+     reçoivent donc DEUX FOIS, celui sous l'affiche une seule. À taille égale,
+     le signe du haut était peint 1,8 fois plus grand (7,75 px contre 4,29 à
+     384 px de large). D'où la taille donnée plus bas au filet du haut :
+     multipliée par `--phone-k`, elle le descend dans le même espace que les
+     autres, et les deux sont peints à la même taille quelle que soit la
+     largeur de l'écran. Mesuré au signe, pas à la déclaration : `font-size`
+     était déjà identique des deux côtés et ne disait rien du dessin.
+
+     Le zoom appliqué deux fois n'est pas corrigé ici : il porte aussi l'air
+     autour des filets, que Daniel a réglé à l'œil, et le redresser
+     l'élargirait. C'est le signe qu'il demandait, pas l'espacement. */
+  var LANE_SIZE = 14;
+
   function phoneActs() {
     var host = document.getElementById('phone-acts');
     if (!host) return;
@@ -16433,7 +16449,20 @@
       host.insertBefore(sep, cards[c]);
       seps.push(sep);
     }
-    for (c = 0; c < seps.length; c++) laneGlyphs(seps[c], 14);
+    for (c = 0; c < seps.length; c++) laneGlyphs(seps[c], LANE_SIZE);
+    /* Et le filet sous l'affiche prend le compte de ceux-ci. Ils ne comptent pas
+       dans le même espace — celui du haut reçoit le zoom de la page une fois,
+       les autres deux fois, donc une largeur locale presque double — et le même
+       calcul y donnait 60 signes contre 45. Le compte est copié plutôt que
+       recalculé : les deux rangées tiennent la même largeur à l'écran. */
+    if (seps.length) {
+      var hautLane = document.getElementById('phone-lane');
+      var voulu = seps[0].children.length;
+      if (hautLane && hautLane.children.length && voulu
+          && hautLane.children.length !== voulu) {
+        laneGlyphs(hautLane, parseFloat(hautLane.style.fontSize) || LANE_SIZE, voulu);
+      }
+    }
     /* Les fiches viennent de naître : le traitement des photographies, qui se
        pose sur chaque `.profile-pic` existante, ne les a pas vues. Il est reposé
        ici. La colonne se montait autrefois au milieu de l'amorçage, avant la
@@ -16478,12 +16507,20 @@
   function phoneLane() {
     var lane = document.getElementById('phone-lane');
     if (!lane) return;
-    laneGlyphs(lane, Math.min(30, Math.max(4, genValue('gutter', 'size', 18))));
+    var k = parseFloat(getComputedStyle(document.documentElement)
+      .getPropertyValue('--phone-k'));
+    /* Le compte des filets d'en bas, quand il y en a : cette fonction est
+       rappelée à chaque changement de largeur, et sans ça elle recalculait le
+       sien et défaisait l'alignement aussitôt posé. Au premier montage la
+       colonne n'existe pas encore, et c'est `phoneActs` qui recopie. */
+    var sep = document.querySelector('.phone-sep');
+    laneGlyphs(lane, LANE_SIZE * (k > 0 ? k : 1),
+               sep ? sep.children.length : 0);
   }
   /* Le filet, quel qu'il soit : celui qui sépare l'affiche de la colonne, et
      ceux qui séparent deux artistes. Même signe, même couleur, même pas — seule
      la hauteur change, et c'est l'appelant qui la donne. */
-  function laneGlyphs(lane, size) {
+  function laneGlyphs(lane, size, count) {
     lane.textContent = '';
     if (!document.documentElement.classList.contains('guttering')) return;
     var g = (typeof currentGlyph === 'function') ? currentGlyph() : 'none';
@@ -16508,7 +16545,12 @@
     lane.style.fontSize = size + 'px';
     lane.style.color = /^#[0-9a-f]{6}$/i.test(look.glyphCol || '') ? look.glyphCol : '';
     var room = lane.clientWidth || document.documentElement.clientWidth || 360;
-    var n = Math.max(3, Math.min(60, Math.floor(room / Math.max(6, size * step))));
+    /* Un compte imposé quand l'appelant en a un à copier : deux rangées du même
+       signe à la même taille, mais pas en même nombre, ne se ressemblent
+       toujours pas — elles sont réparties d'un bord à l'autre, donc c'est le
+       compte qui fait le pas. */
+    var n = count > 0 ? Math.round(count)
+      : Math.max(3, Math.min(60, Math.floor(room / Math.max(6, size * step))));
     for (var i = 0; i < n; i++) {
       var el = document.createElement('i');
       el.textContent = g;
