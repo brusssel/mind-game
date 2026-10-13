@@ -2944,7 +2944,18 @@
     html.phone .phone-acts .profile-links { margin-top: -0.75rem; }
     html.phone .phone-acts .profile-board { margin-top: 0.3rem; }
     html.phone .phone-acts .profile-bio { margin-top: -0.4rem; }
-    html.phone .phone-acts .profile-player { margin-top: 1.2rem; }
+    /* LE LECTEUR NE SUIT PAS L'ÉCHELLE DE LA COLONNE. Tout le reste de la fiche
+       est le dessin du panneau ramené à la largeur de l'écran : un nom et ses
+       mots gardent ainsi la proportion qu'ils ont sur le site. Mais un lecteur
+       de Bandcamp ou de SoundCloud n'est pas de ce dessin — c'est l'interface
+       d'un autre, composée en pixels fixes, et réduite à 0,55 ses boutons
+       devenaient trop petits pour le doigt (36 px de haut peints pour 66
+       déclarés). Le zoom de la colonne lui est donc rendu : il se peint à sa
+       taille, dans une colonne qui garde la sienne. */
+    html.phone .phone-acts .profile-player {
+      margin-top: 1.2rem;
+      zoom: calc(1 / var(--phone-k, 1));
+    }
     /* Les contours du site, repris tels quels : celui du cadre autour de
        l'affiche, celui du panneau d'écoute autour de chaque fiche — c'est le
        même objet que sur le site, lu dans une colonne au lieu d'une fenêtre. */
