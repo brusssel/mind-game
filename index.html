@@ -2966,6 +2966,13 @@
       padding: 0 0.9rem 1.4rem;
     }
     html.phone .phone-venue::after { content: ' -'; }
+    /* L'adresse est un lien, mais elle n'en a pas l'air : c'est une ligne de
+       l'affiche, pas un bouton. La maison dit qu'elle mène quelque part. */
+    html.phone .phone-where a { color: inherit; text-decoration: none; }
+    html.phone .phone-pin {
+      width: 0.72em; height: 0.95em; margin-right: 0.28em;
+      vertical-align: -0.1em; display: inline-block;
+    }
     html.phone .phone-map .map-ask { display: none !important; }
     html.phone .phone-map[hidden] { display: none; }
     /* Aucune carte n'est plus encadrée ici — voir `phoneMap`. Le cadre reste
@@ -16466,6 +16473,20 @@
     }
   }
 
+  /* Où mène l'adresse quand on la touche. Trois cas honnêtes plutôt qu'un lien
+     unique : sur Android, `geo:` ouvre l'application de cartes que la personne a
+     choisie — Google, Organic Maps, OsmAnd, celle qu'elle veut ; sur iPhone,
+     `geo:` ne fait rien, et c'est Plans qui répond ; ailleurs — un ordinateur —
+     OpenStreetMap dans le navigateur, qui est la carte de ce site depuis le
+     début. Les coordonnées si le lieu en a, son adresse écrite sinon. */
+  function mapHref(pt, place) {
+    var q = pt ? (pt.lat + ',' + pt.lon) : String(place || '').trim();
+    if (!q) return '';
+    var ua = navigator.userAgent || '';
+    if (/Android/i.test(ua)) return 'geo:0,0?q=' + encodeURIComponent(q);
+    if (/iPhone|iPad|iPod/i.test(ua)) return 'https://maps.apple.com/?q=' + encodeURIComponent(q);
+    return 'https://www.openstreetmap.org/search?query=' + encodeURIComponent(q);
+  }
   function phoneMap() {
     var fig = document.getElementById('phone-map');
     var frame = document.getElementById('phone-map-frame');
@@ -16481,7 +16502,25 @@
     if (place) {
       var where = document.createElement('p');
       where.className = 'phone-where';
-      where.textContent = place;
+      var lien = document.createElement('a');
+      lien.className = 'phone-where-link';
+      lien.href = mapHref(pt, place);
+      lien.rel = 'noreferrer noopener';
+      /* Le repère d'une carte, dessiné plutôt que pris dans une fonte : aucun
+         caractère ne donne cette goutte percée d'un trou, et les émojis qui s'en
+         approchent arrivent en couleurs. Celui-ci prend celle du texte. */
+      var pin = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      pin.setAttribute('class', 'phone-pin');
+      pin.setAttribute('viewBox', '0 0 12 16');
+      pin.setAttribute('aria-hidden', 'true');
+      var forme = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      forme.setAttribute('fill', 'currentColor');
+      forme.setAttribute('d', 'M6 0C3.24 0 1 2.24 1 5c0 3.6 5 11 5 11s5-7.4 5-11' +
+        'c0-2.76-2.24-5-5-5zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4z');
+      pin.appendChild(forme);
+      lien.appendChild(pin);
+      lien.appendChild(document.createTextNode(place));
+      where.appendChild(lien);
       fig.insertBefore(where, first);
     }
     if (named) {
