@@ -193,12 +193,31 @@
 
   /* Le réglage d'écran se pose sur la page ENTIÈRE et non sur la seule affiche :
      le décor, les bandeaux et la fiche reçoivent la même lumière, sinon
-     l'affiche serait claire au milieu d'un reste resté noir. Sur l'ordinateur
-     la page ne défile pas et `body` fait exactement la hauteur de la vue : rien
-     de ce qui est `fixed` ne se déplace en recevant `body` pour bloc
-     conteneur, vérifié bandeau par bandeau. Sur téléphone, où la page défile,
-     c'est la colonne qui le porte — voir plus bas. */
-  html:not(.phone) body { filter: var(--screen-treatment, none); }
+     l'affiche serait claire au milieu d'un reste resté noir.
+
+     MAIS PAS AVEC UN `filter` SUR `body`. Un filtre fait de l'élément qui le
+     porte le BLOC CONTENEUR de tout ce qui est `fixed` dessous — et sous
+     `body` il y a le décor (`body::before`, posé à `inset: 0`), les deux
+     bandeaux, la gouttitère et les dates. Tant que `body` fait exactement la
+     hauteur de la vue, rien ne bouge ; dès qu'il est plus court, tout se
+     resserre sur lui et le reste de la fenêtre devient NOIR. C'est ce que
+     Daniel a vu en bas de l'app, et je l'ai reproduit en forçant `body` à
+     800 px : la bande du bas se vide exactement comme sur sa capture.
+
+     Le voile fait le même travail sans rien changer à la géométrie :
+     `backdrop-filter` traite ce qui est PEINT DERRIÈRE lui, donc il ne porte
+     aucun filtre et ne devient le bloc conteneur de personne. Il ne reçoit
+     jamais la souris. Sur téléphone, où la page défile, c'est la colonne qui
+     porte le réglage — voir plus bas : elle contient déjà les trois seuls
+     éléments `fixed` de cette vue, donc rien ne s'y déplace, et un voile
+     recomposé à chaque image y coûterait du défilement. */
+  #screen-veil {
+    position: fixed; inset: 0; z-index: 2147483000;
+    pointer-events: none;
+    -webkit-backdrop-filter: var(--screen-treatment, none);
+    backdrop-filter: var(--screen-treatment, none);
+  }
+  html.phone #screen-veil { display: none; }
 
   /* First paint is deliberately a curtain, not the template's undressed
      fallback. The page is assembled in two passes: the shared look first, then
@@ -16976,5 +16995,8 @@
   addEventListener('load', function () { raf2(takePins); });
 })();
 </script>
+<!-- Le voile du réglage d'écran : en dernier, au-dessus de tout, et transparent
+     à la souris. Voir `#screen-veil` dans la feuille de style. -->
+<div id="screen-veil" aria-hidden="true"></div>
 </body>
 </html>
