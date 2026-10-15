@@ -2983,11 +2983,27 @@
     /* LES ADRESSES SOUS LE NOM à la taille où l'on peut les toucher. Même
        raison que le lecteur : ce sont des cibles pour un doigt, pas du texte à
        lire dans la composition. Réduites à l'échelle de la colonne elles
-       étaient peintes à 8,85 px, et leur cadre à 16,9 de haut. Le zoom de la
-       colonne leur est rendu : 16 px et 27,6. Vérifié à 384 px — la plus
-       longue rangée, trois adresses, tient encore sur une seule ligne. */
+       étaient peintes à 8,85 px — trop petites ; rendues à leur pleine taille,
+       16 px — trop grosses. Treize, demandés en pixels d'écran et rendus à la
+       colonne par son échelle, pour que le chiffre dise ce qu'on voit. */
     html.phone .phone-acts .profile-links {
-      font-size: calc(1em / var(--phone-k, 1));
+      font-size: calc(13px / var(--phone-k, 1));
+    }
+    /* ET LE TEXTE AU MILIEU DE SA CASE, à l'ŒIL et non à la boîte. Une boîte
+       centrée ne centre pas ce qui se voit : les capitales occupent le haut du
+       cadratin et le bas reste vide de la place des jambages — 0,246 em en
+       dessous contre 0,054 au-dessus pour cette police. À 11 px sur le site
+       l'écart est d'un pixel et demi et ne se voit pas ; à cette taille-ci il
+       se voit. Le calage reprend donc la différence : plus d'air en haut, moins
+       en bas, et l'encre tombe au milieu. */
+    html.phone .phone-acts .profile-links a {
+      line-height: 1;
+      padding: 0.267em 0.5em 0.243em;
+    }
+    /* LE CONTOUR DES NOMS, AU DEUX TIERS. À la taille où la colonne porte un
+       nom, le filet d'un pixel du panneau se lit comme un trait épais. */
+    html.phone .phone-acts .profile h3 {
+      -webkit-text-stroke-width: calc(var(--info-stroke, 0px) * 0.667);
     }
     /* Les contours du site, repris tels quels : celui du cadre autour de
        l'affiche, celui du panneau d'écoute autour de chaque fiche — c'est le
