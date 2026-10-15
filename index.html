@@ -12663,8 +12663,32 @@
   function applyTextTexture() {
     var root = document.documentElement.style;
     root.setProperty('--text-fill', fillFor(look.text, textInk()));
-    root.setProperty('--text-fill-hover',
-      fillFor(look.hover, look.hoverInk || MG.hoverGreen || '#0b6b18'));
+    /* LE NOM CHOISI, REMPLI JUSQU'À UN CERTAIN NIVEAU. À cent pour cent c'est
+       ce que la page a toujours fait : la texture du survol recouvre la lettre
+       entière. En dessous, la couleur est posée en dégradé À ARRÊT NET — pleine
+       jusqu'au niveau demandé, transparente au-delà — et le reste de la lettre
+       garde son remplissage ordinaire, qui passe dessous. Les deux couches
+       sont découpées à la forme des lettres par le même `background-clip`.
+
+       La texture du survol est perdue dans ce cas, et c'est voulu : un dégradé
+       ne sait pas porter une trame. Ce qui monte dans la lettre est la
+       COULEUR du survol, ce qui est bien ce qu'on demande d'un niveau. */
+    var hFill = Math.max(0, Math.min(100, genValue('hue', 'fill', 100)));
+    var hDir = HUE_DIRS[look.hueDir] ? look.hueDir : 'to top';
+    var hoverInk = look.hoverInk || MG.hoverGreen || '#0b6b18';
+    if (hFill < 100) {
+      root.setProperty('--text-fill-hover',
+        'linear-gradient(' + hDir + ', ' + hoverInk + ' 0 ' + hFill + '%, ' +
+        'transparent ' + hFill + '% 100%), ' + fillFor(look.text, textInk()));
+      /* Le dégradé couvre la boîte une fois ; la trame du dessous garde son pas
+         de huit pixels, qui est ce qui la rend nette au corps du texte. */
+      root.setProperty('--hue-size', 'auto, 8px 8px');
+      root.setProperty('--hue-repeat', 'no-repeat, repeat');
+    } else {
+      root.setProperty('--text-fill-hover', fillFor(look.hover, hoverInk));
+      root.setProperty('--hue-size', '8px 8px');
+      root.setProperty('--hue-repeat', 'repeat');
+    }
     /* The second fill, for a name that is merely under the pointer. Written only
        when one has been chosen: unset, the property is absent and the
        stylesheet's own fallback hands the hover back to the first fill. */
@@ -12681,7 +12705,19 @@
     return fallback;
   }
 
+  /* PAR OÙ LA COULEUR MONTE dans la lettre. Quatre sens, et rien d'autre : ce
+     sont les quatre côtés d'une lettre, et un angle libre ferait une diagonale
+     qui ne veut rien dire à cette échelle. */
+  var HUE_DIRS = {
+    'to top': 'du bas vers le haut',
+    'to bottom': 'du haut vers le bas',
+    'to right': 'de gauche à droite',
+    'to left': 'de droite à gauche'
+  };
   var look = {
+    /* Le sens du remplissage du nom choisi ; son taux est un nombre, et il vit
+       avec les autres dans `gen.hue.fill`. */
+    hueDir: HUE_DIRS[saved.hueDir] ? saved.hueDir : 'to top',
     font: (saved.baseFont === MG.font && MG.fonts[saved.font]) ? saved.font : MG.font,
     bodyFont: (saved.baseBodyFont === MG.bodyFont && MG.fonts[saved.bodyFont])
       ? saved.bodyFont : MG.bodyFont,
@@ -15003,6 +15039,8 @@
     function (v) { look.text = v; applyLook(); applyTextTexture(); });
   fillFields(document.getElementById('pick-hover'), HOVER_TEXTURES, look.hover,
     function (v) { look.hover = v; applyLook(); applyTextTexture(); });
+  fillFields(document.getElementById('pick-huedir'), HUE_DIRS, look.hueDir,
+    function (v) { look.hueDir = v; applyLook(); applyTextTexture(); });
   fillFields(document.getElementById('pick-bg'), BG_FIELDS, look.bg,
     function (v) { look.bg = v; applyLook(); setBackground(v); });
 
