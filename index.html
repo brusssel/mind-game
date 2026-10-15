@@ -230,6 +230,104 @@
      porte le réglage — voir plus bas : elle contient déjà les trois seuls
      éléments `fixed` de cette vue, donc rien ne s'y déplace, et un voile
      recomposé à chaque image y coûterait du défilement. */
+  /* ---- LA RADIO ---------------------------------------------------------
+     Une bande qui ne s'en va jamais : en bas de la fenêtre sur l'ordinateur,
+     en haut de l'écran sur le téléphone. Enfant direct de <body>, donc jamais
+     déplacée ni reconstruite — ni par un changement de date, ni par le passage
+     web ↔ téléphone : c'est la seule place où un son peut continuer de jouer.
+
+     Elle porte son fond à elle, opaque : une barre qui reste ne peut pas
+     laisser passer la moisissure et les lettres de l'affiche derrière ses
+     commandes. */
+  :root {
+    /* Sa hauteur, en pixels de FENÊTRE et non en unités de la scène : la scène
+       est mise à l'échelle de la place qui reste, donc une réserve exprimée
+       dans ses unités dépendrait de l'échelle qu'elle détermine. Et c'est juste
+       aussi pour l'œil — une commande se touche, elle n'est pas du dessin. */
+    --radio-h: 50px;
+    --radio-phone-h: 52px;
+  }
+  #radio {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    background: var(--radio-ground, var(--void, #000));
+    color: var(--dates-ink, var(--ink));
+    font-family: var(--dates-font, var(--body-font));
+    font-size: 0.6875rem; letter-spacing: 0.09em; text-transform: uppercase;
+    border-top: 1px solid var(--info-link-col, rgba(255,255,255,0.35));
+  }
+  #radio[hidden] { display: none; }
+  #radio .r-bar {
+    height: var(--radio-h, 50px); box-sizing: border-box;
+    display: flex; align-items: center; gap: 14px; padding: 0 22px;
+  }
+  #radio button {
+    border: 0; background: transparent; color: inherit; cursor: pointer;
+    padding: 0; line-height: 0; display: flex; align-items: center;
+  }
+  #radio .r-play {
+    flex: 0 0 auto; width: 26px; height: 26px;
+    border: 1px solid currentColor; justify-content: center;
+  }
+  #radio .r-play svg { width: 42%; height: 42%; fill: currentColor; }
+  #radio svg[hidden] { display: none; }
+  #radio .r-now { flex: 0 1 auto; min-width: 0; margin: 0; white-space: nowrap;
+                  overflow: hidden; text-overflow: ellipsis; }
+  #radio .r-now b { font-weight: 700; }
+  #radio .r-now span { opacity: 0.62; }
+  #radio .r-line { flex: 1 1 auto; min-width: 40px; height: 1px;
+                   background: currentColor; opacity: 0.3; position: relative; }
+  #radio .r-line i { position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+                     background: currentColor; opacity: 1; }
+  #radio .r-time { flex: 0 0 auto; margin: 0; font-variant-numeric: tabular-nums;
+                   opacity: 0.62; }
+  #radio .r-skip { flex: 0 0 auto; display: flex; gap: 12px; }
+  #radio .r-skip button, #radio .r-open { opacity: 0.55; }
+  #radio .r-skip button svg, #radio .r-open svg { height: 11px; width: auto; fill: currentColor; }
+  #radio .r-skip button:hover, #radio .r-open:hover,
+  #radio .r-skip button:focus-visible, #radio .r-open:focus-visible { opacity: 1; }
+  /* L'aléatoire est un ÉTAT, pas un geste : allumé, il se lit à pleine encre
+     quand les deux flèches restent en retrait. */
+  #radio .r-skip button.on { opacity: 1; }
+  #radio .r-open { flex: 0 0 auto; }
+  #radio .r-open svg { transition: transform 0.18s ease; }
+  #radio.open .r-open svg { transform: rotate(180deg); }
+
+  /* LA LISTE, DÉPLIÉE. Elle se pose PAR-DESSUS la page plutôt que de la
+     pousser : la scène est composée dans la place qui reste au-dessus de la
+     barre, et la faire grandir redemanderait toute la mise en page à chaque
+     ouverture. */
+  #radio .r-list {
+    position: absolute; left: 0; right: 0; bottom: 100%;
+    margin: 0; padding: 0; list-style: none;
+    max-height: 0; overflow: hidden;
+    background: var(--radio-ground, var(--void, #000));
+    transition: max-height 0.22s ease;
+  }
+  #radio.open .r-list {
+    max-height: min(52vh, 420px); overflow-y: auto;
+    border-top: 1px solid var(--info-link-col, rgba(255,255,255,0.35));
+  }
+  #radio .r-list li { margin: 0; }
+  #radio .r-list button {
+    width: 100%; text-align: left; line-height: 1.4;
+    padding: 0.55rem 22px; gap: 10px; opacity: 0.72;
+    font: inherit; letter-spacing: inherit; text-transform: inherit;
+  }
+  #radio .r-list button:hover, #radio .r-list button:focus-visible { opacity: 1; }
+  #radio .r-list li.on button { opacity: 1; }
+  #radio .r-list .r-rank { flex: 0 0 auto; opacity: 0.5;
+                           font-variant-numeric: tabular-nums; }
+  #radio .r-list .r-nom { flex: 1 1 auto; min-width: 0; white-space: nowrap;
+                          overflow: hidden; text-overflow: ellipsis; }
+  #radio .r-list li.on .r-nom b { text-decoration: underline; text-underline-offset: 3px; }
+
+  /* Le son de la radio est un lecteur comme les autres, simplement sans
+     visage : ce sont les commandes de la barre qui le pilotent. Hors de
+     l'écran plutôt qu'invisible — un cadre réduit à un pixel ou rendu
+     transparent se voit refuser le son par le navigateur comme par SoundCloud. */
+  #radio-son { position: fixed; left: -10000px; top: 0;
+               width: 320px; height: 120px; border: 0; }
+
   #screen-veil {
     position: fixed; inset: 0; z-index: 2147483000;
     pointer-events: none;
@@ -2868,6 +2966,43 @@
          l'affiche et ses deux contours —, donc rien ne change de place. */
       filter: var(--screen-treatment, none);
     }
+    /* LA RADIO, FIXÉE EN HAUT, et la page défile dessous. Elle reste enfant de
+       <body> et n'entre PAS dans la colonne : `.phone-doc` porte le réglage
+       d'écran, et un filtre fait de l'élément qui le porte le bloc conteneur
+       de ce qui est `fixed` dessous — la barre se serait ancrée sur une colonne
+       de quatre mille pixels et serait partie avec le défilement. C'est
+       exactement le défaut qui avait vidé le bas du décor. Elle prend donc le
+       réglage pour elle-même, afin d'être dans la même lumière que ce qui
+       passe dessous. */
+    html.phone #radio {
+      top: 0; bottom: auto;
+      border-top: 0;
+      border-bottom: 1px solid var(--info-link-col, rgba(255,255,255,0.35));
+      filter: var(--screen-treatment, none);
+    }
+    html.phone #radio .r-bar { height: var(--radio-phone-h, 52px); padding: 0 0.9rem; }
+    /* Le compteur s'en va : à 384 px il mangeait la moitié de la ligne et le
+       nom de l'artiste s'arrêtait à « LUCIE PÁ… ». Le trait dit déjà où l'on
+       en est. */
+    html.phone #radio .r-time { display: none; }
+    /* Dépliée, la liste descend sous la barre au lieu de monter. */
+    html.phone #radio .r-list { bottom: auto; top: 100%; }
+    html.phone #radio.open .r-list {
+      border-top: 0;
+      border-bottom: 1px solid var(--info-link-col, rgba(255,255,255,0.35));
+    }
+    html.phone #radio .r-list button { padding-left: 0.9rem; padding-right: 0.9rem; }
+    /* La colonne commence sous la barre, pour que l'affiche ne passe pas
+       dessous. */
+    html.phone .phone-doc { padding-top: var(--radio-phone-h, 52px); }
+    /* Sauf quand la file est vide : la barre ne se montre pas, et la colonne
+       ne doit pas réserver une place pour rien. La classe est posée par le
+       script, le sélecteur de voisinage ne pouvant pas servir ici — la barre
+       est écrite APRÈS la colonne dans la page. */
+    html.phone.no-radio .phone-doc { padding-top: 0; }
+    /* Et le rideau la couvre comme le reste : sans ça elle serait la seule
+       chose à l'écran pendant que la page s'assemble. */
+    html.phone:not(.mg-ready) #radio { visibility: hidden !important; }
     /* The bands come out of their fixed corners and stand at the two ends of
        the page, which is where they were always drawn. */
     html.phone .ticker {
@@ -3358,7 +3493,8 @@
     left: 50%; transform: translateX(-50%);
     width: var(--dates-w, 100%);
     bottom: calc(var(--ticker-foot-b, 0px) - var(--band-out, 0px)
-                 - var(--crest-mid-h, 0px) - var(--dates-h, 24px));
+                 - var(--crest-mid-h, 0px) - var(--dates-h, 24px)
+                 + var(--foot-lift, 0px));
     /* Whole cells only: the strip is cut to an exact number of them and the
        scroll lands on their edges, so nothing is ever half shown. */
     align-items: stretch;
@@ -3825,7 +3961,10 @@
   .ticker-top { top: calc(-1 * var(--band-out, 0px)); }
   /* Set from the block, not from the stage's floor: the band below the frames
      stands as far from them as the band above them does. */
-  .ticker-foot { bottom: calc(var(--ticker-foot-b, 0px) - var(--band-out, 0px)); }
+  .ticker-foot {
+    bottom: calc(var(--ticker-foot-b, 0px) - var(--band-out, 0px)
+                 + var(--foot-lift, 0px));
+  }
   .ticker-run {
     position: absolute; top: 0; left: 0; height: 100%;
     display: flex; align-items: center;
@@ -5847,7 +5986,15 @@
   }
   function fitStage() {
     var w = document.documentElement.clientWidth || STAGE_W;
-    var h = Math.max(1, (document.documentElement.clientHeight || STAGE_H) - appTopInset);
+    /* Moins la bande de la radio : la scène se compose dans ce qui reste, et
+       son centre remonte de la moitié par la même ligne. Zéro quand la file
+       est vide — la barre ne se montre pas et ne réserve rien. */
+    var radioH = (smartphoneMode() ||
+                  document.documentElement.classList.contains('no-radio')) ? 0
+      : (parseFloat(getComputedStyle(document.documentElement)
+          .getPropertyValue('--radio-h')) || 0);
+    var h = Math.max(1, (document.documentElement.clientHeight || STAGE_H)
+                        - appTopInset - radioH);
     /* Only ever smaller: past the size it was drawn at there is nothing to gain
        by blowing it up, and the arrangement is a centred column either way.
 
@@ -5932,6 +6079,26 @@
     var sr = el ? el.getBoundingClientRect() : null;
     stageX0 = sr ? sr.left : 0;
     stageY0 = sr ? sr.top : 0;
+    liftFoot(radioH);
+  }
+  /* DE COMBIEN LE PIED REMONTE au-dessus de la radio. Pas dérivé des variables
+     du pied : elles sont dans les unités de la scène et leur somme ne donne pas
+     la place réelle — essayé, et la bande montait de 60 px au lieu de 12. Il est
+     donc MESURÉ sur le rang des dates une fois posé, qui est la bande la plus
+     basse. Écrit ainsi le calcul est idempotent : relancé sur son propre
+     résultat il redonne la même valeur, donc la passe suivante ne le fait pas
+     dériver. Et il vaut zéro quand la fenêtre est assez haute : la page est
+     alors dessinée au pixel comme avant la radio. */
+  function liftFoot(radioH) {
+    var st = document.documentElement.style;
+    if (!radioH) { st.setProperty('--foot-lift', '0px'); return; }
+    var row = document.querySelector('.dates:not(.dates-top)');
+    if (!row) return;
+    var now = parseFloat(getComputedStyle(document.documentElement)
+      .getPropertyValue('--foot-lift')) || 0;
+    var vh = document.documentElement.clientHeight || 0;
+    var reste = vh - row.getBoundingClientRect().bottom - now;
+    st.setProperty('--foot-lift', Math.max(0, radioH + 6 - reste).toFixed(2) + 'px');
   }
   function fitMobileStage() {
     var root = document.documentElement;
@@ -17088,6 +17255,313 @@
     }
   } else { raf2(takePins); }
   addEventListener('load', function () { raf2(takePins); });
+})();
+</script>
+<!-- LA RADIO. Écrite ici, hors de la scène et hors de la colonne, parce que
+     c'est la seule place que ni un changement de date ni le passage
+     web ↔ téléphone ne reconstruit : un son qui joue y survit. Cachée tant que
+     la file est vide. -->
+<div id="radio" hidden>
+  <ol class="r-list" id="radio-liste"></ol>
+  <div class="r-bar">
+    <button class="r-play" type="button" aria-label="Lire">
+      <svg class="r-ic-play" viewBox="0 0 10 12" aria-hidden="true"><path d="M0 0l10 6-10 6z"/></svg>
+      <svg class="r-ic-pause" viewBox="0 0 10 12" aria-hidden="true" hidden><path d="M0 0h3.5v12H0zM6.5 0H10v12H6.5z"/></svg>
+    </button>
+    <p class="r-now"><b></b> <span></span></p>
+    <div class="r-line"><i></i></div>
+    <p class="r-time"></p>
+    <div class="r-skip">
+      <button type="button" class="r-prev" aria-label="Précédent">
+        <svg viewBox="0 0 14 12" aria-hidden="true"><path d="M1 0h2v12H1zM13 0v12L4 6z"/></svg>
+      </button>
+      <button type="button" class="r-next" aria-label="Suivant">
+        <svg viewBox="0 0 14 12" aria-hidden="true"><path d="M11 0h2v12h-2zM1 0l9 6-9 6z"/></svg>
+      </button>
+      <button type="button" class="r-shuffle" aria-label="Aléatoire" aria-pressed="false">
+        <svg viewBox="0 0 16 12" aria-hidden="true">
+          <path d="M0 1.6h3.1c1 0 1.6.5 2.3 1.5l3.1 4.4c.6.9 1.1 1.3 2 1.3H13v1.6H10.5c-1.5 0-2.3-.7-3.1-1.9L4.3 4.1C3.8 3.4 3.5 3.2 3 3.2H0z"/>
+          <path d="M0 8.8h3c.5 0 .8-.2 1.3-.9l.9-1.3 1 1.4-.7 1c-.8 1.2-1.6 1.9-3.1 1.9H0zM9.5 2.9c.9 0 1.4-.4 2-1.3h1.6l-.7 1 .7 1H11c-.5 0-.8.2-1.3.9l-.8 1.2-1-1.4.7-1"/>
+          <path d="M12.6 0L16 2.4l-3.4 2.4zM12.6 7.2L16 9.6 12.6 12z"/>
+        </svg>
+      </button>
+    </div>
+    <button type="button" class="r-open" aria-label="Voir la liste" aria-expanded="false">
+      <svg viewBox="0 0 12 8" aria-hidden="true"><path d="M6 0l6 8H0z"/></svg>
+    </button>
+  </div>
+  <iframe id="radio-son" title="Radio" allow="autoplay"></iframe>
+  <audio id="radio-fichier" preload="none"></audio>
+</div>
+<!-- LA RADIO : sa file, son tirage, et un seul son à la fois sur la page. -->
+<script>
+(function () {
+  'use strict';
+  var radio = document.getElementById('radio');
+  var data = (window.MG && MG.radio) || null;
+  var file = (data && Array.isArray(data.tracks)) ? data.tracks : [];
+  if (!radio) return;
+  if (!file.length) { document.documentElement.classList.add('no-radio'); return; }
+  radio.hidden = false;
+
+  /* ---- UN SEUL SON À LA FOIS -------------------------------------------
+     Trois espèces de source, parce qu'il y a trois façons de savoir qu'une a
+     démarré et trois façons de la faire taire :
+
+       — la radio, dont on tient la télécommande ;
+       — les lecteurs SoundCloud des artistes, qui ont une vraie API : ils
+         disent quand ils partent et obéissent à `pause()` ;
+       — tous les autres, Bandcamp en tête, qui ne disent rien et n'obéissent à
+         rien. Pour ceux-là on sait qu'ils ont démarré parce que la fenêtre a
+         perdu le foyer au profit de leur cadre — un clic dedans, et le seul
+         bouton qu'ils offrent est « lire » —, et on les arrête en rechargeant
+         leur cadre, faute de tout autre moyen. C'est un arrêt, pas une pause :
+         ils repartent du début. */
+  var sources = [];
+  function seul(qui) {
+    for (var i = 0; i < sources.length; i++) {
+      if (sources[i] === qui) continue;
+      try { sources[i].taire(); } catch (e) {}
+    }
+  }
+
+  var scPret = null;
+  function chargeSC() {
+    if (scPret) return scPret;
+    scPret = new Promise(function (ok) {
+      if (window.SC && window.SC.Widget) return ok();
+      var t = document.createElement('script');
+      t.src = 'https://w.soundcloud.com/player/api.js';
+      t.onload = function () { ok(); };
+      t.onerror = function () { ok(); };
+      document.head.appendChild(t);
+    });
+    return scPret;
+  }
+  function estSC(f) { return /w\.soundcloud\.com\/player/i.test(f.src || ''); }
+
+  function recense(f) {
+    if (!f || f.__mgSource || f.id === 'radio-son') return;
+    var src;
+    if (estSC(f)) {
+      src = { el: f, taire: function () {} };
+      f.__mgSource = src; sources.push(src);
+      chargeSC().then(function () {
+        if (!window.SC || !window.SC.Widget) return;
+        var w = window.SC.Widget(f);
+        src.taire = function () { try { w.pause(); } catch (e) {} };
+        w.bind(window.SC.Widget.Events.PLAY, function () { seul(src); });
+      });
+    } else {
+      src = { el: f, vivant: false, taire: function () {
+        if (!this.vivant) return;
+        this.vivant = false;
+        var g = this.el; g.src = g.src;
+      } };
+      f.__mgSource = src; sources.push(src);
+    }
+  }
+  function balaie() {
+    var fs = document.querySelectorAll('iframe');
+    for (var i = 0; i < fs.length; i++) recense(fs[i]);
+  }
+  /* Les fiches naissent après coup — la colonne du téléphone se remonte à
+     chaque date. On observe donc les deux endroits où des lecteurs peuvent
+     apparaître, et eux seuls : un observateur sur tout le document fausse les
+     mesures d'amorçage de plusieurs centaines de millisecondes. */
+  function guette() {
+    var cibles = ['phone-acts', 'listen'].map(function (id) {
+      return document.getElementById(id);
+    }).filter(Boolean);
+    if (!window.MutationObserver || !cibles.length) return;
+    var mo = new MutationObserver(function () { balaie(); });
+    for (var i = 0; i < cibles.length; i++) {
+      mo.observe(cibles[i], { childList: true, subtree: true });
+    }
+  }
+  window.addEventListener('blur', function () {
+    setTimeout(function () {
+      var a = document.activeElement;
+      if (!a || a.tagName !== 'IFRAME') return;
+      var s = a.__mgSource;
+      if (!s) return;
+      s.vivant = true;
+      seul(s);
+    }, 0);
+  });
+
+  /* ---- LE TIRAGE --------------------------------------------------------
+     Au hasard, mais pas n'importe comment : un morceau ne revient pas avant
+     QUE CINQ AUTRES soient passés. On garde donc les derniers joués et on
+     tire parmi le reste. Quand la file est trop courte pour que la règle
+     tienne, elle se relâche d'elle-même — avec quatre morceaux, « cinq
+     autres » n'existe pas — et l'on se contente d'éviter celui qui vient de
+     jouer. */
+  var MEMOIRE = 5;
+  var derniers = [];
+  function retiens(i) {
+    derniers.push(i);
+    while (derniers.length > MEMOIRE) derniers.shift();
+  }
+  function tire(courant) {
+    if (file.length === 1) return 0;
+    var libres = [], i;
+    for (i = 0; i < file.length; i++) {
+      if (i !== courant && derniers.indexOf(i) < 0) libres.push(i);
+    }
+    if (!libres.length) {
+      for (i = 0; i < file.length; i++) if (i !== courant) libres.push(i);
+    }
+    return libres[Math.floor(Math.random() * libres.length)];
+  }
+
+  /* ---- LA BARRE ---------------------------------------------------------- */
+  var bar = {
+    play: radio.querySelector('.r-play'),
+    icLire: radio.querySelector('.r-ic-play'),
+    icPause: radio.querySelector('.r-ic-pause'),
+    nom: radio.querySelector('.r-now'),
+    avance: radio.querySelector('.r-line i'),
+    temps: radio.querySelector('.r-time'),
+    prev: radio.querySelector('.r-prev'),
+    next: radio.querySelector('.r-next'),
+    hasard: radio.querySelector('.r-shuffle'),
+    ouvre: radio.querySelector('.r-open'),
+    liste: document.getElementById('radio-liste')
+  };
+  var son = document.getElementById('radio-son');
+  var fichier = document.getElementById('radio-fichier');
+  var au = -1, joue = false, melange = data.shuffle !== false, widget = null;
+
+  function mm(ms) {
+    var t = Math.max(0, Math.round(ms / 1000));
+    return ('0' + Math.floor(t / 60)).slice(-2) + ':' + ('0' + (t % 60)).slice(-2);
+  }
+  function titre(t) {
+    return (t.artist || '') + (t.title ? ' — ' + t.title : '');
+  }
+  function montre() {
+    var t = file[au] || {};
+    bar.nom.firstChild.textContent = t.artist || '';
+    bar.nom.lastChild.textContent = t.title ? '— ' + t.title : '';
+    bar.icLire.hidden = joue;
+    bar.icPause.hidden = !joue;
+    bar.play.setAttribute('aria-label', joue ? 'Pause' : 'Lire');
+    bar.hasard.classList.toggle('on', melange);
+    bar.hasard.setAttribute('aria-pressed', String(melange));
+    var li = bar.liste.children;
+    for (var i = 0; i < li.length; i++) li[i].classList.toggle('on', i === au);
+  }
+  function dresseListe() {
+    bar.liste.textContent = '';
+    file.forEach(function (t, i) {
+      var li = document.createElement('li');
+      var b = document.createElement('button');
+      b.type = 'button';
+      var r = document.createElement('span');
+      r.className = 'r-rank';
+      r.textContent = ('0' + (i + 1)).slice(-2);
+      var n = document.createElement('span');
+      n.className = 'r-nom';
+      var g = document.createElement('b');
+      g.textContent = t.artist || '';
+      n.appendChild(g);
+      if (t.title) n.appendChild(document.createTextNode(' — ' + t.title));
+      b.appendChild(r); b.appendChild(n);
+      b.addEventListener('click', function () { va(i, true); });
+      li.appendChild(b);
+      bar.liste.appendChild(li);
+    });
+  }
+
+  /* ---- JOUER ------------------------------------------------------------- */
+  var moi = { taire: function () { pause(); } };
+  sources.push(moi);
+
+  function pause() {
+    joue = false;
+    try { fichier.pause(); } catch (e) {}
+    if (widget) { try { widget.pause(); } catch (e) {} }
+    montre();
+  }
+  function demarre() {
+    if (au < 0) { va(melange ? tire(-1) : 0, true); return; }
+    seul(moi);
+    var t = file[au];
+    if (t.src) { fichier.play().catch(function () {}); }
+    else if (widget) { try { widget.play(); } catch (e) {} }
+  }
+  function va(i, lance) {
+    if (!file.length) return;
+    au = ((i % file.length) + file.length) % file.length;
+    retiens(au);
+    var t = file[au];
+    bar.avance.style.width = '0';
+    if (bar.temps) bar.temps.textContent = '';
+    if (t.src) {
+      if (widget) { try { widget.pause(); } catch (e) {} }
+      fichier.src = t.src;
+      if (lance) { seul(moi); fichier.play().catch(function () {}); }
+    } else if (t.soundcloud) {
+      try { fichier.pause(); } catch (e) {}
+      chargeSC().then(function () {
+        if (!window.SC || !window.SC.Widget) return;
+        if (!widget) { widget = window.SC.Widget(son); brancheWidget(); }
+        widget.load(t.soundcloud, {
+          auto_play: !!lance, show_comments: false, hide_related: true,
+          show_teaser: false, visual: false,
+          callback: function () { if (lance) { seul(moi); widget.play(); } }
+        });
+      });
+    }
+    montre();
+  }
+  function suivant(auto) {
+    va(melange ? tire(au) : au + 1, auto !== false);
+  }
+  function brancheWidget() {
+    var E = window.SC.Widget.Events;
+    widget.bind(E.PLAY, function () { joue = true; seul(moi); montre(); });
+    widget.bind(E.PAUSE, function () { joue = false; montre(); });
+    widget.bind(E.FINISH, function () { suivant(true); });
+    widget.bind(E.PLAY_PROGRESS, function (e) {
+      if (!e) return;
+      if (e.relativePosition != null) {
+        bar.avance.style.width = (Math.max(0, Math.min(1, e.relativePosition)) * 100).toFixed(1) + '%';
+      }
+      if (bar.temps) {
+        widget.getDuration(function (d) {
+          bar.temps.textContent = mm(e.currentPosition) + ' / ' + mm(d);
+        });
+      }
+    });
+  }
+
+  fichier.addEventListener('play', function () { joue = true; seul(moi); montre(); });
+  fichier.addEventListener('pause', function () { joue = false; montre(); });
+  fichier.addEventListener('ended', function () { suivant(true); });
+  fichier.addEventListener('timeupdate', function () {
+    var d = fichier.duration;
+    if (isFinite(d) && d > 0) {
+      bar.avance.style.width = (fichier.currentTime / d * 100).toFixed(1) + '%';
+      if (bar.temps) bar.temps.textContent = mm(fichier.currentTime * 1000) + ' / ' + mm(d * 1000);
+    }
+  });
+
+  bar.play.addEventListener('click', function () { if (joue) pause(); else demarre(); });
+  bar.next.addEventListener('click', function () { suivant(joue); });
+  bar.prev.addEventListener('click', function () { va(melange ? tire(au) : au - 1, joue); });
+  bar.hasard.addEventListener('click', function () { melange = !melange; montre(); });
+  bar.ouvre.addEventListener('click', function () {
+    var on = !radio.classList.contains('open');
+    radio.classList.toggle('open', on);
+    bar.ouvre.setAttribute('aria-expanded', String(on));
+  });
+
+  dresseListe();
+  va(melange ? tire(-1) : 0, false);
+  balaie();
+  guette();
 })();
 </script>
 <!-- Le voile du réglage d'écran : en dernier, au-dessus de tout, et transparent
