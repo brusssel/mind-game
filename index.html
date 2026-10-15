@@ -132,6 +132,25 @@
     font-style: italic; font-weight: 700; font-display: swap;
     src: url("fonts/charter-700-italic.woff2") format('woff2');
   }
+  /* ET LA SANS DES ÉTIQUETTES, embarquée pour la même raison que Charter : les
+     adresses sous les noms sont calées au pixel dans leur case, et un calage
+     mesuré sur une police ne vaut rien si l'appareil en rend une autre. Essayé
+     une fois avec la sans du système — San Francisco ici, Roboto sur un
+     Android — et le texte sortait du milieu de sa case chez Daniel alors
+     qu'il y était chez moi. Inter, licence libre, deux tranches de latin pour
+     que les diacritiques tchèques des noms soient servies aussi. */
+  @font-face {
+    font-family: 'Inter';
+    font-style: normal; font-weight: 400; font-display: swap;
+    src: url("fonts/inter-400-latin.woff2") format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'Inter';
+    font-style: normal; font-weight: 400; font-display: swap;
+    src: url("fonts/inter-400-latin-ext.woff2") format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
   /* Et la descendante, pour qui choisit « Charter (embarquée) » : */
   @font-face {
     font-family: 'Charis SIL';
@@ -1848,16 +1867,31 @@
   /* In the header now: a row of small addresses beside the name, sized to the
      bar rather than to the page. */
   .profile-links { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0; flex: 0 1 auto; }
-  /* LA SANS A ÉTÉ ESSAYÉE ICI, ET RETIRÉE. Elle n'était pas embarquée — San
-     Francisco sur un Mac, Roboto sur un Android — et le calage de l'encre
-     sous les noms est réglé sur les métriques de Charter : avec une autre
-     police par appareil, le texte sortait du milieu de sa case chez Daniel
-     alors qu'il y était chez moi. Les adresses reprennent donc la serif du
-     panneau, qui est embarquée et identique partout. */
+  /* LES ADRESSES SONT DES ÉTIQUETTES, PAS DU TEXTE : à cette taille une serif
+     se remarque, une sans se lit. Celle-ci est servie avec la page, donc elle
+     compose pareil partout et le calage de leur encre vaut sur tout appareil.
+     La sans du système avait été essayée d'abord, et retirée pour cette seule
+     raison. */
+  .profile-links {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  }
   .profile-links a {
     color: var(--info-link-col, inherit); text-decoration: none; white-space: nowrap;
     border: 1px solid var(--info-link-col, rgba(255,255,255,0.35));
-    padding: 0.15rem 0.4rem;
+    /* AU MILIEU DE LA CASE À L'ŒIL, et sur les deux vues. Une boîte centrée ne
+       centre pas ce qui se voit : les capitales occupent le haut du cadratin,
+       le bas reste vide de la place des jambages, et Inter porte en plus une
+       ascendante généreuse — avec l'ancien calage en `rem` et un interligne
+       d'une fois et demie, le texte venait se poser sur le trait du bas :
+       0,13 px en dessous contre 6,54 au-dessus. L'interligne est donc ramené
+       au cadratin et l'air repris en `em`, ce qui le fait suivre la taille.
+       Et là, surprise de la mesure : avec Inter et un interligne d'un cadratin,
+       l'air ÉGAL en haut et en bas centre exactement les capitales — sa demi
+       interligne négative compense pile la place des jambages. Le calage
+       asymétrique que Charter demandait n'a plus lieu d'être. Même valeur à
+       11 px sur le site et à 13 sur le téléphone. */
+    line-height: 1;
+    padding: 0.255em 0.5em;
   }
   .profile-links:empty { display: none; }
   .profile-links a:hover {
@@ -2994,17 +3028,6 @@
        colonne par son échelle, pour que le chiffre dise ce qu'on voit. */
     html.phone .phone-acts .profile-links {
       font-size: calc(13px / var(--phone-k, 1));
-    }
-    /* ET LE TEXTE AU MILIEU DE SA CASE, à l'ŒIL et non à la boîte. Une boîte
-       centrée ne centre pas ce qui se voit : les capitales occupent le haut du
-       cadratin et le bas reste vide de la place des jambages — 0,246 em en
-       dessous contre 0,054 au-dessus pour cette police. À 11 px sur le site
-       l'écart est d'un pixel et demi et ne se voit pas ; à cette taille-ci il
-       se voit. Le calage reprend donc la différence : plus d'air en haut, moins
-       en bas, et l'encre tombe au milieu. */
-    html.phone .phone-acts .profile-links a {
-      line-height: 1;
-      padding: 0.267em 0.5em 0.243em;
     }
     /* LE CONTOUR DES NOMS, AU DEUX TIERS. À la taille où la colonne porte un
        nom, le filet d'un pixel du panneau se lit comme un trait épais. */
