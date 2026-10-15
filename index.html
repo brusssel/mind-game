@@ -2457,6 +2457,23 @@
   .editor-bar b { font-weight: 400; margin-right: auto; display: flex; gap: 0.4rem; }
   .editor-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end; }
   .editor .ed-tab { opacity: 0.5; }
+  /* LA FILE DE LA RADIO dans l'éditeur : une ligne par morceau, son rang, son
+     artiste, son titre, d'où il vient, et de quoi le déplacer ou le retirer. */
+  .ed-radio { list-style: none; margin: 0.6rem 0 0; padding: 0; }
+  .ed-radio li {
+    display: flex; align-items: center; gap: 0.4rem;
+    padding: 0.25rem 0; border-bottom: 1px solid rgba(255,255,255,0.14);
+  }
+  .ed-radio .r-rank { flex: 0 0 auto; opacity: 0.5; font-variant-numeric: tabular-nums; }
+  .ed-radio input { flex: 1 1 0; min-width: 0; }
+  .ed-radio .ed-radio-src { flex: 0 0 auto; opacity: 0.5; font-size: 0.9em; }
+  .ed-radio button { flex: 0 0 auto; padding: 0 0.35rem; }
+  .ed-radio-add { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
+  .ed-radio-add input { flex: 1 1 auto; min-width: 0; }
+  .ed-note { opacity: 0.62; margin: 0.4rem 0; }
+  /* Pendant qu'un fichier survole une zone qui l'accepte. */
+  .ed-drop { outline: 2px dashed var(--ink); outline-offset: -4px; }
+  #radio.ed-drop { outline-offset: -2px; }
   .editor .ed-tab[aria-current="true"] { opacity: 1; background: var(--ink); color: var(--void); }
   .editor-where { opacity: 0.55; margin-right: 0.6rem; text-transform: none; letter-spacing: 0.04em; }
   .editor button {
@@ -10275,6 +10292,149 @@
      does nothing. */
   function pickImageInto() {}
 
+  /* STUDIO */
+  /* LA FILE, CÔTÉ ÉDITEUR. Un onglet à côté des concerts et des artistes : la
+     liste telle qu'elle sera jouée, et deux façons d'y ajouter — déposer des
+     fichiers dessus, ou coller une adresse SoundCloud. Les fichiers déposés
+     sont copiés dans `audio/` par le serveur, qui seul écrit sur le disque. */
+  function radioQueue() {
+    var r = (window.MG && MG.radio) || {};
+    if (!Array.isArray(r.tracks)) r.tracks = [];
+    MG.radio = r;
+    return r;
+  }
+  function radioNom(t) {
+    if (t.artist || t.title) return (t.artist || '') + (t.title ? ' — ' + t.title : '');
+    return t.src ? t.src.replace(/^audio\//, '') : t.soundcloud;
+  }
+  function drawRadio(body) {
+    var r = radioQueue();
+    var h = '<p class="ed-note">Dépose des fichiers ici — ou colle une adresse ' +
+            'SoundCloud. Bandcamp ne peut pas en être : son lecteur ne se pilote ' +
+            'pas, donc il ne sait pas enchaîner.</p>';
+    h += '<div class="ed-radio-add">' +
+         '<input id="ed-radio-url" placeholder="https://soundcloud.com/…">' +
+         '<button type="button" id="ed-radio-plus">Ajouter</button></div>';
+    h += '<ol class="ed-radio" id="ed-radio-list">';
+    for (var i = 0; i < r.tracks.length; i++) {
+      var t = r.tracks[i];
+      h += '<li data-i="' + i + '">' +
+           '<span class="r-rank">' + ('0' + (i + 1)).slice(-2) + '</span>' +
+           '<input data-f="artist" placeholder="artiste" value="' + esc(t.artist || '') + '">' +
+           '<input data-f="title" placeholder="titre" value="' + esc(t.title || '') + '">' +
+           '<span class="ed-radio-src">' + esc(t.src ? 'fichier' : 'soundcloud') + '</span>' +
+           '<button type="button" data-act="up" aria-label="Monter">↑</button>' +
+           '<button type="button" data-act="down" aria-label="Descendre">↓</button>' +
+           '<button type="button" data-act="del" aria-label="Retirer">×</button>' +
+           '</li>';
+    }
+    h += '</ol>';
+    if (!r.tracks.length) h += '<p class="ed-note">La file est vide : la barre ne se montre pas.</p>';
+    body.innerHTML = h;
+
+    body.querySelectorAll('.ed-radio input').forEach(function (inp) {
+      inp.addEventListener('change', function () {
+        var i = Number(this.closest('li').getAttribute('data-i'));
+        r.tracks[i][this.getAttribute('data-f')] = this.value.trim();
+        saveRadio();
+      });
+    });
+    body.querySelectorAll('.ed-radio button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var i = Number(this.closest('li').getAttribute('data-i'));
+        var act = this.getAttribute('data-act');
+        if (act === 'del') r.tracks.splice(i, 1);
+        else if (act === 'up' && i > 0) r.tracks.splice(i - 1, 0, r.tracks.splice(i, 1)[0]);
+        else if (act === 'down' && i < r.tracks.length - 1) {
+          r.tracks.splice(i + 1, 0, r.tracks.splice(i, 1)[0]);
+        }
+        saveRadio(); drawEditor();
+      });
+    });
+    var plus = document.getElementById('ed-radio-plus');
+    if (plus) plus.addEventListener('click', function () {
+      var f = document.getElementById('ed-radio-url');
+      var v = (f.value || '').trim();
+      if (!/^https:\/\/(www\.)?soundcloud\.com\//i.test(v)) {
+        document.getElementById('editor-where').textContent = 'une adresse soundcloud, seulement';
+        return;
+      }
+      r.tracks.push({ artist: '', title: '', src: '', soundcloud: v });
+      f.value = '';
+      saveRadio(); drawEditor();
+    });
+  }
+
+  /* Écrite par le serveur, qui la range et reconstruit la page dans la foulée ;
+     la barre, elle, reprend la file sans recharger — un son qui joue continue. */
+  function saveRadio() {
+    var r = radioQueue();
+    var where = document.getElementById('editor-where');
+    return fetch('/api/radio', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shuffle: r.shuffle !== false, tracks: r.tracks })
+    }).then(function (res) { return res.json(); }).then(function (out) {
+      if (!out || !out.ok) throw new Error((out && out.error) || 'refusé');
+      MG.radio = out.radio;
+      if (window.MG_RADIO && window.MG_RADIO.reload) window.MG_RADIO.reload(out.radio);
+      if (where) where.textContent = out.radio.tracks.length + ' morceau(x) dans la file';
+    }).catch(function (e) {
+      if (where) where.textContent = 'file non écrite : ' + String(e.message || e).slice(0, 40);
+    });
+  }
+
+  /* DÉPOSER DES SONS. Sur le panneau de la radio comme sur la barre elle-même :
+     ce sont les deux endroits où l'on pense à le faire. Un fichier part en
+     base64 vers `/api/audio`, qui le range dans `audio/` et rend son chemin. */
+  function radioAccepte(files) {
+    var r = radioQueue();
+    var sons = [].filter.call(files || [], function (f) {
+      return /\.(mp3|m4a|aac|ogg|oga|wav|flac)$/i.test(f.name || '');
+    });
+    if (!sons.length) return;
+    var where = document.getElementById('editor-where');
+    var reste = sons.length;
+    if (where) where.textContent = 'dépôt de ' + reste + ' son(s)…';
+    sons.forEach(function (f) {
+      var rd = new FileReader();
+      rd.onload = function () {
+        fetch('/api/audio', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: f.name, data: String(rd.result) })
+        }).then(function (res) { return res.json(); }).then(function (out) {
+          if (!out || !out.ok) throw new Error((out && out.error) || 'refusé');
+          r.tracks.push({
+            artist: '', title: f.name.replace(/\.[a-z0-9]+$/i, ''),
+            src: out.path, soundcloud: ''
+          });
+        }).catch(function (e) {
+          if (where) where.textContent = 'son refusé : ' + String(e.message || e).slice(0, 40);
+        }).then(function () {
+          if (--reste) return;
+          saveRadio().then(function () { if (editorTab === 'radio') drawEditor(); });
+        });
+      };
+      rd.readAsDataURL(f);
+    });
+  }
+  /* Exportée : la barre de la radio vit dans son propre script, hors de cette
+     fermeture, et ne verrait pas une fonction déclarée ici. */
+  window.MG_RADIO_DROP = radioDropZone;
+  function radioDropZone(el) {
+    if (!el || el.__mgDrop) return;
+    el.__mgDrop = true;
+    el.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      el.classList.add('ed-drop');
+    });
+    el.addEventListener('dragleave', function () { el.classList.remove('ed-drop'); });
+    el.addEventListener('drop', function (e) {
+      e.preventDefault();
+      el.classList.remove('ed-drop');
+      radioAccepte(e.dataTransfer && e.dataTransfer.files);
+    });
+  }
+
   function drawEditor() {}
   function editorJSON() {
     return editorTab === 'concerts'
@@ -17148,6 +17308,7 @@
     }
     tab('ed-tab-concerts', 'concerts');
     tab('ed-tab-artists', 'artists');
+    tab('ed-tab-radio', 'radio');
     on('ed-copy', function () {
       var text = editorJSON();
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -17557,6 +17718,34 @@
     radio.classList.toggle('open', on);
     bar.ouvre.setAttribute('aria-expanded', String(on));
   });
+
+  /* L'éditeur peut changer la file pendant qu'un morceau joue. Il passe par
+     ici plutôt que de recharger la page : le son continue, et la liste se
+     redresse. Si le morceau en cours a disparu de la file, on reste dessus
+     jusqu'à sa fin plutôt que de l'interrompre. */
+  window.MG_RADIO = {
+    reload: function (neuf) {
+      if (!neuf || !Array.isArray(neuf.tracks)) return;
+      var avant = file[au];
+      file = neuf.tracks;
+      if (!file.length) { pause(); radio.hidden = true; return; }
+      radio.hidden = false;
+      var i = -1;
+      for (var k = 0; k < file.length; k++) {
+        var t = file[k];
+        if (avant && t.src === avant.src && t.soundcloud === avant.soundcloud) { i = k; break; }
+      }
+      au = i;
+      derniers = [];
+      dresseListe();
+      montre();
+    }
+  };
+
+  /* Et la barre accepte aussi un son déposé dessus, dans l'app seulement —
+     c'est l'autre endroit où l'on pense à le faire. La fonction n'existe que
+     dans l'éditeur ; sur le site publié ce bloc ne trouve rien et se tait. */
+  if (window.MG_RADIO_DROP) window.MG_RADIO_DROP(radio);
 
   dresseListe();
   va(melange ? tire(-1) : 0, false);
