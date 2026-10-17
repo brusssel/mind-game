@@ -3180,6 +3180,13 @@
        colonne par son échelle, pour que le chiffre dise ce qu'on voit. */
     html.phone .phone-acts .profile-links {
       font-size: calc(13px / var(--phone-k, 1));
+      /* EN CAPITALES, COMME SUR LE SITE. Dans le panneau, les adresses héritent
+         la casse de ce qui les entoure ; la colonne du téléphone, elle, ne
+         l'hérite de rien et laissait « Zvířena » en bas-de-casse au milieu de
+         deux noms en capitales. Elle est reprise à la même source que le
+         panneau et non posée en dur : si la parure passe aux petites
+         capitales, les deux vues suivent ensemble. */
+      text-transform: var(--info-case, uppercase);
     }
     /* LE CONTOUR DES NOMS, AU DEUX TIERS. À la taille où la colonne porte un
        nom, le filet d'un pixel du panneau se lit comme un trait épais. */
