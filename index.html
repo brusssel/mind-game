@@ -327,6 +327,15 @@
      transparent se voit refuser le son par le navigateur comme par SoundCloud. */
   #radio-son { position: fixed; left: -10000px; top: 0;
                width: 320px; height: 120px; border: 0; }
+  /* Sauf quand le navigateur refuse que la barre le lance — Safari sur
+     iPhone n'accepte le son d'un lecteur SoundCloud que si on a touché le
+     lecteur lui-même. Le cadre se montre alors contre la barre, du côté de
+     la page, le temps qu'on y touche « lire », puis repart hors de l'écran. */
+  #radio.r-tap #radio-son {
+    position: absolute; left: 0; right: 0; bottom: 100%; top: auto;
+    width: 100%; height: 120px;
+    border-top: 1px solid var(--info-link-col, rgba(255,255,255,0.35));
+  }
 
   #screen-veil {
     position: fixed; inset: 0; z-index: 2147483000;
@@ -3004,6 +3013,8 @@
     html.phone #radio .r-time { display: none; }
     /* Dépliée, la liste descend sous la barre au lieu de monter. */
     html.phone #radio .r-list { bottom: auto; top: 100%; }
+    html.phone #radio.r-tap #radio-son { bottom: auto; top: 100%; border-top: 0;
+      border-bottom: 1px solid var(--info-link-col, rgba(255,255,255,0.35)); }
     html.phone #radio.open .r-list {
       border-top: 0;
       border-bottom: 1px solid var(--info-link-col, rgba(255,255,255,0.35));
@@ -3198,7 +3209,9 @@
       padding: 0.4rem 1.1rem 1.1rem;
     }
     /* A name arrived at from the poster should land under the top of the
-       screen, not flush against it. */
+       screen, not flush against it. (The radio fixed above it is counted
+       by scrollToAct, not here: the column is zoomed, and a margin set on
+       its cards shrinks with it.) */
     html.phone .phone-acts .phone-profile { scroll-margin-top: 0.8rem; }
     /* A background held still against the window is repainted at every frame
        of a scroll — on a phone that alone is the difference between a page
@@ -9880,7 +9893,18 @@
       var card = host.querySelector('[data-act="' + key + '"]') ||
                  host.querySelector('[data-act-alt="' + key + '"]');
       if (!card) continue;
-      if (card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      /* Under the radio when it is showing: it is fixed at the top of the
+         screen and would otherwise land over the name. Measured on the
+         window, since the column's zoom would shrink a CSS margin. */
+      var bar = document.querySelector('#radio:not([hidden]) .r-bar');
+      var r = bar && bar.getBoundingClientRect();
+      var over = (r && r.top < window.innerHeight / 2) ? r.bottom : 0;
+      if (over > 0) {
+        var y = card.getBoundingClientRect().top + window.pageYOffset - over - 12;
+        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+      } else if (card.scrollIntoView) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
       return true;
     }
     return false;
@@ -17650,7 +17674,17 @@
     seul(moi);
     var t = file[au];
     if (t.src) { fichier.play().catch(function () {}); }
-    else if (widget) { try { widget.play(); } catch (e) {} }
+    else if (widget) { try { widget.play(); } catch (e) {} guetteDepart(); }
+  }
+  /* Si le son n'est pas parti peu après la demande, c'est que le navigateur
+     l'a refusé : on montre le lecteur pour qu'on y touche soi-même. */
+  var attente = null;
+  function guetteDepart() {
+    clearTimeout(attente);
+    attente = setTimeout(function () {
+      var t = file[au];
+      if (!joue && t && !t.src) radio.classList.add('r-tap');
+    }, 2000);
   }
   function va(i, lance) {
     if (!file.length) return;
@@ -17665,6 +17699,7 @@
       if (lance) { seul(moi); fichier.play().catch(function () {}); }
     } else if (t.soundcloud) {
       try { fichier.pause(); } catch (e) {}
+      if (lance) guetteDepart();
       chargeSC().then(function () {
         if (!window.SC || !window.SC.Widget) return;
         /* La première fois, le cadre est vide : `load()` de l'API reprend
@@ -17693,7 +17728,13 @@
   }
   function brancheWidget() {
     var E = window.SC.Widget.Events;
-    widget.bind(E.PLAY, function () { joue = true; seul(moi); montre(); });
+    widget.bind(E.PLAY, function () {
+      /* Le délai n'est pas annulé ici : un départ refusé s'annonce souvent
+         par un PLAY aussitôt suivi d'un PAUSE, et c'est l'état au bout du
+         délai qui dit si le son est vraiment parti. */
+      joue = true; radio.classList.remove('r-tap');
+      seul(moi); montre();
+    });
     widget.bind(E.PAUSE, function () { joue = false; montre(); });
     widget.bind(E.FINISH, function () { suivant(true); });
     widget.bind(E.PLAY_PROGRESS, function (e) {
