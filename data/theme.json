@@ -253,7 +253,7 @@
         "size": 2.05,
         "date": 0.65,
         "place": 0.65,
-        "artists": 2.5,
+        "artists": 2.2,
         "details": 0.65,
         "artistGap": 0,
         "datePlaceGap": 9.6,
@@ -261,7 +261,7 @@
         "placeTimeGap": 12,
         "pictureLineupGap": 6.2,
         "artistLeading": 0.75,
-        "lineupInfoGap": 0.6,
+        "lineupInfoGap": 0.5,
         "metaLeading": 0.6,
         "inset": 0.04,
         "tracking": 0.06,
@@ -272,7 +272,8 @@
         "tag tracking": 2,
         "tag outline": 1.9,
         "tag size": 0.8,
-        "tag gap": 2.75
+        "tag gap": 2.75,
+        "qualifier": 0.65
       },
       "nav": {
         "size": 5,
@@ -292,19 +293,19 @@
       },
       "wm": {
         "size": 2.12,
-        "height": 2.5,
-        "width": 2.5,
-        "tracking": 0.2,
-        "distortion": 80,
-        "seed": 24,
-        "frequencyX": 0.044,
-        "wordGap": 0,
-        "frequencyY": 0.002,
-        "perspectiveX": 9,
-        "skewX": 20,
+        "height": 2.01,
+        "width": 2.15,
+        "tracking": 0.06,
+        "distortion": 28,
+        "seed": 8,
+        "frequencyX": 0.002,
+        "wordGap": 0.31,
+        "frequencyY": 0.06,
+        "perspectiveX": -74,
+        "skewX": 12.5,
         "skewY": 30.5,
-        "rotate": 18,
-        "perspectiveY": 53
+        "rotate": 29.5,
+        "perspectiveY": -7
       },
       "space": {
         "head": 0,
@@ -343,7 +344,8 @@
       "info": {
         "wordTracking": 0,
         "tracking": -0.005,
-        "leading": 1
+        "leading": 1,
+        "outline": 0.5
       },
       "turing": {
         "scales": 80
@@ -450,37 +452,37 @@
     "wm": "void"
   },
   "layout": {
-    "wmW": 656,
+    "wmW": 672,
     "wmDx": -216,
-    "wmDy": 35.090909090909136,
-    "boardW": 434.48203939745076,
+    "wmDy": -74,
+    "boardW": 466,
     "boardDx": -308,
     "boardDy": -77,
-    "infoDx": -176.17497103128616,
-    "infoDy": -254.4368482039394,
-    "framePad": 45.663962920046345,
+    "infoDx": -156,
+    "infoDy": -24,
+    "framePad": 16,
     "boardH": 602,
     "frameH": 40,
     "picDx": -296,
     "picDy": 93,
     "picDw": -76.3984375,
     "picDh": 60,
-    "allDx": 263.5499936967775,
-    "allDy": 156.90201967634542,
-    "listenDx": 17,
+    "allDx": 251.21248184594015,
+    "allDy": 153.17611637917906,
+    "listenDx": 0,
     "pageDx": 0,
-    "pageDy": 6,
-    "pageScale": 1,
-    "frameFixW": 681.9879258400927,
+    "pageDy": 30,
+    "pageScale": 0,
+    "frameFixW": 622.66,
     "frameFixH": 772.55,
     "framesFree": 0,
-    "frameFixX": -234.57644476598648,
+    "frameFixX": -204.91248184594014,
     "frameFixY": -124.87611637917907,
     "infoFixX": 18.875,
     "infoFixY": 219.7734375,
     "infoFixW": 583.25,
     "infoFixH": 363.3437194824219,
-    "infoW": 674.9209154113557,
+    "infoW": 607.25,
     "infoScale": 0,
     "infoAnchored": 0
   },
@@ -986,6 +988,27 @@
         "images/487313904-702703462330297-492725036658866476-n-2026-10-09.jpg": "images/frozen/2026-10-20/f4ca386bfd30.jpg",
         "images/rae-2026-10-09.jpg": "images/frozen/2026-10-20/ce2c14b76a3e.jpg",
         "images/capture-d-e-cran-2026-10-09-a-08-26-30-2026-10-09.png": "images/frozen/2026-10-20/b359b52e3340.jpg"
+      }
+    },
+    "2026-11-11": {
+      "look": {
+        "font": "Charter (embarquée)",
+        "tagAlign": "right",
+        "wmAlign": "left",
+        "contourLo": "#13c96b",
+        "contourHi": "#73c9bf",
+        "picTex": "none",
+        "picTexBlend": "multiply",
+        "picTexScale": 8,
+        "picTexInk": null,
+        "picTexGround": null,
+        "namesStrokeCol": "#585c6f",
+        "metaStrokeCol": "#807b93"
+      },
+      "layout": {
+        "boardW": 470,
+        "infoDx": -158,
+        "infoDy": -270
       }
     }
   }
