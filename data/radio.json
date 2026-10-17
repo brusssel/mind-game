@@ -2,12 +2,6 @@
   "shuffle": true,
   "tracks": [
     {
-      "artist": "Myles Dillon",
-      "title": "Stirrings Still",
-      "src": "",
-      "soundcloud": "https://soundcloud.com/mylesdillon/stirringsstill"
-    },
-    {
       "artist": "Accou Laposte",
       "title": "Syllabe",
       "src": "audio/accou-laposte-syllabe.mp3",
