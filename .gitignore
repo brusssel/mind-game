@@ -6,7 +6,10 @@
 !/data/artists.json
 !/data/concerts.json
 !/data/theme.json
+!/data/radio.json
 !/images/
 !/images/**
 !/fonts/
 !/fonts/**
+!/audio/
+!/audio/**
