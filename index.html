@@ -17451,7 +17451,7 @@
       <svg viewBox="0 0 12 8" aria-hidden="true"><path d="M6 0l6 8H0z"/></svg>
     </button>
   </div>
-  <iframe id="radio-son" title="Radio" allow="autoplay"></iframe>
+  <iframe id="radio-son" title="Radio" allow="autoplay; encrypted-media"></iframe>
   <audio id="radio-fichier" preload="none"></audio>
 </div>
 <!-- LA RADIO : sa file, son tirage, et un seul son à la fois sur la page. -->
@@ -17667,7 +17667,18 @@
       try { fichier.pause(); } catch (e) {}
       chargeSC().then(function () {
         if (!window.SC || !window.SC.Widget) return;
-        if (!widget) { widget = window.SC.Widget(son); brancheWidget(); }
+        /* La première fois, le cadre est vide : `load()` de l'API reprend
+           l'adresse du cadre pour construire la nouvelle, et sans elle il
+           chargeait la page elle-même au lieu du lecteur. On l'amorce donc
+           avec l'adresse complète du lecteur ; les suivants passent par `load()`. */
+        if (!widget) {
+          son.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(t.soundcloud) +
+            '&auto_play=' + !!lance + '&show_comments=false&hide_related=true' +
+            '&show_teaser=false&visual=false';
+          widget = window.SC.Widget(son); brancheWidget();
+          if (lance) widget.bind(window.SC.Widget.Events.READY, function () { seul(moi); widget.play(); });
+          return;
+        }
         widget.load(t.soundcloud, {
           auto_play: !!lance, show_comments: false, hide_related: true,
           show_teaser: false, visual: false,
