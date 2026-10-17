@@ -2,6 +2,41 @@
   "concerts": [
     {
       "projects": [
+        "UBLO (release party)",
+        "LIME68K",
+        "FATIGUE SUSPECTE",
+        "& COMPAGNIE",
+        "4649",
+        "Bobé Van Jézu (DJ)"
+      ],
+      "projectUrls": [
+        "https://soundcloud.com/ublocore/sets/sfkt/s-kGcp8GrFJKm?si=4e8325d1c88f4f649f4d64a70313fc30&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing",
+        "https://lime68k.bandcamp.com/",
+        "https://fatiguesuspecte.bandcamp.com/",
+        "https://daddypower.bandcamp.com/album/pocket-watching",
+        "https://soundcloud.com/csocso/4649-klub-szalonych",
+        ""
+      ],
+      "profileNames": [
+        "UBLO",
+        "",
+        "",
+        "",
+        "",
+        "Bobé van Jézu"
+      ],
+      "location": "15 rue de la Campine, Molenbeek",
+      "venueName": "La Campine",
+      "locationUrl": "https://www.openstreetmap.org/directions?to=15+rue+de+la+campine#map=19/50.853854/4.326784",
+      "date": "2026-11-11",
+      "time": "19:30",
+      "fee": "8/10€",
+      "tag": "MIND GAME 002 W/ THIRD TYPE TAPES",
+      "url": "",
+      "image": ""
+    },
+    {
+      "projects": [
         "Lucie Páchová & Maryia Kamarova",
         "Giulia Rae",
         "Eve Julia Gonzalez & Myles Dillon"
