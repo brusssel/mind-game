@@ -17642,8 +17642,10 @@
     var t = file[au] || {};
     bar.nom.firstChild.textContent = t.artist || '';
     bar.nom.lastChild.textContent = t.title ? '— ' + t.title : '';
-    bar.icLire.hidden = joue;
-    bar.icPause.hidden = !joue;
+    /* L'attribut, pas la propriété : `.hidden` n'existe que sur les éléments
+       HTML, et sur un <svg> il ne cachait rien. */
+    bar.icLire.toggleAttribute('hidden', joue);
+    bar.icPause.toggleAttribute('hidden', !joue);
     bar.play.setAttribute('aria-label', joue ? 'Pause' : 'Lire');
     bar.hasard.classList.toggle('on', melange);
     bar.hasard.setAttribute('aria-pressed', String(melange));
