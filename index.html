@@ -17733,11 +17733,24 @@
     if (widget) { try { widget.pause(); } catch (e) {} }
     montre();
   }
+  /* COMME UNE RADIO QU'ON ALLUME : le tout premier morceau, celui que la
+     page a tiré, part d'un moment pris au hasard — dans ses sept premiers
+     dixièmes, pour qu'il en reste à entendre. Les suivants, et un morceau
+     choisi dans la liste, partent du début. */
+  var premier = true;
+  function auHasard() {
+    var d = fichier.duration;
+    if (isFinite(d) && d > 0) fichier.currentTime = Math.random() * d * 0.7;
+    else fichier.addEventListener('loadedmetadata', auHasard, { once: true });
+  }
   function demarre() {
     if (au < 0) { va(melange ? tire(-1) : 0, true); return; }
     seul(moi);
     var t = file[au];
-    if (t.src) { fichier.play().catch(function () {}); }
+    if (t.src) {
+      if (premier) { premier = false; auHasard(); }
+      fichier.play().catch(function () {});
+    }
     else if (widget) { try { widget.play(); } catch (e) {} guetteDepart(); }
   }
   /* Si le son n'est pas parti peu après la demande, c'est que le navigateur
@@ -17754,6 +17767,7 @@
     if (!file.length) return;
     au = ((i % file.length) + file.length) % file.length;
     retiens(au);
+    if (lance) premier = false;
     var t = file[au];
     bar.avance.style.width = '0';
     if (bar.temps) bar.temps.textContent = '';
@@ -17865,6 +17879,16 @@
 
   dresseListe();
   va(melange ? tire(-1) : 0, false);
+  /* Une page rendue telle quelle par le navigateur — retour arrière, onglet
+     repris sur le téléphone — ne repasse pas par ici : sans ce rattrapage
+     elle garderait le morceau tiré la première fois. Si rien ne joue, on
+     retire — un autre que celui qui était affiché —, et le prochain départ
+     se refait au hasard. */
+  window.addEventListener('pageshow', function (e) {
+    if (!e.persisted || joue) return;
+    premier = true;
+    va(melange ? tire(au) : 0, false);
+  });
   balaie();
   guette();
 })();
