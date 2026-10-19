@@ -273,7 +273,28 @@
   #radio .r-now { flex: 0 1 auto; min-width: 0; margin: 0; white-space: nowrap;
                   overflow: hidden; text-overflow: ellipsis; }
   #radio .r-now b { font-weight: 700; }
-  #radio .r-now span { opacity: 0.62; }
+  #radio .r-now i { font-style: normal; opacity: 0.62; }
+  /* Trop long pour la place : le nom défile, en boucle. Deux copies à la
+     suite et la marche fait exactement une copie, comme le bandeau — la
+     seconde est là où était la première quand l'animation repart. Pas de
+     points de suspension pendant ce temps : ils avaleraient le bloc entier. */
+  #radio .r-now.defile { text-overflow: clip; }
+  /* `!important` : la seule exception à la règle qui arrête tout sur le
+     téléphone — un nom coupé ne se lit pas autrement. */
+  #radio .r-now.defile .r-run {
+    display: inline-block; will-change: transform;
+    animation: r-defile var(--r-defile-secs, 12s) linear infinite !important;
+  }
+  #radio .r-now.defile .r-txt { padding-right: 3em; }
+  @keyframes r-defile {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #radio .r-now.defile { text-overflow: ellipsis; }
+    #radio .r-now.defile .r-run { animation: none !important; }
+    #radio .r-now.defile .r-txt + .r-txt { display: none; }
+  }
   #radio .r-line { flex: 1 1 auto; min-width: 40px; height: 1px;
                    background: currentColor; opacity: 0.3; position: relative; }
   #radio .r-line i { position: absolute; left: 0; top: 0; bottom: 0; width: 0;
@@ -17466,7 +17487,7 @@
       <svg class="r-ic-play" viewBox="0 0 10 12" aria-hidden="true"><path d="M0 0l10 6-10 6z"/></svg>
       <svg class="r-ic-pause" viewBox="0 0 10 12" aria-hidden="true" hidden><path d="M0 0h3.5v12H0zM6.5 0H10v12H6.5z"/></svg>
     </button>
-    <p class="r-now"><b></b> <span></span></p>
+    <p class="r-now"><span class="r-run"><span class="r-txt"><b></b> <i></i></span></span></p>
     <div class="r-line"><i></i></div>
     <p class="r-time"></p>
     <div class="r-skip">
@@ -17640,8 +17661,13 @@
   }
   function montre() {
     var t = file[au] || {};
-    bar.nom.firstChild.textContent = t.artist || '';
-    bar.nom.lastChild.textContent = t.title ? '— ' + t.title : '';
+    var txt = bar.nom.querySelector('.r-txt');
+    var b = t.artist || '', i = t.title ? '— ' + t.title : '';
+    if (txt.firstChild.textContent !== b || txt.lastChild.textContent !== i) {
+      txt.firstChild.textContent = b;
+      txt.lastChild.textContent = i;
+      defile();
+    }
     /* L'attribut, pas la propriété : `.hidden` n'existe que sur les éléments
        HTML, et sur un <svg> il ne cachait rien. */
     bar.icLire.toggleAttribute('hidden', joue);
@@ -17652,6 +17678,29 @@
     var li = bar.liste.children;
     for (var i = 0; i < li.length; i++) li[i].classList.toggle('on', i === au);
   }
+  /* Le nom défile s'il ne tient pas dans sa place, et seulement alors. On
+     mesure sans la copie ; la vitesse est la même quel que soit le nom. */
+  function defile() {
+    var run = bar.nom.querySelector('.r-run');
+    var copies = run.querySelectorAll('.r-txt');
+    for (var k = 1; k < copies.length; k++) run.removeChild(copies[k]);
+    bar.nom.classList.remove('defile');
+    if (bar.nom.scrollWidth <= bar.nom.clientWidth + 1) return;
+    var double = copies[0].cloneNode(true);
+    double.setAttribute('aria-hidden', 'true');
+    run.appendChild(double);
+    bar.nom.classList.add('defile');
+    var pas = copies[0].offsetWidth;
+    run.style.setProperty('--r-defile-secs', Math.max(6, pas / 30).toFixed(1) + 's');
+  }
+  var refait = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(refait);
+    refait = setTimeout(defile, 150);
+  });
+  /* La police arrivée change la largeur du nom. */
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(defile);
+
   function dresseListe() {
     bar.liste.textContent = '';
     file.forEach(function (t, i) {
