@@ -36,6 +36,18 @@
       "title": "La onzième lettre",
       "src": "audio/amedee-de-murcia-la-onzieme-lettre.mp3",
       "soundcloud": ""
+    },
+    {
+      "artist": "Manoir Molle",
+      "title": "Crépi",
+      "src": "audio/manoir-molle-crepi.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Manoir Molle",
+      "title": "Wagon",
+      "src": "audio/manoir-molle-wagon.mp3",
+      "soundcloud": ""
     }
   ]
 }
