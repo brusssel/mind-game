@@ -497,7 +497,7 @@
     "infoScale": 0,
     "infoAnchored": 0
   },
-  "archive": false,
+  "archive": true,
   "dates": {
     "2026-11-28": {
       "layout": {
