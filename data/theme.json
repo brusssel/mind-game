@@ -514,12 +514,13 @@
     },
     "2026-10-20": {
       "look": {
+        "hueDir": "to top",
         "font": "Geneva",
         "bodyFont": "Charter",
         "tex": "grid",
         "text": "moire",
         "hover": "weave",
-        "hoverInk": "#237661",
+        "hoverInk": "#7d9790",
         "hoverAltInk": "#ad94a4",
         "textInk": "#9b9fa1",
         "contour": "normal",
@@ -774,7 +775,16 @@
             "tag tracking": 2,
             "tag outline": 1.9,
             "tag size": 0.8,
-            "tag gap": 2.75
+            "tag gap": 2.75,
+            "qualifier": 0.85,
+            "name:fatigue suspecte": 1,
+            "tag cell size": 7,
+            "name:refus d'obtemperer": 0.95,
+            "name:& compagnie": 0.9,
+            "name:bobe van jezu": 0.95,
+            "name:ublo": 1,
+            "name:lime68k": 1,
+            "name:4649": 0.95
           },
           "nav": {
             "size": 5,
@@ -845,7 +855,8 @@
           "info": {
             "wordTracking": 0,
             "tracking": -0.005,
-            "leading": 1
+            "leading": 1,
+            "outline": 0.5
           },
           "turing": {
             "scales": 80
@@ -900,6 +911,9 @@
           },
           "smoothlife": {
             "outer radius": 9
+          },
+          "hue": {
+            "fill": 50
           }
         },
         "edge": {
