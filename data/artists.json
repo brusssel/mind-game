@@ -235,51 +235,112 @@
     },
     {
       "name": "UBLO",
-      "bio": "",
-      "image": "",
-      "embed": "",
+      "bio": "To celebrate the release of Ublo’s tape “Split Replica” on ThirdTypeTapes in November '26, \nthe label organizes a mini-tour with stops in Paris, Nancy and Brussels.\nUBLO is the electronic solo of Gabriel Valtchev. He detaches himself from aesthetic restrictions to immerse himself in the accidental, the sensory and confusion, whether physical or emotional.\nHe is also drumming in bands R999D, Otto and Vava Maudit.",
+      "image": "images/ublo-2026-10-24.jpg",
+      "embed": "https://soundcloud.com/ublo/sets/live-bazart",
       "aka": [],
-      "links": []
+      "links": [
+        {
+          "label": "UBLO.SITE",
+          "url": "www.ublo.site"
+        }
+      ]
     },
     {
       "name": "LIME68K",
-      "bio": "",
-      "image": "",
-      "embed": "",
+      "bio": "Prolific and playing with blurred boundaries, LIME68K creates improvised music on stage that is at once demanding, \ndanceable, and breathtaking, using live coding and various instruments and tools she has developed. \nHer soundscape never stops and is constantly evolving. \nRecognized by the legendary British electronic duo Autechre, for whom she opened in Rennes in 2024, \nshe has released various projects on fals.ch, Active Listeners Club, EVEL, and Miniature Recs...",
+      "image": "images/lime68k-2026-10-24.jpeg",
+      "embed": "album=4114842524",
       "aka": [],
-      "links": []
+      "links": [
+        {
+          "label": "L68K.COM",
+          "url": "https://l68k.com/"
+        },
+        {
+          "label": "Bandcamp",
+          "url": "https://lime68k.bandcamp.com/"
+        }
+      ]
     },
     {
       "name": "FATIGUE SUSPECTE",
-      "bio": "",
-      "image": "",
-      "embed": "",
+      "bio": "FATIGUE SUSPECTE is a noise techno sound and music experimentation project founded in 2018 by Luc Le Manchot and Suliane Hamon. \nTheir music is largely based on sampling and field recording. \nThey explore various techniques for deconstructing samples, such as granular synthesis and extreme bitcrushing.\nThe rhythmic aspect is characterized by a blend of analog and digital sounds. \nThe resulting sound allows for the development of patterns in which the improvisation of sequences leads to a strange, lopsided groove. \nThe composition of Fatigue Suspecte’s tracks and live performances blends cinematic storytelling with techno progression. \nThe atmosphere created draws heavily on horror films as well as elements from folklore.\nThe harmonic aspect draws on traditional music, while the rhythms deviate from the four-beat structure of techno through the layering of polyrhythms and irregular rhythms.",
+      "image": "images/fatigue-sus-2026-10-24.jpg",
+      "embed": "album=3563812446",
       "aka": [],
-      "links": []
+      "links": [
+        {
+          "label": "Bandcamp",
+          "url": "https://fatiguesuspecte.bandcamp.com/"
+        }
+      ]
     },
     {
       "name": "& COMPAGNIE",
-      "bio": "",
-      "image": "",
-      "embed": "",
+      "bio": "& COMPAGNIE is the solo project by one half of 2Mo.\nThe music of \"& Compagnie\" is crafted using homemade tools built with SuperCollider.\nSituated somewhere between live coding and non-visual performance, \"& Compagnie\" delivers its twisted interpretation of rather abrupt music that lies somewhere between distorted breakcore and repetitive, hypnotic, ever-evolving rhythms.",
+      "image": "images/terrifi-2026-10-24.jpg",
+      "embed": "album=586943298",
       "aka": [],
-      "links": []
+      "links": [
+        {
+          "label": "THIRDTYPETAPES",
+          "url": "https://www.thirdtypetapes.com/cassettes/view/37/TTT35/2Mo/Antipattern"
+        },
+        {
+          "label": "2MO",
+          "url": "https://2-mo.bandcamp.com/"
+        }
+      ]
     },
     {
       "name": "4649",
-      "bio": "",
-      "image": "",
-      "embed": "",
+      "bio": "4649 (\"YOROSHIKU\") is the electronic duo of Csocsó and Doresale, where textual improvisation and the disarticulation of textures and rhythms form quasi-songs that celebrate their build-up failures.",
+      "image": "images/jdm-tsurikawa-number-plates-4649-2-f6ff787f-3001-41e4-b627-ce0262b82dae-2026-10-24.webp",
+      "embed": "https://soundcloud.com/csocso/4649-klub-szalonych/",
       "aka": [],
-      "links": []
+      "links": [
+        {
+          "label": "CSOCSÓ",
+          "url": "https://csocso.bandcamp.com/"
+        },
+        {
+          "label": "DORESALE",
+          "url": "https://doresale.bandcamp.com/"
+        }
+      ]
     },
     {
       "name": "Bobé Van Jézu",
-      "bio": "",
-      "image": "",
+      "bio": "BOBÉ VAN JÉZU is part of the THIRDTYPETAPES label and host of the monthly TTTINTAMARE radio show.\nHis mixes ground in illbient and deconstructed rhythmic oddities, hazes of floating presences and ghost-like patterns.",
+      "image": "images/bobe-2026-10-24.jpg",
+      "embed": "https://soundcloud.com/bobevanjezu2/bobe-van-jezu-tttintamarre-19",
+      "aka": [],
+      "links": [
+        {
+          "label": "SOUNDLOUD",
+          "url": "https://soundcloud.com/bobevanjezu2"
+        },
+        {
+          "label": "THIRDTYPETAPES",
+          "url": "https://www.thirdtypetapes.com/"
+        }
+      ],
+      "nameScale": 2.6
+    },
+    {
+      "name": "REFUS D'OBTEMPÉRER",
+      "bio": "REFUS D'OBTEMPÉRER is a live project that seeks to play with the conventions of dancehall, \nrap, and noise to manipulate vocal samples and make small, modified electronic machines scream. \nBeyond the deep bass, swaying snare drums, and distorted kicks, \nthe project is about championing the accessibility and diversity of urban and underground countercultures through an anti-establishment attitude.",
+      "image": "images/refusdob-2026-10-24.jpeg",
       "embed": "",
       "aka": [],
-      "links": []
+      "links": [
+        {
+          "label": "INSTAGRAM",
+          "url": "https://www.instagram.com/edouard_sufrin/"
+        }
+      ],
+      "nameScale": 3
     }
   ]
 }

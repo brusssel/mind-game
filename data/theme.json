@@ -17,12 +17,12 @@
     "tex": "grid",
     "text": "moire",
     "hover": "weave",
-    "hoverInk": "#237661",
-    "hoverAltInk": "#ad94a4",
-    "textInk": "#9b9fa1",
+    "hoverInk": "#60c95e",
+    "hoverAltInk": "#3c2b25",
+    "textInk": "#9f8a7a",
     "contour": "normal",
     "bg": "physarum",
-    "frame": "smoothlife",
+    "frame": "none",
     "scale": "epx",
     "motion": "still",
     "tiling": "none",
@@ -159,8 +159,8 @@
     "wmCell": "moire",
     "wmCellInk": "#252522",
     "wmCellGround": "#5d6560",
-    "contourLo": "#762347",
-    "contourHi": "#781274",
+    "contourLo": "#b1cdc1",
+    "contourHi": "#869b7d",
     "navInk": "#8b8593",
     "viewportFrames": [
       {
@@ -250,10 +250,10 @@
         "states": 12
       },
       "text": {
-        "size": 2.05,
+        "size": 1.9,
         "date": 0.65,
         "place": 0.65,
-        "artists": 2.2,
+        "artists": 2.6,
         "details": 0.65,
         "artistGap": 0,
         "datePlaceGap": 9.6,
@@ -261,7 +261,7 @@
         "placeTimeGap": 12,
         "pictureLineupGap": 6.2,
         "artistLeading": 0.75,
-        "lineupInfoGap": 0.5,
+        "lineupInfoGap": 0.2,
         "metaLeading": 0.6,
         "inset": 0.04,
         "tracking": 0.06,
@@ -270,10 +270,11 @@
         "names outline": 2,
         "names cell size": 400,
         "tag tracking": 2,
-        "tag outline": 1.9,
+        "tag outline": 2.7,
         "tag size": 0.8,
-        "tag gap": 2.75,
-        "qualifier": 0.65
+        "tag gap": 1.15,
+        "qualifier": 0.85,
+        "tag cell size": 7
       },
       "nav": {
         "size": 5,
@@ -293,19 +294,19 @@
       },
       "wm": {
         "size": 2.12,
-        "height": 2.01,
-        "width": 2.15,
-        "tracking": 0.06,
-        "distortion": 28,
-        "seed": 8,
-        "frequencyX": 0.002,
-        "wordGap": 0.31,
-        "frequencyY": 0.06,
-        "perspectiveX": -74,
-        "skewX": 12.5,
+        "height": 2.5,
+        "width": 0.66,
+        "tracking": 0.8,
+        "distortion": 80,
+        "seed": 24,
+        "frequencyX": 0.044,
+        "wordGap": 2,
+        "frequencyY": 0.002,
+        "perspectiveX": 9,
+        "skewX": 7,
         "skewY": 30.5,
-        "rotate": 29.5,
-        "perspectiveY": -7
+        "rotate": 18,
+        "perspectiveY": 53
       },
       "space": {
         "head": 0,
@@ -400,6 +401,9 @@
       },
       "smoothlife": {
         "outer radius": 9
+      },
+      "hue": {
+        "fill": 50
       }
     },
     "edge": {
@@ -407,18 +411,18 @@
         "r": 0,
         "w": 1,
         "s": "none",
-        "c": "#5a6d60"
+        "c": "#48564c"
       },
       "board": {
-        "w": 41,
-        "s": "none",
-        "c": "#0d0826",
-        "r": 260
+        "w": 1,
+        "s": "inset",
+        "c": "#1d2520",
+        "r": 270
       },
       "frame": {
         "w": 1,
         "s": "dashed",
-        "c": "#5b536a",
+        "c": "#7ec986",
         "r": 6
       },
       "listen": {
@@ -444,12 +448,12 @@
     "bgHi": "#262626",
     "boardLo": "#3a3947",
     "boardHi": "#000000",
-    "frameLo": "#25222a",
-    "frameHi": "#000000",
+    "frameLo": "#2e3438",
+    "frameHi": "#040605",
     "cellInk": "#ffffff",
     "cellGround": "#0b0710",
     "board": "none",
-    "wm": "void"
+    "wm": "cell"
   },
   "layout": {
     "wmW": 672,
@@ -992,24 +996,29 @@
     },
     "2026-11-11": {
       "look": {
-        "font": "Charter (embarquée)",
         "tagAlign": "right",
-        "wmAlign": "left",
-        "contourLo": "#13c96b",
-        "contourHi": "#73c9bf",
+        "tagText": "grey-75",
+        "tagInk": "#be8989",
+        "tagStrokeCol": "#911232",
+        "tagCell": "horizontal",
+        "namesCell": "wave",
+        "namesCellGroundCol": "#bebdd6",
+        "namesStrokePlace": "out",
         "picTex": "none",
         "picTexBlend": "multiply",
         "picTexScale": 8,
         "picTexInk": null,
         "picTexGround": null,
-        "namesStrokeCol": "#585c6f",
-        "metaStrokeCol": "#807b93"
+        "namesStrokeCol": "#367f06",
+        "metaStrokeCol": "#d54d69"
       },
       "layout": {
+        "wmDy": 234,
         "boardW": 470,
-        "infoDx": -158,
-        "infoDy": -270
-      }
+        "infoDx": -152,
+        "infoDy": -362
+      },
+      "public": true
     }
   }
 }
