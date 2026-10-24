@@ -6270,13 +6270,24 @@
     var toolbar = 62 + Math.max(0, parseFloat(getComputedStyle(document.body)
       .getPropertyValue('padding-bottom')) || 0);
     var availW = Math.max(160, viewportW - safe.left - safe.right - 16);
-    var availH = Math.max(220, viewportH - appTopInset - safe.top - safe.bottom - toolbar - 16);
+    /* LA BARRE DE LA RADIO TIENT LE HAUT DE L'ÉCRAN, et l'affiche se compose
+       dessous. Posée en `fixed`, elle ne pousse rien : la colonne lui réserve
+       sa hauteur par un air en haut, mais la scène, fixée elle aussi, passait
+       DERRIÈRE — l'étiquette du haut de l'affiche était rognée de cinquante
+       pixels. Mesurée plutôt que supposée : la barre ne se montre pas quand la
+       file est vide, et alors elle ne réserve rien. */
+    var rb = document.getElementById('radio');
+    var rbr = rb ? rb.getBoundingClientRect() : null;
+    var radioTop = (rbr && rbr.height && rbr.top <= 1) ? rbr.height : 0;
+    var availH = Math.max(220, viewportH - appTopInset - safe.top - safe.bottom
+                               - radioTop - toolbar - 16);
     var nextK = Math.min(1, availW / Math.max(1, target.w),
       availH / Math.max(1, target.h)) * appZoom;
     var changed = Math.abs(nextK - stageK) > 0.0005;
     stageK = nextK;
     s.setProperty('--stage-k', stageK);
-    s.setProperty('--stage-top', (appTopInset + safe.top + 8 + availH / 2).toFixed(2) + 'px');
+    s.setProperty('--stage-top',
+      (appTopInset + safe.top + radioTop + 8 + availH / 2).toFixed(2) + 'px');
     s.setProperty('--stage-shift', '0px');
     s.setProperty('--stage-focus-x', (STAGE_W / 2 - (target.x + target.w / 2)).toFixed(2) + 'px');
     s.setProperty('--stage-focus-y', (STAGE_H / 2 - (target.y + target.h / 2)).toFixed(2) + 'px');
@@ -17370,11 +17381,29 @@
       (pages[page] || document).querySelector('li:not(.poster-row)');
     if (card && card.offsetWidth && card.offsetHeight) {
       var o0 = offsetIn(card);
+      var ax0 = o0[0], ay0 = o0[1];
+      var ax1 = ax0 + card.offsetWidth, ay1 = ay0 + card.offsetHeight;
+      /* ET CE QUI DÉPASSE DU CADRE. La boîte du titre dit où le site encadre
+         l'affiche, pas jusqu'où elle est peinte : depuis que le haut de la
+         bande du wordmark est rendu au plateau, l'étiquette (« MIND GAME 002
+         w/ THIRD TYPE TAPES ») peut être posée AU-DESSUS de ce cadre. Cadrée
+         sur la boîte seule, la caméra du téléphone la laissait hors champ, où
+         la barre de la radio la recouvrait — « l'affiche est rognée par le
+         lecteur ». L'union des deux boîtes cadre ce qui est vraiment là ;
+         tant que le plateau tient dans le cadre, elle ne change rien. */
+      var ink = (pages[page] || document).querySelector('li:not(.poster-row)');
+      if (ink && ink.offsetWidth && ink.offsetHeight) {
+        var oi = offsetIn(ink);
+        if (oi[0] < ax0) ax0 = oi[0];
+        if (oi[1] < ay0) ay0 = oi[1];
+        if (oi[0] + ink.offsetWidth > ax1) ax1 = oi[0] + ink.offsetWidth;
+        if (oi[1] + ink.offsetHeight > ay1) ay1 = oi[1] + ink.offsetHeight;
+      }
       /* Quelques unités, pour que les pointillés du cadre ne soient pas eux-
          mêmes sur la coupe. */
       var pad = 6;
-      x = o0[0] - pad; y = o0[1] - pad;
-      w = card.offsetWidth + pad * 2; h = card.offsetHeight + pad * 2;
+      x = ax0 - pad; y = ay0 - pad;
+      w = (ax1 - ax0) + pad * 2; h = (ay1 - ay0) + pad * 2;
       var room0 = host.clientWidth || document.documentElement.clientWidth;
       var k0 = room0 / w;
       var st0 = document.documentElement.style;
@@ -17392,9 +17421,35 @@
     if (card && card.offsetWidth && card.offsetHeight) {
       var o = offsetIn(card);
       x = o[0]; y = o[1]; w = card.offsetWidth; h = card.offsetHeight;
+      /* ET CE QUI DÉPASSE DU CADRE — c'est ici que la caméra est réglée pour
+         de bon, l'autre passe ne faisant que la préparer. La boîte du titre
+         dit où le site ENCADRE l'affiche, pas jusqu'où elle est peinte :
+         depuis que le haut de la bande du wordmark est rendu au plateau,
+         l'étiquette peut être posée au-dessus de ce cadre. Cadrée sur la boîte
+         seule, elle tombait hors champ, où la barre de la radio la recouvrait
+         — mesuré sur le site : étiquette à 20–64 px, barre à 0–53. L'union
+         des deux boîtes cadre ce qui est là ; tant que le plateau tient dans
+         le cadre, elle ne change rien. */
+      var ink = (pages[page] || document).querySelector('li:not(.poster-row)');
+      if (ink && ink.offsetWidth && ink.offsetHeight) {
+        var oi = offsetIn(ink);
+        var ux0 = Math.min(x, oi[0]), uy0 = Math.min(y, oi[1]);
+        var ux1 = Math.max(x + w, oi[0] + ink.offsetWidth);
+        var uy1 = Math.max(y + h, oi[1] + ink.offsetHeight);
+        x = ux0; y = uy0; w = ux1 - ux0; h = uy1 - uy0;
+      }
     } else {
+      /* Le plateau ENTIER, et son étiquette. La liste nommait le titre, la
+         ligne d'infos et l'image — mais ni la case qui les porte (absolue,
+         donc la liste ne la mesure pas) ni l'étiquette de la série. Tant que
+         celle-ci vivait sous le titre, cela ne se voyait pas ; posée au-dessus
+         depuis que le haut du cadre est rendu au plateau, elle tombait hors du
+         champ cadré — et sur le téléphone, c'est la barre de la radio qui
+         occupe cette place : « l'affiche est rognée par le lecteur ».
+         Mesuré avant : étiquette à 20–64 px, barre à 0–53. */
       var parts = (pages[page] || document).querySelectorAll(
-        '.concerts, .concert-title, .concert-meta, .poster');
+        '.concerts, li:not(.poster-row), .concert-title, .concert-meta,' +
+        ' .concert-tag, .poster');
       var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, i;
       for (i = 0; i < parts.length; i++) {
         if (!parts[i].offsetWidth && !parts[i].offsetHeight) continue;
