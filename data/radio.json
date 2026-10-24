@@ -2,10 +2,112 @@
   "shuffle": true,
   "tracks": [
     {
+      "artist": "Accou Laposte",
+      "title": "Syllabe",
+      "src": "audio/accou-laposte-syllabe.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Wouter Jaspers",
+      "title": "Respirar en Hertz ft. Horacio Franco (excerpt)",
+      "src": "audio/wouter-jaspers-respirar-en-hertz.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "GG ALIEN",
+      "title": "XC 81",
+      "src": "audio/gg-alien-xc-81.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Illat",
+      "title": "A04",
+      "src": "audio/illat-a04.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Amédée De Murcia",
+      "title": "Stranger 3-1",
+      "src": "audio/amedee-de-murcia-stranger-3-1.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Fritz & De Murcia",
+      "title": "La onzième lettre",
+      "src": "audio/amedee-de-murcia-la-onzieme-lettre.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Manoir Molle",
+      "title": "Crépi",
+      "src": "audio/manoir-molle-crepi.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Manoir Molle",
+      "title": "Wagon",
+      "src": "audio/manoir-molle-wagon.mp3",
+      "soundcloud": ""
+    },
+    {
       "artist": "Myles Dillon",
       "title": "Stirrings Still",
-      "src": "",
-      "soundcloud": "https://soundcloud.com/mylesdillon/stirringsstill"
+      "src": "audio/myles-dillon-stirrings-still.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Giulia Rae",
+      "title": "Silica Pond",
+      "src": "audio/giulia-rae-silica-pond.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "m-O-m",
+      "title": "Midnight Plazza",
+      "src": "audio/m-o-m-midnight-plazza.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Germ Lattice",
+      "title": "Liquid Asset",
+      "src": "audio/germ-lattice-liquid-asset.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Thelma Cappello",
+      "title": "City Piece",
+      "src": "audio/thelma-cappello-city-piece.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Thelma Cappello",
+      "title": "Ladder",
+      "src": "audio/thelma-cappello-ladder.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Chovirene K",
+      "title": "Crush Crusher",
+      "src": "audio/chovirene-k-crush-crusher.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Deliluh",
+      "title": "Cash Will Follow",
+      "src": "audio/deliluh-cash-will-follow.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Itchy Spots",
+      "title": "Bass Thing",
+      "src": "audio/itchy-spots-bass-thing.mp3",
+      "soundcloud": ""
+    },
+    {
+      "artist": "Lès Modernos",
+      "title": "Mon amour n'est pas aisé",
+      "src": "audio/les-modernos-mon-amour-nest-pas-aise.mp3",
+      "soundcloud": ""
     }
   ]
 }
