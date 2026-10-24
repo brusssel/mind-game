@@ -2017,10 +2017,18 @@
   .profile-bio:empty { display: none; }
   /* In the header now: a row of small addresses beside the name, sized to the
      bar rather than to the page. */
-  .concert-title .proj {
+  /* Et seulement là où un filet est effectivement tracé. Posée sans condition,
+     cette ligne rendait le trait aux deux placements qui s'en passent — le
+     contour EXTÉRIEUR, fait de quatre ombres portées, et celui taillé dans une
+     cellule, qui passe par un filtre : tous deux mettent le trait à zéro sur
+     le bloc, et le remettre sur chaque nom dessinait un second contour par-
+     dessus le premier. C'est le défaut qu'on a vu apparaître « en entier
+     autour des lettres ». Les deux placements qui tracent vraiment un filet
+     sont nommés ici, et eux seuls. */
+  html[data-names-cell="off"][data-names-outline="mid"] .concert-title .proj {
     -webkit-text-stroke-width: calc(var(--names-outline, 0px) * var(--name-scale, 1));
   }
-  html[data-names-outline="in"] .concert-title .proj {
+  html[data-names-cell="off"][data-names-outline="in"] .concert-title .proj {
     -webkit-text-stroke-width: calc(var(--names-outline, 0px) * var(--name-scale, 1) * 2);
   }
 
