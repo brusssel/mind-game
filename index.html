@@ -6079,10 +6079,17 @@
      window. Read from the page rather than assumed, and only as an allowance:
      before the row has been built there is nothing to read and the stage takes
      its own height, which is what it did before any of this. */
+  /* Ce qui pend SOUS le dessin, dans ses propres unités : la rangée de dates,
+     la ligne du haut, la voie des signes — et la bande défilante du pied, qui
+     manquait. Elle se pose au-dessus des dates en partant du bas de la
+     fenêtre, donc elle occupe cette place-là comme les autres ; non comptée,
+     la scène descendait sous elle et la bande était peinte EN TRAVERS du
+     cadre et du panneau (mesuré à 1400×760 : bande à 645–663, cadre jusqu'à
+     663, les dernières lignes du plateau dessous). */
   function belowStage() {
     var cs = getComputedStyle(document.documentElement);
     var n = function (v) { return parseFloat(cs.getPropertyValue(v)) || 0; };
-    return n('--dates-h') + n('--topline-h') + n('--crest-mid-h');
+    return n('--dates-h') + n('--topline-h') + n('--crest-mid-h') + n('--ticker-h');
   }
   function fitStage() {
     var w = document.documentElement.clientWidth || STAGE_W;
@@ -6166,7 +6173,19 @@
        which reads as touched rather than as clear. */
     var footRef = band('bottom') + (band('bottom') ? 12 : 0);
     var needW = STAGE_W + band('left') + band('right');
-    var needH = STAGE_H + below + band('top') + footRef;
+    /* DEUX FOIS CE QUI PEND, parce que la scène est CENTRÉE dans la place et
+       que le mobilier, lui, se pose depuis le bas. Réserver sa hauteur une
+       seule fois ouvre la moitié de cette place AU-DESSUS, où personne n'en a
+       besoin, et le bas continue de manquer d'autant : c'est l'arithmétique du
+       centrage, pas un décor. En demandant le double, le pied de la scène
+       arrive exactement au-dessus de ce qui pend — posé : hauteur de la scène
+       `900k`, centrée dans `h`, son pied tombe à `(h + 900k)/2`, qu'on veut
+       sous `h - Fk` ; d'où `k ≤ h / (900 + 2F)`.
+
+       Sur une fenêtre qui a de la place le facteur est inerte : l'échelle est
+       plafonnée à 1 des deux façons, et la page est dessinée au pixel comme
+       avant. */
+    var needH = STAGE_H + 2 * (below + footRef) + band('top');
     stageK = Math.min(1, w / needW, h / needH) * appZoom * pageScale();
     stageFoot = footRef * stageK;
     var s = document.documentElement.style;
