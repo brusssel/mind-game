@@ -2025,6 +2025,19 @@
      dessus le premier. C'est le défaut qu'on a vu apparaître « en entier
      autour des lettres ». Les deux placements qui tracent vraiment un filet
      sont nommés ici, et eux seuls. */
+  /* QUAND LES NOMS ONT CHACUN LEUR TAILLE, le contour en cellule passe du
+     bloc à chaque nom. Posé sur le plateau entier, le filtre dilate d'une même
+     quantité, en pixels : un nom réduit se retrouve proportionnellement plus
+     cerné que son voisin. Donné à chaque nom avec un rayon mis à son échelle
+     (`--name-contour`, voir `scaleNameContours`), il garde la même épaisseur
+     apparente partout. Les signes « + » gardent le filtre du plateau, qui est
+     à l'échelle 1 comme eux. */
+  html[data-names-cell="on"][data-names-scaled="on"] .concert-title { filter: none; }
+  html[data-names-cell="on"][data-names-scaled="on"] .concert-title .proj,
+  html[data-names-cell="on"][data-names-scaled="on"] .concert-title .sep {
+    filter: var(--name-contour, url(#names-contour));
+  }
+
   html[data-names-cell="off"][data-names-outline="mid"] .concert-title .proj {
     -webkit-text-stroke-width: calc(var(--names-outline, 0px) * var(--name-scale, 1));
   }
@@ -6888,6 +6901,58 @@
     if (!name || name === 'none') return '';
     return ((window.MG && MG.patterns) || {})[name] ? name : '';
   }
+  /* UN FILTRE PAR TAILLE PRÉSENTE SUR L'AFFICHE. Le contour en cellule est un
+     filtre SVG : son rayon est donné en pixels et vaut pour tout ce qu'il
+     touche. Les noms ayant chacun leur taille, le même rayon les cerne
+     inégalement — mesuré sur le plateau du 11 novembre : trois échelles
+     (0,9 · 0,95 · 1) pour un seul rayon. On clone donc le filtre réglé, une
+     fois par échelle, en multipliant ses deux rayons par elle, et chaque nom
+     reçoit le sien. Les clones portent l'échelle dans leur identité, si bien
+     qu'un réglage qui ne change rien ne reconstruit rien. */
+  function scaleNameContours() {
+    var root = document.documentElement;
+    var base = document.getElementById('names-contour');
+    var noms = document.querySelectorAll('.concert-title .proj');
+    var echelles = {}, n, i;
+    for (i = 0; i < noms.length; i++) {
+      var sc = parseFloat(noms[i].style.getPropertyValue('--name-scale'));
+      if (isFinite(sc) && sc > 0 && Math.abs(sc - 1) > 0.001) echelles[sc.toFixed(3)] = sc;
+    }
+    var aucune = true;
+    for (n in echelles) { aucune = false; break; }
+    if (!base || aucune || root.getAttribute('data-names-cell') !== 'on') {
+      root.setAttribute('data-names-scaled', 'off');
+      for (i = 0; i < noms.length; i++) noms[i].style.removeProperty('--name-contour');
+      return;
+    }
+    var grown = base.querySelector('[data-grown]');
+    var shrunk = base.querySelector('[data-shrunk]');
+    var rg = parseFloat(grown && grown.getAttribute('radius')) || 0;
+    var rs = parseFloat(shrunk && shrunk.getAttribute('radius')) || 0;
+    var host = base.parentNode;
+    for (n in echelles) {
+      var id = 'names-contour-s' + Math.round(echelles[n] * 1000);
+      var vieux = document.getElementById(id);
+      if (vieux) vieux.parentNode.removeChild(vieux);
+      var copie = base.cloneNode(true);
+      copie.setAttribute('id', id);
+      copie.querySelector('[data-grown]').setAttribute('radius',
+        (rg * echelles[n]).toFixed(3));
+      copie.querySelector('[data-shrunk]').setAttribute('radius',
+        (rs * echelles[n]).toFixed(3));
+      host.appendChild(copie);
+    }
+    root.setAttribute('data-names-scaled', 'on');
+    for (i = 0; i < noms.length; i++) {
+      var s2 = parseFloat(noms[i].style.getPropertyValue('--name-scale'));
+      if (isFinite(s2) && s2 > 0 && Math.abs(s2 - 1) > 0.001) {
+        noms[i].style.setProperty('--name-contour',
+          'url(#names-contour-s' + Math.round(s2 * 1000) + ')');
+      } else {
+        noms[i].style.removeProperty('--name-contour');
+      }
+    }
+  }
   function applyContour(spec) {
     var root = document.documentElement;
     var width = textParam(spec.width, 0);
@@ -6920,6 +6985,9 @@
         : (/^#[0-9a-f]{6}$/i.test(look[spec.ink] || '') ? look[spec.ink] : textInk());
     }
     filter.querySelector('[data-ground]').setAttribute('flood-color', ground);
+    /* Les copies à l'échelle sont faites d'après celle-ci : elle vient d'être
+       réglée, donc c'est ici qu'elles se refont. */
+    if (spec === TEXT_CONTOURS.names) scaleNameContours();
   }
   function applyOrganicDistortion() {
     var style = document.getElementById('organic-distortion-style');
@@ -10383,6 +10451,7 @@
        réglé n'ait pas de style en dur. */
     root.style.setProperty('--qualifier-scale', textParam('qualifier', 1));
     var projs = document.querySelectorAll('.concerts .concert-title .proj');
+    var posees = false;
     for (var pi = 0; pi < projs.length; pi++) {
       var core = projs[pi].querySelector('.proj-core') || projs[pi];
       var sc = textParam('name:' + actKey(core.textContent), 1);
@@ -10391,7 +10460,11 @@
          taille de caractère — le filet du contour en premier. */
       if (!isFinite(sc) || sc === 1) projs[pi].style.removeProperty('--name-scale');
       else projs[pi].style.setProperty('--name-scale', String(sc));
+      posees = true;
     }
+    /* Les tailles viennent d'être posées : le contour en cellule, qui est un
+       filtre, doit en recevoir une copie par échelle. */
+    if (posees && typeof scaleNameContours === 'function') scaleNameContours();
     root.style.setProperty('--date-type-scale', textParam('date', 1) + 'em');
     root.style.setProperty('--place-type-scale', textParam('place', 1) + 'em');
     root.style.setProperty('--extra-type-scale', textParam('details', 1) + 'em');
