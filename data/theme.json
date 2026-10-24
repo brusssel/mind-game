@@ -274,7 +274,14 @@
         "tag size": 0.8,
         "tag gap": 1.15,
         "qualifier": 0.85,
-        "tag cell size": 7
+        "tag cell size": 7,
+        "name:fatigue suspecte": 1,
+        "name:refus d'obtemperer": 0.95,
+        "name:& compagnie": 0.9,
+        "name:bobe van jezu": 0.95,
+        "name:ublo": 1,
+        "name:lime68k": 1,
+        "name:4649": 0.95
       },
       "nav": {
         "size": 5,
