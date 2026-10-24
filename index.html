@@ -5997,6 +5997,7 @@
      fitStage, read by centrePage: the assembly is placed inside the room the
      bands leave, not inside the window. */
   var stageFoot = 0;
+  var stageBelow = 0;       // la rangée de dates et la bande du pied, en pixels
 
   /* Where the drawing stands in the window, so the frames can ring it. The
      box is the composition — the stage and everything that hangs off it —
@@ -6057,7 +6058,30 @@
        centring would leave, so the whole assembly sits above the middle by that
        same half. Stated as a rule rather than as a one-off nudge, so it holds
        at any window height and through any change to what the strips carry. */
-    var H2 = Math.max(0, (document.documentElement.clientHeight || 0) - appTopInset - stageFoot);
+    /* Moins ce qui pend, aussi. Le dessin était centré dans une place qui
+       comptait encore la rangée de dates et la bande du pied : l'air s'ouvrait
+       autour de lui, le mobilier se posait quand même depuis le bas, et la
+       bande finissait peinte en travers du cadre. Retiré ici, l'air s'ouvre
+       au-dessus — où il ne gêne personne — et le pied du dessin arrive juste
+       au-dessus de ce qui pend, sans que rien ait rapetissé.
+
+       MESURÉ plutôt que calculé : la bande du pied est posée depuis le bas de
+       la fenêtre, avec sa propre rallonge, et la somme de ses hauteurs ne dit
+       donc pas où elle commence — elle tombait trente pixels plus haut que le
+       calcul, et le panneau d'écoute la traversait encore de douze. Lire son
+       bord haut règle la question une fois pour toutes, et sans boucle : rien
+       de ce qui place cette bande ne dépend de l'endroit où le dessin finit
+       par se poser. La somme des hauteurs reste le recours tant que la bande
+       n'est pas peinte. */
+    var hFen = document.documentElement.clientHeight || 0;
+    var tf = document.getElementById('ticker-foot');
+    var tfr = tf ? tf.getBoundingClientRect() : null;
+    /* Et dix pixels de souffle : réserver la bande au ras posait le cadre
+       DESSUS à deux pixels près, ce qui se lit comme touché et non comme
+       dégagé — le même soin que le pied de la scène prend déjà ailleurs. */
+    var pend = (tfr && tfr.height && tfr.top > 0 && tfr.top < hFen)
+      ? (hFen - tfr.top + 10) : (stageFoot + stageBelow);
+    var H2 = Math.max(0, hFen - appTopInset - pend);
     var centredGap = Math.max(0, (H2 - (hi - lo)) / 2);
     /* The user's page offset is deliberate and must not be mistaken for a
        centring error. It is stored in stage pixels and seen here after scale. */
@@ -6173,21 +6197,17 @@
        which reads as touched rather than as clear. */
     var footRef = band('bottom') + (band('bottom') ? 12 : 0);
     var needW = STAGE_W + band('left') + band('right');
-    /* DEUX FOIS CE QUI PEND, parce que la scène est CENTRÉE dans la place et
-       que le mobilier, lui, se pose depuis le bas. Réserver sa hauteur une
-       seule fois ouvre la moitié de cette place AU-DESSUS, où personne n'en a
-       besoin, et le bas continue de manquer d'autant : c'est l'arithmétique du
-       centrage, pas un décor. En demandant le double, le pied de la scène
-       arrive exactement au-dessus de ce qui pend — posé : hauteur de la scène
-       `900k`, centrée dans `h`, son pied tombe à `(h + 900k)/2`, qu'on veut
-       sous `h - Fk` ; d'où `k ≤ h / (900 + 2F)`.
-
-       Sur une fenêtre qui a de la place le facteur est inerte : l'échelle est
-       plafonnée à 1 des deux façons, et la page est dessinée au pixel comme
-       avant. */
-    var needH = STAGE_H + 2 * (below + footRef) + band('top');
+    /* Une seule fois ce qui pend : c'est la place qu'il faut, et pas davantage.
+       Doubler la réserve rendait bien le dégagement, mais en rapetissant tout
+       le dessin d'un dixième — proportions perdues pour un défaut de PLACEMENT.
+       Le pied se règle plus bas, en posant la scène haut plutôt qu'au milieu :
+       la place existe, il suffit qu'elle s'ouvre du bon côté. */
+    var needH = STAGE_H + below + band('top') + footRef;
     stageK = Math.min(1, w / needW, h / needH) * appZoom * pageScale();
     stageFoot = footRef * stageK;
+    /* Ce qui pend sous le dessin, à l'échelle où il est peint : la hauteur que
+       le placement doit laisser SOUS la scène, et non autour d'elle. */
+    stageBelow = below * stageK;
     var s = document.documentElement.style;
     document.documentElement.classList.toggle('smartphone', smartphoneMode());
     s.setProperty('--stage-w', STAGE_W + 'px');
