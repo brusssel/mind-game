@@ -5256,12 +5256,14 @@
       var(--text-fill-hover, linear-gradient(#3b8b09, #3b8b09)));
     background-size: var(--hue-size, 8px 8px);
     background-repeat: var(--hue-repeat, repeat);
+    background-position: var(--hue-pos, 0% 0%);
   }
   /* the one whose page is open */
   .hue.is-current, .hue.is-current:hover {
     background-image: var(--text-fill-hover, linear-gradient(#3b8b09, #3b8b09));
     background-size: var(--hue-size, 8px 8px);
     background-repeat: var(--hue-repeat, repeat);
+    background-position: var(--hue-pos, 0% 0%);
   }
 </style>
 </head>
@@ -13235,12 +13237,25 @@
         'linear-gradient(' + hDir + ', ' + hoverInk + ' 0 ' + hFill + '%, ' +
         'transparent ' + hFill + '% 100%), ' + fillFor(look.text, textInk()));
       /* Le dégradé couvre la boîte une fois ; la trame du dessous garde son pas
-         de huit pixels, qui est ce qui la rend nette au corps du texte. */
+         de huit pixels, qui est ce qui la rend nette au corps du texte.
+
+         ESSAYÉ ET RETIRÉ : tailler cette couche à la hauteur des capitales, ou
+         la répéter au pas de la ligne, pour qu'un nom de DEUX lignes soit
+         rempli par ligne et non en travers. Aucune des deux ne tient : le fond
+         d'une boîte en ligne se pose une fois pour toutes ses lignes, et ni
+         `background-position` ni `box-decoration-break: clone` ne le rendent
+         par fragment — mesuré au pixel, la première ligne se rangeait et la
+         seconde recevait le vert destiné à la troisième, ou la bande se
+         répétait deux fois dans la même ligne. Un remplissage par ligne
+         demanderait que chaque ligne soit son propre élément, ce qui est une
+         autre affaire que ce réglage. */
       root.setProperty('--hue-size', 'auto, 8px 8px');
+      root.removeProperty('--hue-pos');
       root.setProperty('--hue-repeat', 'no-repeat, repeat');
     } else {
       root.setProperty('--text-fill-hover', fillFor(look.hover, hoverInk));
       root.setProperty('--hue-size', '8px 8px');
+      root.removeProperty('--hue-pos');
       root.setProperty('--hue-repeat', 'repeat');
     }
     /* The second fill, for a name that is merely under the pointer. Written only
