@@ -3222,9 +3222,13 @@
        tiers de cadratin de la taille du nom, soit 11 px à l'écran du
        téléphone. Quand une autre disposition met l'image en tête, le nom n'est
        plus le premier et la règle ne s'applique pas. */
-    html:not(.pa-picture) .phone-acts .phone-profile > h3 {
-      margin-top: calc(-0.18em - var(--name-cap-lift, 0em));
-    }
+    /* AUTANT D'AIR DES DEUX CÔTÉS DU NOM. Reprendre toute la rallonge du fond
+       (un tiers de cadratin) collait le nom au trait ; n'en rien reprendre
+       l'en éloignait. La valeur est posée par la mesure : de l'encre à
+       l'encre, le trait du cadre était à 6,6 px des capitales quand les
+       adresses en étaient à 11,9 ; les cinq pixels d'écart valent 0,14
+       cadratin à la taille du nom, qu'on rend donc à la rallonge. */
+    html:not(.pa-picture) .phone-acts .phone-profile > h3 { margin-top: -0.04em; }
     html.phone .phone-acts .profile-bio > p:first-child { margin-top: 0; }
     html.phone .phone-acts .profile-bio > p:last-child { margin-bottom: 0; }
     /* Sous une ligne de CAPITALES, la boîte du texte garde la place des
@@ -8859,29 +8863,6 @@
     ['right',  'artist name — ranged right']
   ];
   var currentProfileArtist = null;
-  /* L'AIR QUE LA FONTE MET AU-DESSUS DES CAPITALES. Une boîte de texte garde
-     au-dessus de la ligne la place des ascendantes et des accents, qu'aucune
-     capitale n'occupe : sous le trait du cadre, ce vide se lit comme un nom
-     posé trop bas. Mesuré sur la fonte du nom plutôt que deviné — c'est la
-     différence entre la montante déclarée par la fonte et l'encre réelle d'une
-     capitale — et rendu en cadratins, pour qu'il suive la taille du nom. */
-  function nameCapLift() {
-    var h3 = document.querySelector('.phone-acts .phone-profile h3') ||
-             document.querySelector('.profile h3');
-    if (!h3) return;
-    var cs = getComputedStyle(h3);
-    var taille = parseFloat(cs.fontSize) || 0;
-    if (!taille) return;
-    try {
-      var c = document.createElement('canvas').getContext('2d');
-      c.font = cs.fontWeight + ' ' + taille + 'px ' + cs.fontFamily;
-      var m = c.measureText('HX');
-      var air = (m.fontBoundingBoxAscent || 0) - (m.actualBoundingBoxAscent || 0);
-      if (!isFinite(air) || air <= 0) return;
-      var em = Math.max(0, Math.min(0.4, air / taille));
-      document.documentElement.style.setProperty('--name-cap-lift', em.toFixed(3) + 'em');
-    } catch (e) {}
-  }
   function applyProfile() {
     var s = document.documentElement.style;
     var cl = document.documentElement.classList;
@@ -8914,8 +8895,6 @@
     s.setProperty('--profile-picw', (genValue('profile', 'picture', 100)) + '%');
     s.setProperty('--profile-ground', genValue('profile', 'ground', 0.14));
     s.setProperty('--profile-player', genValue('profile', 'player', 120) + 'px');
-    /* La fonte du nom vient peut-être de changer avec la parure. */
-    nameCapLift();
   }
 
   /* What a `music` field turns into. Bandcamp's player is addressed by the
