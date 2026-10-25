@@ -11,7 +11,7 @@
   "perPage": 1,
   "email": "your@address.here",
   "look": {
-    "hueDir": "to bottom",
+    "hueDir": "to top",
     "font": "Geneva",
     "bodyFont": "Charter",
     "tex": "grid",
@@ -514,7 +514,7 @@
     },
     "2026-10-20": {
       "look": {
-        "hueDir": "to bottom",
+        "hueDir": "to top",
         "font": "Geneva",
         "bodyFont": "Charter",
         "tex": "grid",
@@ -1017,7 +1017,7 @@
     },
     "2026-11-11": {
       "look": {
-        "hueDir": "to bottom",
+        "hueDir": "to top",
         "font": "Geneva",
         "bodyFont": "Charter",
         "tex": "grid",
