@@ -1517,6 +1517,16 @@
     cursor: pointer;
     -webkit-background-clip: text;
             background-clip: text;
+    /* CHAQUE LIGNE SON PROPRE FOND. Un nom qui tourne sur deux lignes n'est
+       qu'une seule boîte en ligne : le dégradé du remplissage s'étalait donc
+       sur les DEUX, et sa moitié basse tombait entièrement sur la seconde —
+       « SUSPECTE » beige et « & COMPAGNIE » vert en entier, au lieu de deux
+       lignes à moitié remplies. Avec les décors clonés, chaque fragment de
+       ligne reçoit le fond comme s'il était seul : la moitié basse se compte
+       alors sur la ligne, qui est ce que l'œil lit. Sans effet sur la trame,
+       qui se répète de toute façon. */
+    -webkit-box-decoration-break: clone;
+            box-decoration-break: clone;
     /* 8px = the pattern at 1:1, so it stays crisp on small type */
     background-size: 8px 8px;
     background-repeat: repeat;
