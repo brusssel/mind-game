@@ -3222,13 +3222,19 @@
        tiers de cadratin de la taille du nom, soit 11 px à l'écran du
        téléphone. Quand une autre disposition met l'image en tête, le nom n'est
        plus le premier et la règle ne s'applique pas. */
-    /* AUTANT D'AIR DES DEUX CÔTÉS DU NOM. Reprendre toute la rallonge du fond
-       (un tiers de cadratin) collait le nom au trait ; n'en rien reprendre
-       l'en éloignait. La valeur est posée par la mesure : de l'encre à
-       l'encre, le trait du cadre était à 6,6 px des capitales quand les
-       adresses en étaient à 11,9 ; les cinq pixels d'écart valent 0,14
-       cadratin à la taille du nom, qu'on rend donc à la rallonge. */
-    html:not(.pa-picture) .phone-acts .phone-profile > h3 { margin-top: -0.04em; }
+    /* AUTANT D'AIR DES DEUX CÔTÉS DU NOM — et l'œil compare au CADRE des
+       adresses, pas à leurs capitales. C'est ce qui m'a fait tourner autour
+       deux fois : mesuré jusqu'à leur encre, l'air du dessous valait 11,9 px
+       et celui du dessus 12,9, donc « égaux » ; mais la boîte des adresses
+       commence 4 px plus haut que leur encre, et c'est ELLE que l'on voit. La
+       bonne cible est donc 7,5 px — du trait du cadre aux capitales du nom, et
+       de la ligne de base au cadre des adresses.
+
+       Posé : 7,4 contre 7,5, au dixième de pixel. La valeur reprend la
+       rallonge du fond (0,18 em) et l'air que la fonte garde au-dessus des
+       capitales (0,11 em de plus), ce qui fait un peu moins d'un tiers de
+       cadratin à la taille du nom. */
+    html:not(.pa-picture) .phone-acts .phone-profile > h3 { margin-top: -0.29em; }
     html.phone .phone-acts .profile-bio > p:first-child { margin-top: 0; }
     html.phone .phone-acts .profile-bio > p:last-child { margin-bottom: 0; }
     /* Sous une ligne de CAPITALES, la boîte du texte garde la place des
