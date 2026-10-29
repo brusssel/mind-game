@@ -5921,6 +5921,7 @@
   var STAGE_W = 1600, STAGE_H = 900;
   var stageK = 1, stageX0 = 0, stageY0 = 0;
   var appZoom = 1, appTopInset = 0;
+  var pageCut = 1;          // ce que trimPageScale retient de l'échelle de page
   var mobilePane = 'poster';
   /* How big the whole page is drawn, as a factor. Held at zero until it is
      said, so a page that has never been scaled is drawn exactly as before. */
@@ -6257,7 +6258,18 @@
        Le pied se règle plus bas, en posant la scène haut plutôt qu'au milieu :
        la place existe, il suffit qu'elle s'ouvre du bon côté. */
     var needH = STAGE_H + below + band('top') + footRef;
-    stageK = Math.min(1, w / needW, h / needH) * appZoom * pageScale();
+    var fitK = Math.min(1, w / needW, h / needH);
+    /* Au-delà de 100 %, l'échelle de page est retenue par `pageCut` : voir
+       `trimPageScale`, qui la mesure sur le pied une fois posé. */
+    var ps = pageScale();
+    stageK = fitK * appZoom * ps;
+    /* Et jamais plus large que la fenêtre : la scène et ses bandes de côté y
+       tiennent à 100 % par construction, l'agrandissement n'a de place qu'en
+       hauteur quand la fenêtre est plus large que haute. */
+    if (ps > 1 && !smartphoneMode()) {
+      stageK = Math.min(fitK * appZoom * Math.max(1, ps * pageCut),
+                        Math.max(fitK, w / needW) * appZoom);
+    }
     stageFoot = footRef * stageK;
     /* Ce qui pend sous le dessin, à l'échelle où il est peint : la hauteur que
        le placement doit laisser SOUS la scène, et non autour d'elle. */
@@ -6400,6 +6412,53 @@
     buildGutter();
     buildDates();
     placeZones();
+    if (!resettling) trimPageScale();
+  }
+  /* L'ÉCHELLE DE PAGE NE POUSSE RIEN HORS DE LA FENÊTRE. Au-delà de 100 % elle
+     agrandit le dessin dans l'air que la scène de 1600 × 900 laisse autour de
+     ce qui est vraiment peint — mais sans borne : à 111 %, dans une fenêtre
+     basse (un portable, Safari et ses onglets), l'assemblage ne tenait plus,
+     le pied était remonté (--foot-lift) pour dégager la radio, et il se posait
+     donc EN TRAVERS de l'affiche : la fin du programme et l'adresse passaient
+     sous la bande et sous la rangée des dates.
+
+     Mesuré sur la page posée plutôt que calculé : les bandes s'écartent dans
+     l'air qui reste (--band-out) et le panneau descend jusqu'au pied, si bien
+     qu'aucune hauteur lue avant la pose ne disait la place qu'il faut. Ici on
+     lit de combien la rangée des dates, sans sa remontée, dépasse le haut de
+     la radio, et l'agrandissement est rogné d'autant — le haut de l'assemblage
+     restant où il est, c'est une simple règle de trois. Quelques passes au
+     plus ; jamais sous la taille ajustée (100 %) ; et il se rend quand la
+     fenêtre regagne de la place. */
+  var resettling = false;
+  function trimPageScale() {
+    if (pageScale() <= 1 || smartphoneMode()) { pageCut = 1; return; }
+    var root = document.documentElement;
+    for (var it = 0; it < 4; it++) {
+      var row = document.getElementById('dates');
+      if (!row || !row.offsetHeight) row = document.getElementById('ticker-foot');
+      if (!row || !row.offsetHeight) return;
+      var cs = getComputedStyle(root);
+      var lift = parseFloat(cs.getPropertyValue('--foot-lift')) || 0;
+      var radioH = root.classList.contains('no-radio') ? 0
+        : (parseFloat(cs.getPropertyValue('--radio-h')) || 0);
+      var top = Infinity, ids = ['dates-top', 'crest', 'ticker-top'];
+      for (var i = 0; i < ids.length; i++) {
+        var el = document.getElementById(ids[i]);
+        if (el && el.offsetHeight) top = Math.min(top, el.getBoundingClientRect().top);
+      }
+      if (!isFinite(top)) top = document.getElementById('stage').getBoundingClientRect().top;
+      /* La remontée s'applique dans la scène : elle déplace de lift × k. */
+      var bottom = row.getBoundingClientRect().bottom + lift * stageK;
+      var limit = (root.clientHeight || 0) - radioH - 6;
+      if (bottom - top < 1 || limit - top < 1) return;
+      var next = pageCut * (limit - top) / (bottom - top);
+      next = Math.max(1 / pageScale(), Math.min(1, next));
+      if (Math.abs(next - pageCut) < 0.002) return;
+      pageCut = next;
+      resettling = true;
+      try { settle(); } finally { resettling = false; }
+    }
   }
   /* Once per frame at most: dragging a window edge fires resize continuously,
      and this measures the page each time. */
