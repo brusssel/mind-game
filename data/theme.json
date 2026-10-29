@@ -17,12 +17,12 @@
     "tex": "grid",
     "text": "moire",
     "hover": "weave",
-    "hoverInk": "#7d9790",
-    "hoverAltInk": "#ad94a4",
-    "textInk": "#9b9fa1",
+    "hoverInk": "#60c95e",
+    "hoverAltInk": "#3c2b25",
+    "textInk": "#828782",
     "contour": "normal",
     "bg": "physarum",
-    "frame": "smoothlife",
+    "frame": "none",
     "scale": "epx",
     "motion": "still",
     "tiling": "none",
@@ -159,8 +159,8 @@
     "wmCell": "moire",
     "wmCellInk": "#252522",
     "wmCellGround": "#5d6560",
-    "contourLo": "#762347",
-    "contourHi": "#781274",
+    "contourLo": "#b1cdc1",
+    "contourHi": "#869b7d",
     "navInk": "#8b8593",
     "viewportFrames": [
       {
@@ -250,10 +250,10 @@
         "states": 12
       },
       "text": {
-        "size": 2.05,
+        "size": 1.9,
         "date": 0.65,
         "place": 0.65,
-        "artists": 2.5,
+        "artists": 2.6,
         "details": 0.65,
         "artistGap": 0,
         "datePlaceGap": 9.6,
@@ -261,7 +261,7 @@
         "placeTimeGap": 12,
         "pictureLineupGap": 6.2,
         "artistLeading": 0.75,
-        "lineupInfoGap": 0.6,
+        "lineupInfoGap": 0.2,
         "metaLeading": 0.6,
         "inset": 0.04,
         "tracking": 0.06,
@@ -270,9 +270,9 @@
         "names outline": 2,
         "names cell size": 400,
         "tag tracking": 2,
-        "tag outline": 1.9,
+        "tag outline": 2.7,
         "tag size": 0.8,
-        "tag gap": 2.75,
+        "tag gap": 1.15,
         "qualifier": 0.85,
         "name:fatigue suspecte": 1,
         "tag cell size": 7,
@@ -302,15 +302,15 @@
       "wm": {
         "size": 2.12,
         "height": 2.5,
-        "width": 2.5,
-        "tracking": 0.2,
+        "width": 0.66,
+        "tracking": 0.8,
         "distortion": 80,
         "seed": 24,
         "frequencyX": 0.044,
-        "wordGap": 0,
+        "wordGap": 2,
         "frequencyY": 0.002,
         "perspectiveX": 9,
-        "skewX": 20,
+        "skewX": 7,
         "skewY": 30.5,
         "rotate": 18,
         "perspectiveY": 53
@@ -345,7 +345,7 @@
         "glow": 0.06
       },
       "surround": {
-        "scale": 115,
+        "scale": 80,
         "step": 48,
         "fade": 1.25
       },
@@ -359,10 +359,10 @@
         "scales": 80
       },
       "dates": {
-        "size": 0.935,
-        "padding": 0.45,
-        "past": 1,
-        "gap": 0.055,
+        "size": 1,
+        "padding": 0,
+        "past": 5,
+        "gap": 0,
         "hover amount": 3,
         "hover seconds": 0.2,
         "tracking": 0,
@@ -378,9 +378,9 @@
         "gap": 15.5
       },
       "top": {
-        "height": 7.9,
+        "height": 8,
         "size": 4.05,
-        "strip cell": 9.45,
+        "strip cell": 9.8,
         "cell": 8
       },
       "wmpos": {
@@ -418,18 +418,18 @@
         "r": 0,
         "w": 1,
         "s": "none",
-        "c": "#5a6d60"
+        "c": "#48564c"
       },
       "board": {
-        "w": 41,
-        "s": "none",
-        "c": "#0d0826",
-        "r": 260
+        "w": 1,
+        "s": "inset",
+        "c": "#1d2520",
+        "r": 270
       },
       "frame": {
         "w": 1,
         "s": "dashed",
-        "c": "#5b536a",
+        "c": "#7ec986",
         "r": 6
       },
       "listen": {
@@ -455,23 +455,23 @@
     "bgHi": "#262626",
     "boardLo": "#3a3947",
     "boardHi": "#000000",
-    "frameLo": "#25222a",
-    "frameHi": "#000000",
+    "frameLo": "#2e3438",
+    "frameHi": "#040605",
     "cellInk": "#ffffff",
     "cellGround": "#0b0710",
     "board": "none",
-    "wm": "void"
+    "wm": "cell"
   },
   "layout": {
-    "wmW": 672,
+    "wmW": 656,
     "wmDx": -216,
-    "wmDy": -74,
-    "boardW": 466,
+    "wmDy": 234,
+    "boardW": 434.48203939745076,
     "boardDx": -308,
     "boardDy": -77,
-    "infoDx": -156,
-    "infoDy": -24,
-    "framePad": 16,
+    "infoDx": -152,
+    "infoDy": -372,
+    "framePad": 45.663962920046345,
     "boardH": 602,
     "frameH": 40,
     "picDx": -296,
@@ -482,9 +482,9 @@
     "allDy": 153.17611637917906,
     "listenDx": 0,
     "pageDx": 0,
-    "pageDy": 30,
+    "pageDy": 13,
     "pageScale": 1.11,
-    "frameFixW": 622.66,
+    "frameFixW": 681.9879258400927,
     "frameFixH": 772.55,
     "framesFree": 0,
     "frameFixX": -204.91248184594014,
@@ -493,19 +493,13 @@
     "infoFixY": 219.7734375,
     "infoFixW": 583.25,
     "infoFixH": 363.3437194824219,
-    "infoW": 607.25,
+    "infoW": 674.9209154113557,
     "infoScale": 0,
     "infoAnchored": 0
   },
   "archive": true,
   "dates": {
     "2026-11-28": {
-      "layout": {
-        "picDx": -301,
-        "picDy": -137,
-        "picDw": -54.3984375,
-        "picDh": 88.99984741210938
-      },
       "frozen": false,
       "public": false,
       "images": {
@@ -972,41 +966,6 @@
         "namesStrokeCol": "#585c6f",
         "metaStrokeCol": "#807b93"
       },
-      "layout": {
-        "wmW": 656,
-        "wmDx": -216,
-        "wmDy": 35.090909090909136,
-        "boardW": 434.48203939745076,
-        "boardDx": -308,
-        "boardDy": -77,
-        "infoDx": -176.17497103128616,
-        "infoDy": -254.4368482039394,
-        "framePad": 45.663962920046345,
-        "boardH": 602,
-        "frameH": 40,
-        "picDx": -296,
-        "picDy": 93,
-        "picDw": -76.3984375,
-        "picDh": 60,
-        "allDx": 263.5499936967775,
-        "allDy": 156.90201967634542,
-        "listenDx": 17,
-        "pageDx": 0,
-        "pageDy": 6,
-        "pageScale": 1.11,
-        "frameFixW": 681.9879258400927,
-        "frameFixH": 772.55,
-        "framesFree": 0,
-        "frameFixX": -234.57644476598648,
-        "frameFixY": -124.87611637917907,
-        "infoFixX": 18.875,
-        "infoFixY": 219.7734375,
-        "infoFixW": 583.25,
-        "infoFixH": 363.3437194824219,
-        "infoW": 674.9209154113557,
-        "infoScale": 0,
-        "infoAnchored": 0
-      },
       "frozen": true,
       "public": true,
       "images": {
@@ -1017,10 +976,6 @@
     },
     "2026-11-11": {
       "look": {
-        "hoverInk": "#60c95e",
-        "hoverAltInk": "#3c2b25",
-        "textInk": "#828782",
-        "frame": "none",
         "tagAlign": "right",
         "tagText": "grey-75",
         "tagInk": "#b49393",
@@ -1029,40 +984,10 @@
         "namesCell": "scatter",
         "namesCellGroundCol": "#bebdd6",
         "namesStrokePlace": "out",
-        "contourLo": "#b1cdc1",
-        "contourHi": "#869b7d",
-        "gen": {
-          "text": {
-            "size": 1.9,
-            "artists": 2.6,
-            "lineupInfoGap": 0.2,
-            "tag outline": 2.7,
-            "tag gap": 1.15
-          },
-          "wm": {
-            "width": 0.66,
-            "tracking": 0.8,
-            "wordGap": 2,
-            "skewX": 7
-          }
-        },
-        "edge": {
-          "pic": {
-            "c": "#48564c"
-          },
-          "board": {
-            "w": 1,
-            "s": "inset",
-            "c": "#1d2520",
-            "r": 270
-          },
-          "frame": {
-            "c": "#7ec986"
-          }
-        },
-        "frameLo": "#2e3438",
-        "frameHi": "#040605",
-        "wm": "cell",
+        "surroundCol": "#374337",
+        "surroundInk": "#423e3e",
+        "datesHomeBg": "#000000",
+        "datesNextHotBg": "#000000",
         "picTex": "none",
         "picTexBlend": "multiply",
         "picTexScale": 8,
@@ -1070,13 +995,6 @@
         "picTexGround": null,
         "namesStrokeCol": "#367f06",
         "metaStrokeCol": "#d54d69"
-      },
-      "layout": {
-        "wmDy": 234,
-        "boardW": 470,
-        "infoDx": -152,
-        "infoDy": -372,
-        "pageScale": 1.11
       },
       "frozen": false,
       "public": true,
