@@ -74,9 +74,9 @@
     "glyphMotion": "still",
     "surround": "cell",
     "surroundCell": "noise",
-    "surroundCol": "#374337",
-    "surroundInk": "#423e3e",
-    "surroundMotion": "still",
+    "surroundCol": "#12121c",
+    "surroundInk": "#0e1a11",
+    "surroundMotion": "down",
     "surroundImage": "",
     "datesFont": "Monaco",
     "datesInk": "#949494",
@@ -457,7 +457,7 @@
     "boardHi": "#000000",
     "frameLo": "#2e3438",
     "frameHi": "#040605",
-    "cellInk": "#ffffff",
+    "cellInk": "#2e2a29",
     "cellGround": "#0b0710",
     "board": "none",
     "wm": "cell"
@@ -470,7 +470,7 @@
     "boardDx": -308,
     "boardDy": -77,
     "infoDx": -152,
-    "infoDy": -372,
+    "infoDy": -407.65,
     "framePad": 45.663962920046345,
     "boardH": 602,
     "frameH": 40,
@@ -935,16 +935,16 @@
         "namesStrokeCol": "#585c6f",
         "metaStrokeCol": "#807b93"
       },
+      "layout": {
+        "infoDx": -145.8,
+        "infoDy": -254.4368482039394
+      },
       "frozen": true,
       "public": true,
       "images": {
         "images/487313904-702703462330297-492725036658866476-n-2026-10-09.jpg": "images/frozen/2026-10-20/f4ca386bfd30.jpg",
         "images/rae-2026-10-09.jpg": "images/frozen/2026-10-20/ce2c14b76a3e.jpg",
         "images/capture-d-e-cran-2026-10-09-a-08-26-30-2026-10-09.png": "images/frozen/2026-10-20/b359b52e3340.jpg"
-      },
-      "layout": {
-        "infoDx": -145.8,
-        "infoDy": -254.4368482039394
       }
     },
     "2026-11-11": {
@@ -957,10 +957,14 @@
         "namesCell": "scatter",
         "namesCellGroundCol": "#bebdd6",
         "namesStrokePlace": "out",
-        "surroundCol": "#12121c",
-        "surroundInk": "#0e1a11",
-        "surroundMotion": "down",
-        "cellInk": "#2e2a29",
+        "datesNextHotInk": "#9eaf74",
+        "datesNextTextInk": "#998a8a",
+        "gen": {
+          "dates": {
+            "padding": 0.13,
+            "past": 10
+          }
+        },
         "picTex": "none",
         "picTexBlend": "multiply",
         "picTexScale": 8,
