@@ -18069,6 +18069,17 @@
       txt.firstChild.textContent = b;
       txt.lastChild.textContent = i;
       defile();
+      /* Ce que le téléphone montre hors de la page — écran verrouillé, centre
+         de contrôle. Sans ça il lit les étiquettes du fichier, telles
+         qu'écrites ; en capitales, comme la barre. */
+      if ('mediaSession' in navigator && window.MediaMetadata) {
+        try {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: (t.title || '').toUpperCase(),
+            artist: (t.artist || '').toUpperCase()
+          });
+        } catch (e) {}
+      }
     }
     /* L'attribut, pas la propriété : `.hidden` n'existe que sur les éléments
        HTML, et sur un <svg> il ne cachait rien. */
