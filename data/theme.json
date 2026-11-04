@@ -124,10 +124,10 @@
     "crestMotion": "right",
     "datesNextHover": "colour",
     "datesNextHotBg": "#181111",
-    "datesNextHotInk": "#b4c785",
+    "datesNextHotInk": "#9eaf74",
     "datesNextCellInk": "#36323e",
     "datesNextText": "grey-75",
-    "datesNextTextInk": null,
+    "datesNextTextInk": "#998a8a",
     "datesBack": "void",
     "datesText": "grey-75",
     "datesCase": "upper",
@@ -360,8 +360,8 @@
       },
       "dates": {
         "size": 1,
-        "padding": 0,
-        "past": 5,
+        "padding": 0.13,
+        "past": 10,
         "gap": 0,
         "hover amount": 3,
         "hover seconds": 0.2,
@@ -470,7 +470,7 @@
     "boardDx": -308,
     "boardDy": -77,
     "infoDx": -152,
-    "infoDy": -407.65,
+    "infoDy": -417.65,
     "framePad": 45.663962920046345,
     "boardH": 602,
     "frameH": 40,
@@ -957,14 +957,6 @@
         "namesCell": "scatter",
         "namesCellGroundCol": "#bebdd6",
         "namesStrokePlace": "out",
-        "datesNextHotInk": "#9eaf74",
-        "datesNextTextInk": "#998a8a",
-        "gen": {
-          "dates": {
-            "padding": 0.13,
-            "past": 10
-          }
-        },
         "picTex": "none",
         "picTexBlend": "multiply",
         "picTexScale": 8,
@@ -972,6 +964,9 @@
         "picTexGround": null,
         "namesStrokeCol": "#367f06",
         "metaStrokeCol": "#d54d69"
+      },
+      "layout": {
+        "infoDy": -416.8322017165405
       },
       "frozen": false,
       "public": true,
