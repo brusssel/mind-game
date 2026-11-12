@@ -417,11 +417,33 @@
     background-position: center;
     opacity: var(--surround-fade, 1);
   }
-  /* Its own drift, on its own clock — nothing else on the page moves with it. */
-  html.sm-down body::before  { animation: sr-down  var(--surround-secs, 30s) linear infinite; }
-  html.sm-up body::before    { animation: sr-down  var(--surround-secs, 30s) linear infinite reverse; }
-  html.sm-left body::before  { animation: sr-left  var(--surround-secs, 30s) linear infinite; }
-  html.sm-right body::before { animation: sr-left  var(--surround-secs, 30s) linear infinite reverse; }
+  /* Its own drift, on its own clock — nothing else on the page moves with it.
+     Glissé par `transform`, pas par `background-position` : la couche agrandie
+     d'un pas du côté d'où le motif arrive est peinte une fois, puis déplacée
+     par la carte graphique. Animer la position du fond repeignait l'écran
+     entier à chaque image — soixante fois par seconde, cent vingt sur un écran
+     qui va jusque-là. Le motif est recalé du même pas, pour que chaque image
+     soit celle d'avant. */
+  html.sm-down body::before, html.sm-up body::before {
+    top: calc(-1 * var(--surround-step, 200px));
+    background-position: 0 var(--surround-step, 200px);
+    background-attachment: scroll;
+    will-change: transform;
+  }
+  html.sm-left body::before, html.sm-right body::before {
+    left: calc(-1 * var(--surround-step, 200px));
+    background-position: var(--surround-step, 200px) 0;
+    background-attachment: scroll;
+    will-change: transform;
+  }
+  html.sm-down body::before  { animation: sr-down-t var(--surround-secs, 30s) linear infinite; }
+  html.sm-up body::before    { animation: sr-down-t var(--surround-secs, 30s) linear infinite reverse; }
+  html.sm-left body::before  { animation: sr-left-t var(--surround-secs, 30s) linear infinite; }
+  html.sm-right body::before { animation: sr-left-t var(--surround-secs, 30s) linear infinite reverse; }
+  @keyframes sr-down-t { from { transform: translate3d(0, 0, 0); }
+                         to   { transform: translate3d(0, var(--surround-step, 200px), 0); } }
+  @keyframes sr-left-t { from { transform: translate3d(0, 0, 0); }
+                         to   { transform: translate3d(var(--surround-step, 200px), 0, 0); } }
   html.sm-breathe body::before { animation: sr-breathe var(--surround-secs, 30s) ease-in-out infinite; }
   @keyframes sr-down { from { background-position: 0 0; }
                        to   { background-position: 0 var(--surround-step, 200px); } }
@@ -612,7 +634,7 @@
       background-attachment: scroll, fixed;
       /* how the line and the field meet — see the contour selector */
       background-blend-mode: var(--contour-blend, normal);
-      animation: contour-travel var(--contour-secs, 7s) linear infinite;
+      animation: contour-travel var(--contour-secs, 7s) steps(140) infinite;
     }
 
     /* the fill: a picture of the wordmark, inside which is a smaller picture
@@ -682,7 +704,7 @@
       var(--contour-lo) 0%, var(--contour-hi) 50%, var(--contour-lo) 100%);
     background-size: 190px 100%;
     background-repeat: repeat;
-    animation: wm-void-contour-travel var(--contour-secs, 7s) linear infinite;
+    animation: wm-void-contour-travel var(--contour-secs, 7s) steps(140) infinite;
   }
   @keyframes wm-void-contour-travel {
     from { background-position: 0 0; }
@@ -11732,7 +11754,9 @@
     var warm = 0;
     function tick() {
       if (dead) return;
-      if (frozen) { timer = setTimeout(tick, 120); return; }
+      /* Hors de l'écran — autre onglet, fenêtre réduite — rien ne se calcule :
+         on repasse voir de temps en temps, sans pas, sans image. */
+      if (frozen || document.hidden) { timer = setTimeout(tick, document.hidden ? 500 : 120); return; }
       step();
       paint();
       if (stillAlways && ++warm >= STILL_WARMUP) return;
@@ -12578,6 +12602,18 @@
     /* `void` uses this same page tile inside a separately displaced alpha mask.
        Supplying the tile to the SVG filter keeps its pixels stationary while
        the letter-shaped aperture changes form. */
+    lastPageTexture = { url: url, cssW: cssW };
+    syncVoidTexture();
+  }
+  /* Recopiée dans le filtre du titre `void` seulement quand le titre l'est :
+     une demi-mégaoctet d'image remise dix fois par seconde à un filtre que
+     rien n'affiche coûtait à elle seule près d'un dixième d'un cœur. Le
+     titre qui devient `void` la reprend aussitôt (setWordmark). */
+  var lastPageTexture = null;
+  function syncVoidTexture() {
+    if (!lastPageTexture) return;
+    if (!document.documentElement.classList.contains('wm-void')) return;
+    var url = lastPageTexture.url, cssW = lastPageTexture.cssW;
     var image = document.getElementById('wm-void-texture');
     if (image) {
       var href = String(url || '');
@@ -12614,11 +12650,15 @@
     if (name === 'swarm') { bgStop = startSwarmBackground(); return; }
     bgStop = runField(name, {
       box: function () { return { w: BG_TILE_CSS, h: BG_TILE_CSS }; },
-      cell: cellFor(name, 'bg', BG_CELL), lut: lutFor(name, 'bg'), tick: 45,
+      cell: cellFor(name, 'bg', BG_CELL), lut: lutFor(name, 'bg'), tick: 100, blob: true,
       restart: RESTART[name],
       altLut: INSIDE_LUT,
       altApply: applyInside,
       compose: composeWordmarkFill,
+      /* 100 ms : la cadence qu'on voyait en vrai. Écrit 45, le pas n'en tenait
+         que dix par seconde, l'encodage de l'image le retenant ; l'encodage
+         passé hors du fil, 45 l'aurait laissé courir au double, et au double
+         du calcul. */
       /* Only the `field` wordmark reads the second livery. Painted and encoded
          unconditionally it cost a second full paint and two more PNG encodes —
          6 ms of every 45 ms tick — to produce two images that nothing on the
@@ -12709,6 +12749,7 @@
     cl.toggle('wm-field', mode === 'field');
     cl.toggle('wm-void', mode === 'void');
     cl.toggle('wm-cell', mode === 'cell');
+    syncVoidTexture();
     /* No contour over a field of its own — see the rule it keys. */
     /* The contour is a choice now: bare unless one has been asked for. With a
        zero stroke the layer paints the glyph exactly under the fill and the two
@@ -14339,8 +14380,35 @@
       ctx.putImageData(img, 0, 0);
       if (opts.overlay) opts.overlay(ctx, gw, gh);
       if (quiet) return;
+      if (opts.blob && blobOK) { publishBlob(); return; }
       apply(canvas.toDataURL(), gw * opts.cell, gh * opts.cell);
       stillShown(name);
+    }
+    /* Par un blob plutôt qu'une chaîne base64 : l'encodage se fait hors du fil
+       de la page, et la feuille de style reçoit une adresse courte au lieu
+       d'un demi-mégaoctet de texte à relire à chaque image. Une image encore
+       en cours d'encodage fait sauter la suivante : sur une machine chargée le
+       fond ralentit au lieu de tout ralentir. L'adresse d'avant-dernière est
+       rendue une seconde après — celle d'avant peut encore être à l'écran. Pas
+       depuis file:// : là, le navigateur refuse un blob comme fond. */
+    var blobOK = !!(canvas.toBlob && window.URL && URL.createObjectURL) &&
+                 location.protocol !== 'file:';
+    var encoding = false, blobUrls = [];
+    function publishBlob() {
+      if (encoding) return;
+      encoding = true;
+      var w = gw * opts.cell, h = gh * opts.cell;
+      canvas.toBlob(function (b) {
+        encoding = false;
+        if (dead || !b) return;
+        var u = URL.createObjectURL(b);
+        apply(u, w, h);
+        stillShown(name);
+        blobUrls.push(u);
+        while (blobUrls.length > 2) {
+          setTimeout(URL.revokeObjectURL.bind(URL, blobUrls.shift()), 1000);
+        }
+      });
     }
 
     function publishAlt(idx, lut) {
@@ -14358,7 +14426,9 @@
     var warm = 0, quiet = false;
     function tick() {
       if (dead) return;
-      if (frozen) { timer = setTimeout(tick, 120); return; }
+      /* Hors de l'écran — autre onglet, fenêtre réduite — rien ne se calcule :
+         on repasse voir de temps en temps, sans pas, sans image. */
+      if (frozen || document.hidden) { timer = setTimeout(tick, document.hidden ? 500 : 120); return; }
       /* A still page pays for ONE picture, not sixty. The steps are cheap; what
          is not is encoding the canvas to a PNG and handing it to the stylesheet
          — done at every step of the opening it is the whole of the delay, and
@@ -15141,6 +15211,7 @@
       var now = (window.performance && performance.now) ? performance.now() : 0;
       if (!t0) t0 = now;
       clock = now - t0;
+      if (document.hidden) { timer = setTimeout(frame, 500); return; }
       paint();
       timer = setTimeout(frame, TUNNEL_TICK);
     }
@@ -15419,6 +15490,7 @@
 
     var warm = 0;
     function tick() {
+      if (document.hidden) { timer = setTimeout(tick, 500); return; }
       step();
       maybeResize();
       paint();
