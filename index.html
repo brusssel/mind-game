@@ -6479,7 +6479,35 @@
     buildGutter();
     buildDates();
     placeZones();
+    egaliserLAir();
     if (!resettling) trimPageScale();
+  }
+  /* AUTANT D'AIR SOUS LES CADRES QUE DESSUS. La bande du pied est placée par un
+     calcul qui vise déjà cette symétrie — l'air sous les cadres doit valoir
+     l'air sur eux — mais il la vise à partir de la boîte du cadre et de la
+     hauteur déclarée des bandes, alors que ce qui se voit dépend aussi de leur
+     écartement, de la crête et des arrondis : mesuré sur la page posée, il
+     restait jusqu'à onze pixels d'écart, tout l'air passant en haut. Le bord
+     bas des cadres venait alors toucher la bande, et on ne le voyait plus.
+
+     Ici les deux airs sont MESURÉS, et le pied est déplacé de leur différence.
+     Le calcul est idempotent : une fois les deux égaux il ne réécrit rien, et
+     déplacer le pied ne change pas l'air du haut, donc une passe suffit. */
+  function egaliserLAir() {
+    var haut = document.getElementById('ticker-top');
+    var pied = document.getElementById('ticker-foot');
+    var cadre = document.querySelector('.listen') || document.querySelector('.wm-box');
+    if (!haut || !pied || !cadre) return;
+    var rh = haut.getBoundingClientRect(), rp = pied.getBoundingClientRect(),
+        rc = cadre.getBoundingClientRect();
+    if (!rh.height || !rp.height || !rc.height) return;
+    var k = stageK || 1;
+    var ecart = ((rp.top - rc.bottom) - (rc.top - rh.bottom)) / k;
+    if (!(Math.abs(ecart) > 0.5) || Math.abs(ecart) > 200) return;
+    var st = document.documentElement.style;
+    var now = parseFloat(getComputedStyle(document.documentElement)
+      .getPropertyValue('--ticker-foot-b')) || 0;
+    st.setProperty('--ticker-foot-b', (now + ecart).toFixed(2) + 'px');
   }
   /* L'ÉCHELLE DE PAGE NE POUSSE RIEN HORS DE LA FENÊTRE. Au-delà de 100 % elle
      agrandit le dessin dans l'air que la scène de 1600 × 900 laisse autour de
