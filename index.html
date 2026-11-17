@@ -11797,10 +11797,12 @@
       /* Hors de l'écran — autre onglet, fenêtre réduite — rien ne se calcule :
          on repasse voir de temps en temps, sans pas, sans image. */
       if (frozen || document.hidden) { timer = setTimeout(tick, document.hidden ? 500 : 120); return; }
+      var tDeb = champHorloge();
       step();
       paint();
       if (stillAlways && ++warm >= STILL_WARMUP) return;
-      timer = setTimeout(tick, Math.max(20, genValue('life', 'ms a generation', POSTER_TICK)));
+      champCoute(champHorloge() - tDeb);
+      timer = setTimeout(tick, champAttente(Math.max(20, genValue('life', 'ms a generation', POSTER_TICK))));
     }
 
     paint();
@@ -12545,6 +12547,42 @@
      lecteur la seconde et demie que les trente-six autres lui prenaient. (Ce
      chiffre ne vaut que pour une page figée, c'est-à-dire un téléphone : sur un
      écran les champs vivent et ne préchauffent pas.) */
+  /* CE QUE LES CHAMPS ONT LE DROIT DE PRENDRE. Les champs génératifs sont ce
+     que la page calcule sans arrêt : un pas de simulation, quinze fois par
+     seconde, pour chacun. Sur une machine rapide ils tiennent dans un cinquième
+     du temps ; sur une plus lente — ou dans un navigateur qui peint plus cher —
+     ils prennent tout, et le ventilateur avec. Mesuré sur la page en ligne
+     avant ce garde-fou : 4 846 ms de calcul pour 8 s d'horloge, soit 60 % d'un
+     cœur, sans que personne ne touche à rien.
+
+     Ils mesurent donc ce qu'ils coûtent, et quand leur part dépasse le budget
+     ils espacent leurs générations d'autant. Sur une machine qui suit, rien ne
+     change : le frein vaut exactement 1 tant que la part reste sous le budget,
+     et il se rend dès qu'elle redescend. Ce qui ralentit alors est le RYTHME
+     des champs, jamais leur dessin — une génération reste une génération. */
+  var CHAMP_BUDGET = 0.20;      // la part du temps qui revient aux champs
+  var CHAMP_FREIN_MAX = 6;      // jamais plus de six fois plus lent
+  var champMs = 0, champFenetre = 0, champFrein = 1;
+  function champHorloge() {
+    return (window.performance && performance.now) ? performance.now() : +new Date();
+  }
+  function champCoute(ms) {
+    var t = champHorloge();
+    if (!champFenetre) { champFenetre = t; return; }
+    champMs += ms;
+    var duree = t - champFenetre;
+    if (duree < 1000) return;              /* on juge sur une seconde, pas sur un pas */
+    var part = champMs / duree;
+    if (part > CHAMP_BUDGET) {
+      champFrein = Math.min(CHAMP_FREIN_MAX, champFrein * Math.min(2, part / CHAMP_BUDGET));
+    } else if (part < CHAMP_BUDGET * 0.6) {
+      champFrein = Math.max(1, champFrein * 0.85);   /* il se rend doucement */
+    }
+    champMs = 0; champFenetre = t;
+  }
+  function champAttente(base) {
+    return champFrein > 1 ? Math.round(base * champFrein) : base;
+  }
   var STILL_WARMUP = 24;
   /* MAIS UN CHAMP NE SE JUGE PAS AU NOMBRE DE PAS. Un compte fixe fige l'image
      à un moment convenu d'avance, et ce moment n'a rien à voir avec l'état du
@@ -14497,6 +14535,7 @@
       /* Hors de l'écran — autre onglet, fenêtre réduite — rien ne se calcule :
          on repasse voir de temps en temps, sans pas, sans image. */
       if (frozen || document.hidden) { timer = setTimeout(tick, document.hidden ? 500 : 120); return; }
+      var tDeb = champHorloge();
       /* A still page pays for ONE picture, not sixty. The steps are cheap; what
          is not is encoding the canvas to a PNG and handing it to the stylesheet
          — done at every step of the opening it is the whole of the delay, and
@@ -14572,8 +14611,9 @@
          première image, en revanche, le champ se repose entre deux pas : la
          page est déjà là, et ce qui reste à faire ne doit plus lui coûter son
          défilement. */
+      champCoute(champHorloge() - tDeb);
       timer = setTimeout(tick, quiet ? (stillAlways && warm >= STILL_WARMUP ? 8 : 0)
-                                     : (opts.tick || 40));
+                                     : champAttente(opts.tick || 40));
     }
 
     tick();
@@ -15296,8 +15336,10 @@
       if (!t0) t0 = now;
       clock = now - t0;
       if (document.hidden) { timer = setTimeout(frame, 500); return; }
+      var tDeb = champHorloge();
       paint();
-      timer = setTimeout(frame, TUNNEL_TICK);
+      champCoute(champHorloge() - tDeb);
+      timer = setTimeout(frame, champAttente(TUNNEL_TICK));
     }
 
     if (!measure()) return null;
@@ -15575,11 +15617,13 @@
     var warm = 0;
     function tick() {
       if (document.hidden) { timer = setTimeout(tick, 500); return; }
+      var tDeb = champHorloge();
       step();
       maybeResize();
       paint();
       if (stillAlways && ++warm >= STILL_WARMUP) return;
-      timer = setTimeout(tick, delay());   // re-timed each generation
+      champCoute(champHorloge() - tDeb);
+      timer = setTimeout(tick, champAttente(delay()));   // re-timed each generation
     }
 
     seed();
