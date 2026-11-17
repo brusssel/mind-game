@@ -12518,6 +12518,20 @@
      chiffre ne vaut que pour une page figée, c'est-à-dire un téléphone : sur un
      écran les champs vivent et ne préchauffent pas.) */
   var STILL_WARMUP = 24;
+  /* MAIS UN CHAMP NE SE JUGE PAS AU NOMBRE DE PAS. Un compte fixe fige l'image
+     à un moment convenu d'avance, et ce moment n'a rien à voir avec l'état du
+     dessin : selon la graine et les paramètres tirés, le même nombre de pas
+     donne une affiche pleine ou trois organismes perdus dans le gris — c'est
+     ce dernier cas qu'on voyait sur le téléphone. Le champ tourne donc
+     maintenant jusqu'à ce qu'il ait REMPLI l'affiche, c'est-à-dire jusqu'à ce
+     que sa densité cesse de monter : huit pas sans progrès et c'est fini.
+
+     Et un budget de temps plutôt qu'un plafond de pas, parce qu'un pas coûte
+     de 10 à 29 ms sur un téléphone et que ce prix varie d'un appareil à
+     l'autre : l'appareil rapide remplit son affiche, le lent s'arrête de
+     lui-même avant d'avoir fait attendre. */
+  var STILL_PLEIN = 24;         // pas sans progrès avant de déclarer l'affiche pleine
+  var STILL_BUDGET = 3000;      // ms de calcul au plus, par champ
 
   /* What the letters show: the same field in the page's own purples. */
   /* The letters' livery, set light: the shading multiplies it down toward the
@@ -14319,6 +14333,20 @@
     var FAINT = 0.34;
     var tape = [], stride = 1, ticks = 0, back = -1, shot = null, faint = 0, faintAt = 0;
     var seedNext = null;
+    /* La densité du champ, pour savoir quand l'affiche est pleine. Prise sur un
+       échantillon d'une cellule sur quelques milliers : un champ qui se remplit
+       le dit à cette grossièreté-là, et la mesure ne coûte alors rien devant le
+       pas lui-même. Le sommet est retenu ; huit pas sans le dépasser de 0,5 %
+       disent que ça ne monte plus. */
+    var sommet = 0, sansProgres = 0, pleine = false, tempsPas = 0;
+    function mesurerRemplissage() {
+      if (!shot || !shot.length) return;
+      var saut = Math.max(1, shot.length >> 12), somme = 0, n = 0;
+      for (var q = 0; q < shot.length; q += saut) { somme += shot[q]; n++; }
+      var d = n ? somme / n : 0;
+      if (d > sommet * 1.01) { sommet = d; sansProgres = 0; }
+      else if (++sansProgres >= STILL_PLEIN) pleine = true;
+    }
     /* A second colouring of the same frame. The indices are already computed —
        only the ramp differs — so it costs one more paint and one more encode,
        and nothing is stepped twice. */
@@ -14445,7 +14473,16 @@
          is not is encoding the canvas to a PNG and handing it to the stylesheet
          — done at every step of the opening it is the whole of the delay, and
          the phone has nothing left for the finger. Only the last step speaks. */
-      quiet = stillAlways && (warm + 1 < STILL_WARMUP);
+      /* DEUX IMAGES, PAS UNE. La première au bout des vingt-quatre pas d'avant :
+         elle ne montre qu'un champ qui commence, mais elle arrive vite et c'est
+         elle qui ouvre la page — le téléphone n'attend pas devant un écran nu.
+         Le champ continue ensuite, en se reposant entre deux pas pour que le
+         doigt garde la main, et la SECONDE image est celle qui reste : le champ
+         y a rempli l'affiche. L'image qui restera est celle du pas où l'on
+         s'arrête, et on sait avant de faire le pas si c'est celui-là. */
+      var premier = stillAlways && warm + 1 === STILL_WARMUP;
+      var dernier = stillAlways && (pleine || tempsPas >= STILL_BUDGET);
+      quiet = stillAlways && !premier && !dernier;
       stillBeat();              /* le garde-fou voit que ça travaille */
       if (build()) {
         if (back >= 0) {
@@ -14473,8 +14510,11 @@
             build();
           }
         } else {
+          var t0 = (window.performance && performance.now) ? performance.now() : 0;
           for (var i = 0, n = gen.steps || 1; i < n; i++) gen.step();
           quantise(gen.values, shot, gen.lo, gen.hi);
+          tempsPas += ((window.performance && performance.now) ? performance.now() : 0) - t0;
+          mesurerRemplissage();
           if (restart && ticks % stride === 0 && tape.length < REWIND_FRAMES) {
             /* the ramp's top goes with the frame: without it the indices cannot
                be turned back into a field to carry on from */
@@ -14498,10 +14538,14 @@
           }
         }
       }
-      if (stillAlways && ++warm >= STILL_WARMUP) return;
+      if (stillAlways) { warm++; if (dernier) return; }
       /* Back to back while the opening runs, so it is over in a breath rather
-         than in two and a half seconds of a page that will not scroll. */
-      timer = setTimeout(tick, quiet ? 0 : (opts.tick || 40));
+         than in two and a half seconds of a page that will not scroll. Après la
+         première image, en revanche, le champ se repose entre deux pas : la
+         page est déjà là, et ce qui reste à faire ne doit plus lui coûter son
+         défilement. */
+      timer = setTimeout(tick, quiet ? (stillAlways && warm >= STILL_WARMUP ? 8 : 0)
+                                     : (opts.tick || 40));
     }
 
     tick();
