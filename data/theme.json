@@ -1,5 +1,5 @@
 {
-  "font": "Geneva",
+  "font": "Georgia",
   "stroke": 2,
   "texture": "grey-50",
   "textureScale": 2,
@@ -7,25 +7,25 @@
   "speed": 4,
   "pageTexture": "grey-50",
   "pageTextureOpacity": 0.05,
-  "bodyFont": "Charter",
+  "bodyFont": "Charter (embarquée)",
   "perPage": 1,
   "email": "your@address.here",
   "look": {
     "hueDir": "to top",
-    "font": "Geneva",
-    "bodyFont": "Charter",
+    "font": "Georgia",
+    "bodyFont": "Charter (embarquée)",
     "tex": "grid",
-    "text": "moire",
-    "hover": "weave",
-    "hoverInk": "#60c95e",
+    "text": "vertical",
+    "hover": "grey-75",
+    "hoverInk": "#000000",
     "hoverAltInk": "#3c2b25",
-    "textInk": "#828782",
+    "textInk": "#deeaa4",
     "contour": "normal",
     "bg": "physarum",
-    "frame": "none",
+    "frame": "lenia",
     "scale": "epx",
     "motion": "still",
-    "tiling": "none",
+    "tiling": "half",
     "picHover": "none",
     "justify": "center",
     "tagPlace": "head",
@@ -44,7 +44,7 @@
     "namesStrokePlace": "mid",
     "metaStrokePlace": "mid",
     "lineupAlign": "justify",
-    "lineupPlus": "left",
+    "lineupPlus": "right",
     "lineupUnit": "whole",
     "lineupFlow": "wrap",
     "listen": true,
@@ -53,7 +53,7 @@
     "skinInk": "#a9a1ba",
     "skinGround": "#000000",
     "picPlace": "board",
-    "picSkin": "post4",
+    "picSkin": "none",
     "picSkinAnim": "both",
     "picSkinInk": "#292623",
     "picSkinGround": "#000000",
@@ -131,8 +131,8 @@
     "datesBack": "void",
     "datesText": "grey-75",
     "datesCase": "upper",
-    "wmAlign": "center",
-    "wmContourMode": "integrated",
+    "wmAlign": "left",
+    "wmContourMode": "autonomous",
     "glyphCell": "noise",
     "glyphCol": "#000000",
     "glyphCellInk": null,
@@ -156,11 +156,11 @@
     "infoContour": "line",
     "infoCase": "upper",
     "infoNameText": "same",
-    "wmCell": "moire",
-    "wmCellInk": "#252522",
-    "wmCellGround": "#5d6560",
-    "contourLo": "#b1cdc1",
-    "contourHi": "#869b7d",
+    "wmCell": "ring",
+    "wmCellInk": "#343932",
+    "wmCellGround": "#5d5656",
+    "contourLo": "#a5c0b4",
+    "contourHi": "#000000",
     "navInk": "#8b8593",
     "viewportFrames": [
       {
@@ -231,12 +231,12 @@
     "viewportFramesMagnet": false,
     "tileGap": 6,
     "life": [
-      null,
-      "#484242",
+      "#090326",
+      "#040f2a",
       "#554949",
       "#253824"
     ],
-    "boardGround": "#3a3743",
+    "boardGround": "#000000",
     "gen": {
       "physarum": {
         "agents": 3,
@@ -253,35 +253,37 @@
         "size": 1.9,
         "date": 0.65,
         "place": 0.65,
-        "artists": 2.6,
+        "artists": 3.85,
         "details": 0.65,
         "artistGap": 0,
         "datePlaceGap": 9.6,
         "timePriceGap": 0,
         "placeTimeGap": 12,
-        "pictureLineupGap": 6.2,
-        "artistLeading": 0.75,
-        "lineupInfoGap": 0.2,
-        "metaLeading": 0.6,
-        "inset": 0.04,
-        "tracking": 0.06,
-        "leading": 1.35,
+        "pictureLineupGap": 4.9,
+        "artistLeading": 0.85,
+        "lineupInfoGap": 0.45,
+        "metaLeading": 0.7,
+        "inset": 0.01,
+        "tracking": 0.065,
+        "leading": 1.3,
         "info outline": 0.5,
-        "names outline": 2,
+        "names outline": 2.2,
         "names cell size": 400,
         "tag tracking": 2,
-        "tag outline": 2.7,
-        "tag size": 0.8,
-        "tag gap": 1.15,
-        "qualifier": 0.85,
+        "tag outline": 3,
+        "tag size": 1.15,
+        "tag gap": 1.1,
+        "qualifier": 0.5,
         "name:fatigue suspecte": 1,
-        "tag cell size": 7,
+        "tag cell size": 80,
         "name:refus d'obtemperer": 0.95,
         "name:& compagnie": 0.9,
         "name:bobe van jezu": 0.95,
         "name:ublo": 1,
         "name:lime68k": 1,
-        "name:4649": 0.95
+        "name:4649": 0.95,
+        "name:tresque": 0.9,
+        "name:gaute granli": 1
       },
       "nav": {
         "size": 5,
@@ -293,7 +295,7 @@
       },
       "contour": {
         "seconds": 5,
-        "width": 0.58
+        "width": 0.6
       },
       "motion": {
         "seconds": 2,
@@ -302,18 +304,18 @@
       "wm": {
         "size": 2.12,
         "height": 2.5,
-        "width": 0.66,
-        "tracking": 0.8,
+        "width": 1,
+        "tracking": 0.36,
         "distortion": 80,
         "seed": 24,
-        "frequencyX": 0.044,
-        "wordGap": 2,
+        "frequencyX": 0.048,
+        "wordGap": 0,
         "frequencyY": 0.002,
-        "perspectiveX": 9,
-        "skewX": 7,
+        "perspectiveX": 42,
+        "skewX": -12,
         "skewY": 30.5,
         "rotate": 18,
-        "perspectiveY": 53
+        "perspectiveY": 14
       },
       "space": {
         "head": 0,
@@ -393,7 +395,7 @@
         "seed": 14
       },
       "organic_postertext": {
-        "distortion": 4,
+        "distortion": 6,
         "frequencyX": 0.034,
         "frequencyY": 0.068
       },
@@ -404,32 +406,38 @@
         "tint": 0.8
       },
       "life": {
-        "layers": 1
+        "layers": 1.6,
+        "seed": 3384262352
       },
       "smoothlife": {
         "outer radius": 9
       },
       "hue": {
-        "fill": 50
+        "fill": 51
+      },
+      "lenia": {
+        "mu": 0.26
       }
     },
     "edge": {
       "pic": {
         "r": 0,
-        "w": 1,
+        "w": 16,
         "s": "none",
         "c": "#48564c"
       },
       "board": {
-        "w": 1,
-        "s": "inset",
-        "c": "#1d2520",
-        "r": 270
+        "w": 20,
+        "s": "none",
+        "c": "#250778",
+        "r": 274,
+        "cell": "lattice",
+        "u": 33
       },
       "frame": {
         "w": 1,
         "s": "dashed",
-        "c": "#7ec986",
+        "c": "#4f4545",
         "r": 6
       },
       "listen": {
@@ -455,8 +463,8 @@
     "bgHi": "#262626",
     "boardLo": "#3a3947",
     "boardHi": "#000000",
-    "frameLo": "#2e3438",
-    "frameHi": "#040605",
+    "frameLo": "#525252",
+    "frameHi": "#000000",
     "cellInk": "#2e2a29",
     "cellGround": "#0b0710",
     "board": "none",
@@ -500,8 +508,44 @@
   "archive": true,
   "dates": {
     "2026-11-28": {
+      "look": {
+        "hueDir": "to bottom",
+        "tagAlign": "right",
+        "tagText": "stipple",
+        "tagInk": "#ffffff",
+        "tagStrokeCol": "#2b066f",
+        "tagCell": "scatter",
+        "tagCellGroundCol": "#5a5e5a",
+        "namesCell": "wave",
+        "wmAlign": "center",
+        "gen": {
+          "text": {
+            "tag tracking": 1.67,
+            "tag size": 1.2,
+            "tag gap": 0.8,
+            "name:tresque": 1
+          }
+        },
+        "picTex": "none",
+        "metaStrokeCol": "#ffffff",
+        "namesStrokeCol": "#757575"
+      },
+      "layout": {
+        "boardW": 467.5745242303382,
+        "boardDx": -428.4198753641181,
+        "boardDy": -233.27006726641292,
+        "infoDx": -10.437703770425852,
+        "infoDy": -233.80286203951425,
+        "boardH": 476.98394618686973,
+        "frameH": 19.776814824346566,
+        "picDx": -282.21146465296357,
+        "picDy": 107.70777103683888,
+        "picDw": -401.56252149038284,
+        "picDh": 147.33415126735264,
+        "frameFixH": 752.3268148243466
+      },
       "frozen": false,
-      "public": false,
+      "public": true,
       "images": {
         "https://i1.sndcdn.com/avatars-000309884919-faviak-t1080x1080.jpg": "images/frozen/2026-11-28/69a9a1c138be.jpg"
       }

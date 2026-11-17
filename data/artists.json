@@ -120,21 +120,30 @@
     },
     {
       "name": "Illat",
-      "bio": "",
-      "image": "https://f4.bcbits.com/img/0046176790_10.jpg",
-      "embed": "",
+      "bio": "ILLAT is Gábor Kovács, also known as technoïd deformer Új Bála.\nTheir entities dwelled these past years in their hand-made traditional Jette blues music within a chrysalid of medical sciences until reaching full bloom - to finally outreach our basement with minimalistic, textured and delicately hard techno.\n\nILLAT has been part of the SHAPE platform in several formations, has been playing in bands such as Der Tanz, Dutch Courage or Wash Club and has performed solo as Cranky Bow and Új Bála, prolificly releasing on Jollies, Cold Moss, Tanzprocesz, Baba Vanga,...",
+      "image": "images/uj-bala-1495447305-2026-11-17.jpg",
+      "embed": "album=3161645330",
       "aka": [],
-      "links": []
+      "links": [
+        {
+          "label": "Bandcamp",
+          "url": "https://ujbala.bandcamp.com/"
+        },
+        {
+          "label": "Soundcloud",
+          "url": "https://soundcloud.com/j-b-la-1"
+        }
+      ]
     },
     {
       "name": "Gaute Granli",
-      "bio": "GAUTE GRANLI works alone in Stavanger: voice, guitar, a bank of effects and an analogue sampler, run through each other until the parts stop being separable. Chanting over feedback, rhythm arrived at by accident, a one-man band that sounds like a bad transmission of a larger one.\n\nHe played guitar and shouted in Skadne Krek and Freddy The Dyke before the solo work took over. Records have come out on Drid Machine, Ultra Eczema, Editions Cave12, Nashazphone and Feeding Tube — the most recent, Bløt Klut, in 2024.",
+      "bio": "GAUTE GRANLI is currently 1/2 of Rump State with Mark Morgan, has played guitar and shouted in Skadne Krek and Freddy The Dyke before their solo work took over, with records on Drid Machine, Ultra Eczema, Editions Cave12, Nashazphone, Feeding Tube, ...\n\n\"Gaute Granli, a true prodigy of (de)structured psychedelic songs (...) filled with ghost/haunting folk music, which one has the impression of knowing from who knows where, of lyrics sung in unknown vocabularies and of pop surges deboned by a psychedelic gnome messing everything up with effects pedals. As always with Gaute Granli, everything works and magically “chaotically” holds together with this dusty melancholy of despair uncomfortably and permanently inhabiting each level of his fascinating sound universe.\"\nSixto (Cave12)",
       "image": "https://f4.bcbits.com/img/0036566971_10.jpg",
       "embed": "album=1468276135",
       "aka": [],
       "links": [
         {
-          "label": "bandcamp",
+          "label": "Bandcamp",
           "url": "https://gautegranli.bandcamp.com/"
         },
         {

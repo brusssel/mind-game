@@ -2,6 +2,32 @@
   "concerts": [
     {
       "projects": [
+        "Tresque (Release Party)",
+        "Gaute Granli",
+        "Illat (DJ)"
+      ],
+      "projectUrls": [
+        "https://www.nts.live/artists/52673-tresque",
+        "https://gautegranli.bandcamp.com/",
+        "https://ujbala.bandcamp.com/album/hangulat"
+      ],
+      "profileNames": [
+        "Tresque",
+        "",
+        "Illat"
+      ],
+      "location": "Rue de la Campine 15, Molenbeek",
+      "venueName": "La Campine",
+      "locationUrl": "",
+      "date": "2026-11-28",
+      "time": "20:30",
+      "fee": "8-10 €",
+      "tag": "MIND GAME 003",
+      "url": "",
+      "image": ""
+    },
+    {
+      "projects": [
         "UBLO (release party)",
         "LIME68K",
         "FATIGUE SUSPECTE",
@@ -34,7 +60,7 @@
       "date": "2026-11-11",
       "time": "19:30",
       "fee": "8/10€",
-      "tag": "MIND GAME 002 W/ THIRD TYPE TAPES",
+      "tag": "",
       "url": "",
       "image": ""
     },
@@ -60,32 +86,6 @@
       "date": "2026-10-20",
       "time": "19:30",
       "fee": "8-10€",
-      "tag": "MIND GAME 001",
-      "url": "",
-      "image": ""
-    },
-    {
-      "projects": [
-        "Tresque (Release Party)",
-        "Gaute Granli",
-        "TBC"
-      ],
-      "projectUrls": [
-        "https://www.nts.live/artists/52673-tresque",
-        "",
-        ""
-      ],
-      "profileNames": [
-        "Tresque",
-        "",
-        ""
-      ],
-      "location": "Rue de la Campine 15, Molenbeek",
-      "venueName": "La Campine",
-      "locationUrl": "",
-      "date": "2026-11-28",
-      "time": "20:30",
-      "fee": "8-10 €",
       "tag": "",
       "url": "",
       "image": ""
