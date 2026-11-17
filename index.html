@@ -1579,6 +1579,37 @@
   }
   @media (prefers-reduced-motion: reduce) { .hue { transition: none; } }
 
+  /* L'APERÇU TÉLÉPHONE. Un cadre de la largeur d'un téléphone, posé par-dessus
+     la page, dans lequel le site se charge pour de bon : c'est la page elle-même
+     qui décide d'être en version téléphone, à partir de la largeur qu'elle
+     reçoit, donc ce qu'on voit là est ce qu'un téléphone verra — pas une
+     imitation. Au-dessus de tout, et hors de la scène, sinon l'échelle du
+     dessin s'appliquerait aussi au cadre. */
+  #apercu-telephone { position: fixed; inset: 0; z-index: 2147483000; }
+  #apercu-telephone[hidden] { display: none; }
+  .apercu-fond { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.78); }
+  .apercu-cadre {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 390px; max-width: 94vw; display: flex; flex-direction: column;
+    background: #0b0b0d; border: 1px solid #4b4b57; border-radius: 10px;
+    box-shadow: 0 10px 60px rgba(0, 0, 0, 0.7); overflow: hidden;
+  }
+  .apercu-barre {
+    display: flex; align-items: center; gap: 8px; padding: 4px 6px;
+    font: 11px/1.4 Monaco, monospace; color: #9b9ba6;
+    background: #16161c; border-bottom: 1px solid #2a2a33;
+  }
+  .apercu-titre { flex: 1; letter-spacing: 0.08em; }
+  .apercu-barre button {
+    font: 13px/1 Monaco, monospace; color: #c8c8d2; background: #22222b;
+    border: 1px solid #3a3a45; border-radius: 4px; padding: 2px 7px; cursor: pointer;
+  }
+  .apercu-barre button:hover { background: #2e2e3a; }
+  .apercu-vue {
+    display: block; width: 390px; max-width: 94vw; height: 844px;
+    max-height: calc(100vh - 90px); border: 0; background: #000;
+  }
+
   /* ------------------------------------------------------------------
      Contact view — the wordmark toggles it
      ------------------------------------------------------------------ */
@@ -16718,6 +16749,64 @@
     persistTheme(btn, 'this is the default now');
   });
 
+  /* VOIR LA PAGE COMME UN TÉLÉPHONE LA VOIT. Le cadre charge le site servi
+     dans une fenêtre de 390 px : la page qui s'y ouvre lit cette largeur et
+     passe d'elle-même en version téléphone — champs figés, affiche recadrée,
+     fiches en dessous. On ne déguise rien, on donne juste moins de place.
+
+     Rechargé à chaque ouverture, pour qu'il montre l'état du moment et non
+     celui d'il y a une heure ; et vidé à la fermeture, pour qu'un aperçu
+     oublié ne calcule pas dans son coin. */
+  (function () {
+    var bouton = document.getElementById('voir-telephone');
+    if (!bouton) return;
+    var local = location.protocol === 'http:' &&
+      (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+    if (!local) return;
+    bouton.hidden = false;
+    /* Le cadre est bâti à la première ouverture, pas écrit dans la page : posé
+       en dur il aurait fallu qu'il existe AVANT ce script — il vivait après, et
+       le bouton restait muet — et une page qui ne s'en sert pas n'a pas à le
+       porter. */
+    var cadre = null, vue = null;
+    function batir() {
+      if (cadre) return;
+      cadre = document.createElement('div');
+      cadre.id = 'apercu-telephone';
+      cadre.innerHTML = '<div class="apercu-fond"></div>'
+        + '<div class="apercu-cadre"><div class="apercu-barre">'
+        + '<span class="apercu-titre">390 × 844</span>'
+        + '<button type="button" class="apercu-recharger" title="Recharger">↻</button>'
+        + '<button type="button" class="apercu-fermer" title="Fermer">×</button>'
+        + '</div><iframe class="apercu-vue" title="Aperçu téléphone"></iframe></div>';
+      document.body.appendChild(cadre);
+      vue = cadre.querySelector('.apercu-vue');
+      cadre.querySelector('.apercu-fond').addEventListener('click', fermer);
+      cadre.querySelector('.apercu-fermer').addEventListener('click', fermer);
+      cadre.querySelector('.apercu-recharger').addEventListener('click', function () {
+        vue.src = 'index.html?telephone=' + Date.now();
+      });
+    }
+    function ouvrir() {
+      batir();
+      cadre.hidden = false;
+      vue.src = 'index.html?telephone=' + Date.now();
+      bouton.textContent = 'Fermer';
+    }
+    function fermer() {
+      if (!cadre) return;
+      cadre.hidden = true;
+      vue.removeAttribute('src');          /* rien ne tourne derrière */
+      bouton.textContent = 'Téléphone';
+    }
+    bouton.addEventListener('click', function () {
+      if (!cadre || cadre.hidden) ouvrir(); else fermer();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && cadre && !cadre.hidden) fermer();
+    });
+  })();
+
   /* Pushing, from the page's own corner: the app is this page, so the button
      that puts it on the web belongs beside the ones that dress it. Shown only
      when the local admin is serving — a published copy has nothing to push. */
@@ -16738,11 +16827,28 @@
         return fetch('/api/publish', { method: 'POST' })
           .then(function (r2) { return r2.json().then(function (d) {
             if (!r2.ok) throw new Error(d.error || 'could not'); return d; }); })
-          .then(function (d) { pb.textContent = d.committed ? 'pushed' : 'up to date'; })
+          .then(function (d) {
+            /* Ce qui est venu d'ailleurs est dit, pas tu : le bouton le compte,
+               et si un de ces commits a touché la page elle-même — ce qu'une
+               reconstruction efface — il le dit en toutes lettres. */
+            var r = d.rattrapage || {};
+            pb.textContent = (d.committed ? 'pushed' : 'up to date')
+              + (r.integre ? ' +' + r.integre + ' d\'ailleurs' : '');
+            if (r.integre && r.pageTouchee) {
+              alert('Poussé, et ' + r.integre + ' changement(s) venus d\'ailleurs ont été '
+                + 'intégrés. L\'un d\'eux touchait la page elle-même : elle a été refaite '
+                + 'à partir du template et des données, donc une retouche écrite directement '
+                + 'dans la page publiée serait perdue. Jette un œil au site.');
+            }
+          })
           .then(function () {
-            setTimeout(function () { pb.textContent = 'Push'; }, 4000);
+            setTimeout(function () { pb.textContent = 'Push'; }, 6000);
           });
-      }).catch(function (e) { pb.textContent = 'could not: ' + e.message; });
+      }).catch(function (e) {
+        pb.textContent = 'could not';
+        /* Le message est une phrase, pas un code : il mérite d'être lu en entier. */
+        alert(e && e.message ? e.message : 'Le push n\'a pas abouti.');
+      });
     });
   })();
 
