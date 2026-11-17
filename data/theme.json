@@ -520,6 +520,7 @@
         "wmAlign": "center",
         "gen": {
           "text": {
+            "lineupInfoGap": 0.5,
             "tag tracking": 1.67,
             "tag size": 1.2,
             "tag gap": 0.8,
