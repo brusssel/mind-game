@@ -18208,7 +18208,16 @@
   });
   function takePins() { takeFramePin(); takeInfoPin(); }
   if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(function () { fit(); raf2(takePins); });
+    /* `fit` remesure le contenu, mais c'est `settle` qui REJUGE l'échelle de
+       page : voir `trimPageScale`, appelé à sa fin. La différence se voyait, et
+       elle se voyait en entier — le rogneur a un plancher, 1 / 1,11, et une
+       page rognée jusque-là pendant l'ouverture reste dessiné à 90 % de sa
+       taille jusqu'au prochain réglage. C'est ce que Daniel voyait sur Brave :
+       la page s'ouvrait à 90 %, et un cmd+ suivi d'un cmd− la remettait à
+       l'endroit — non pas en changeant le zoom, mais en provoquant la mesure
+       qui manquait. Les polices qui arrivent tard sont justement ce qui rend
+       le texte momentanément plus haut, donc ce qui déclenche le rognage. */
+    document.fonts.ready.then(function () { fit(); settleSoon(); raf2(takePins); });
     /* `fonts.ready` ne promet qu'une chose : que les chargements EN COURS sont
        finis. Une police demandée plus tard — parce qu'un caractère tchèque la
        réclame, parce que le navigateur a attendu de la voir servir — arrive
@@ -18220,10 +18229,20 @@
       document.fonts.addEventListener('loadingdone', function () {
         if (++fontPass > 6) return;    /* une page n'a pas six polices */
         fit();
+        settleSoon();
       });
     }
   } else { raf2(takePins); }
   addEventListener('load', function () { raf2(takePins); });
+  /* Et deux relectures tardives, pour le cas où rien d'autre ne les provoque.
+     L'ouverture est le seul moment où la page se mesure alors qu'elle n'est pas
+     encore elle-même : les champs n'ont pas publié, les polices se posent, le
+     navigateur ajoute ou retire une barre. Ce qui se décide là — l'échelle
+     surtout — ne se rejuge ensuite que si quelqu'un redimensionne la fenêtre.
+     Deux passes, à deux et cinq secondes : elles ne coûtent rien et ne changent
+     rien quand tout était déjà juste, le calcul étant idempotent. */
+  setTimeout(settleSoon, 2000);
+  setTimeout(settleSoon, 5000);
 })();
 </script>
 <!-- LA RADIO. Écrite ici, hors de la scène et hors de la colonne, parce que
