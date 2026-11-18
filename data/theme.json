@@ -969,7 +969,11 @@
         "wm": "cell",
         "picTex": "none",
         "metaStrokeCol": "#ffffff",
-        "namesStrokeCol": "#757575"
+        "namesStrokeCol": "#757575",
+        "picTexBlend": "multiply",
+        "picTexScale": 8,
+        "picTexInk": null,
+        "picTexGround": null
       },
       "layout": {
         "wmW": 656,
@@ -979,7 +983,7 @@
         "boardDx": -308,
         "boardDy": -77,
         "infoDx": -145.56710199413368,
-        "infoDy": -365.3727906816119,
+        "infoDy": -374.56526675125195,
         "framePad": 45.663962920046345,
         "boardH": 602,
         "frameH": 40,
