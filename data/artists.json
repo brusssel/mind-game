@@ -354,6 +354,44 @@
         }
       ],
       "nameScale": 3
+    },
+    {
+      "name": "Nina Dalva",
+      "bio": "Nina Dalva improvises electroacoustic soundscapes & songs, collaging her own vocal snippets with samples from collaborative projects (eg fourthcoming ssabæ, or ongoing project with bassist Otto Willberg).\nLayers of found texts, fake folk & field recordings emerge as polyphony, composing metaphoric images & little abstract narratives.\n\nOriginally from Reunion Island, Nina Dalva is known only for her restlessness. \nThough never too far from her beloved Korg Microsampler, her musical terrain adapts itself to its surroundings, morphing in sync with collective impulses.",
+      "image": "images/nina-dalva-2026-11-19.jpg",
+      "embed": "https://soundcloud.com/mur3n3/nina-dalva-seanaps-festival-09",
+      "aka": [],
+      "links": [
+        {
+          "label": "Soundcloud",
+          "url": "https://soundcloud.com/mur3n3"
+        }
+      ]
+    },
+    {
+      "name": "Simon B.",
+      "bio": "",
+      "image": "",
+      "embed": "",
+      "aka": [],
+      "links": []
+    },
+    {
+      "name": "Orphids",
+      "bio": "ORPHIDS is the electronic duo of Lucie Pinier (Fruiting Body, Sorcière Picasso) and Matthieu Levet (Carrageenan, Pizza Noise Mafia, Carcass Identity).\nOrphids inhabits a tension-filled universe where anarchy finds melodic integrity. Polyrhythms create a boundless frenetic playground where ambient, techno and noise collide into a whirlwind of colorful narratives and upbeat structures.",
+      "image": "images/orphids-2026-11-19.webp",
+      "embed": "album=3549402359",
+      "aka": [],
+      "links": [
+        {
+          "label": "INSTAGRAM",
+          "url": "https://www.instagram.com/_orphids_/"
+        },
+        {
+          "label": "Bandcamp",
+          "url": "https://orphids.bandcamp.com/"
+        }
+      ]
     }
   ]
 }

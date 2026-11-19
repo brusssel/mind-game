@@ -2,6 +2,32 @@
   "concerts": [
     {
       "projects": [
+        "Nina Dalva",
+        "Simon B.",
+        "Orphids"
+      ],
+      "projectUrls": [
+        "",
+        "",
+        ""
+      ],
+      "profileNames": [
+        "",
+        "",
+        ""
+      ],
+      "location": "15 rue de la CAMPINE, Molenbeek",
+      "venueName": "La Campine",
+      "locationUrl": "https://maps.app.goo.gl/cbQr3dfPsAP2gGEL7",
+      "date": "2026-12-02",
+      "time": "19:30",
+      "fee": "8-10€",
+      "tag": "MIND GAME 004",
+      "url": "",
+      "image": ""
+    },
+    {
+      "projects": [
         "Tresque (Release Party)",
         "Gaute Granli",
         "Illat (DJ)"
