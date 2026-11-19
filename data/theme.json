@@ -308,7 +308,7 @@
         "size": 2.12,
         "height": 2.5,
         "width": 1,
-        "tracking": 0.36,
+        "tracking": 0.34,
         "distortion": 80,
         "seed": 24,
         "frequencyX": 0.048,
@@ -1940,55 +1940,23 @@
     },
     "2026-12-02": {
       "look": {
-        "text": "diagonal",
-        "hoverInk": "#32005c",
-        "hoverAltInk": "#6e5349",
-        "textInk": "#002aff",
-        "frame": "cyclic",
         "tagAlign": "right",
-        "tagText": "diagonal",
+        "tagText": "moire",
         "tagInk": "#177d5e",
-        "tagStrokeCol": "#0b345b",
+        "tagStrokeCol": "#118c08",
         "tagCell": "diagonal-back",
-        "lineupPlus": "left",
-        "lineupFlow": "stack",
-        "wmAlign": "left",
-        "wmCellInk": "#60d133",
-        "wmCellGround": "#420a0a",
-        "contourLo": "#92d3b6",
-        "contourHi": "#110434",
+        "namesStrokePlace": "out",
+        "metaStrokePlace": "in",
         "gen": {
           "text": {
-            "date": 1,
-            "place": 1,
-            "artists": 3.8,
-            "details": 1,
-            "artistLeading": 1.6,
-            "lineupInfoGap": 0.7,
-            "metaLeading": 1.3,
-            "info outline": 0.235,
-            "names outline": 1.3,
-            "tag tracking": 1.68,
-            "tag gap": 0,
-            "name:nina dalva": 0.85,
-            "name:simon b.": 0.85,
-            "name:orphids": 0.9
-          },
-          "hue": {
-            "fill": 68
+            "info outline": 0.325,
+            "names outline": 2.05,
+            "tag gap": 0.4,
+            "tag cell size": 98
           }
         },
-        "edge": {
-          "board": {
-            "s": "double",
-            "c": "#110d26",
-            "r": 2
-          }
-        },
-        "frameLo": "#462525",
-        "frameHi": "#2f0424",
         "picTex": "none",
-        "metaStrokeCol": "#33ff81",
+        "metaStrokeCol": "#ff0019",
         "namesStrokeCol": "#000000",
         "picTexBlend": "multiply",
         "picTexScale": 8,
@@ -1998,8 +1966,8 @@
       "layout": {
         "boardDx": -309.83849521392807,
         "boardDy": -23.683638796088083,
-        "infoDx": -140.96902871643204,
-        "infoDy": -431.43871410445996,
+        "infoDx": -139.0942767527867,
+        "infoDy": -446.4367298136225,
         "infoW": 672.1631725904637
       }
     }
