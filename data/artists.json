@@ -370,11 +370,16 @@
     },
     {
       "name": "Simon B.",
-      "bio": "",
-      "image": "",
-      "embed": "",
+      "bio": "SIMON B is a longtime contributor to Antwerp's improvised music scene (Groovecats Deluxe, Wij Blij Trio ). Primarily a double bass player, he also has a deep-felt passion for offbeat electronica and the rainbowy side of American minimalism.",
+      "image": "images/simon-b-2026-11-20.jpg",
+      "embed": "album=694427944",
       "aka": [],
-      "links": []
+      "links": [
+        {
+          "label": "SCHÖNEN ABEND",
+          "url": "https://souvenirsfromimaginarycities.bandcamp.com/album/sch-nen-abend"
+        }
+      ]
     },
     {
       "name": "Orphids",
